@@ -1,0 +1,1364 @@
+<testsuites id="" name="" tests="324" failures="0" skipped="324" errors="0" time="0.15100099999999997">
+<testsuite name="automation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Automation › should display automation panel" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should show search engine selector with all options" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add keyword using button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add keyword using Enter key" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add target domain using button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add target domain using Enter key" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should show start button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should disable start button when no keywords" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should enable start button when keywords added" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should change search engine" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should display keyword count" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should display domain count" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="captcha-detection.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Captcha Detection › should display automation panel for captcha-aware automation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should allow search engine selection for captcha handling" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should setup automation that may encounter captchas" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should have start/stop controls for captcha-interrupted automation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should display keyword list that may trigger captchas" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should support domain targeting for captcha avoidance" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should verify automation panel has all required elements" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should allow keyword removal for captcha rate management" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should display address bar for manual captcha solving navigation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should have navigation controls for captcha page handling" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="circuit-breaker.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Circuit Breaker › should display proxy failure statistics" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display active proxy count for circuit breaker decisions" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should have failure-aware rotation strategy for circuit breaker" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display proxy list with status indicators" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display total proxy count for circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should allow adding proxies to circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display all three status categories for circuit breaker" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should support switching between rotation strategies for resilience" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should maintain circuit breaker configuration after panel toggle" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display empty state when no proxies in circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="creator-support.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Creator Support Flow › should be able to add creator URL as target domain" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to add multiple creator domains" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should setup automation for creator support" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to start creator support automation" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should validate creator domain format" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should display creator support statistics after setup" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to remove creator from list" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Navigation &amp; UI › should display main UI elements" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display all toolbar buttons" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should switch between panels" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open activity log panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open stats panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open settings panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should close panel when clicking same button" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should show navigation controls" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display proxy status indicator" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display tab bar with new tab button" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="privacy-protection.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="14" failures="0" skipped="14" time="0" errors="0">
+<testcase name="Privacy Protection › should display privacy panel" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show all privacy sections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle canvas fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle WebGL fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle audio fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle navigator spoofing" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle WebRTC leak protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle tracker blocking" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle timezone spoofing" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show all fingerprint options" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show WebRTC and tracker options" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show timezone spoofing option" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should be able to enable all protections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should be able to disable all protections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="privacy-verification.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="6" failures="0" skipped="6" time="0" errors="0">
+<testcase name="Privacy Verification › should enable fingerprint spoofing and verify settings persist" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should verify WebRTC leak prevention is configurable" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should verify tracker blocking functionality" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should enable all privacy protections simultaneously" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should toggle individual protections without affecting others" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should display privacy protection status indicators" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="proxy-management.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Proxy Management › should display proxy panel" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display add proxy button" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display proxy list or empty state" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should show proxy statistics" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should change rotation strategy" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should toggle proxy panel visibility" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display all rotation strategy options" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="proxy-rotation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Proxy Rotation › should display rotation strategy selector" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should have all rotation strategy options available" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Round Robin strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Random strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Least Used strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Fastest strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Failure Aware strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Weighted strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should cycle through all rotation strategies" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should maintain rotation strategy after panel toggle" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should display proxy statistics relevant to rotation" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should display Add Proxy button for expanding rotation pool" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="scheduling-system.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Scheduling System › should display automation panel for scheduling" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should setup automation task that can be scheduled" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should configure search engine for scheduled task" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should display task counts for scheduling overview" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should support multiple target domains for scheduled execution" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should have start button for immediate execution" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should display automation controls for schedule management" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should allow removal of scheduled keywords" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should allow removal of scheduled domains" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should maintain schedule configuration across panel switches" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="session-isolation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="chromium" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Session Isolation › should display tab bar with initial tab" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should have new tab button functional" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display proxy status for current session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should be able to configure proxy for session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should verify session panel can be toggled" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display session statistics" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should maintain UI state across panel switches" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display address bar for navigation" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should have navigation controls for session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should support multiple rotation strategies for session isolation" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="automation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Automation › should display automation panel" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should show search engine selector with all options" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add keyword using button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add keyword using Enter key" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add target domain using button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add target domain using Enter key" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should show start button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should disable start button when no keywords" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should enable start button when keywords added" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should change search engine" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should display keyword count" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should display domain count" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="captcha-detection.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Captcha Detection › should display automation panel for captcha-aware automation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should allow search engine selection for captcha handling" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should setup automation that may encounter captchas" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should have start/stop controls for captcha-interrupted automation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should display keyword list that may trigger captchas" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should support domain targeting for captcha avoidance" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should verify automation panel has all required elements" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should allow keyword removal for captcha rate management" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should display address bar for manual captcha solving navigation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should have navigation controls for captcha page handling" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="circuit-breaker.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Circuit Breaker › should display proxy failure statistics" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display active proxy count for circuit breaker decisions" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should have failure-aware rotation strategy for circuit breaker" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display proxy list with status indicators" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display total proxy count for circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should allow adding proxies to circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display all three status categories for circuit breaker" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should support switching between rotation strategies for resilience" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should maintain circuit breaker configuration after panel toggle" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display empty state when no proxies in circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="creator-support.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Creator Support Flow › should be able to add creator URL as target domain" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to add multiple creator domains" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should setup automation for creator support" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to start creator support automation" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should validate creator domain format" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should display creator support statistics after setup" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to remove creator from list" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Navigation &amp; UI › should display main UI elements" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display all toolbar buttons" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should switch between panels" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open activity log panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open stats panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open settings panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should close panel when clicking same button" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should show navigation controls" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display proxy status indicator" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display tab bar with new tab button" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="privacy-protection.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="14" failures="0" skipped="14" time="0" errors="0">
+<testcase name="Privacy Protection › should display privacy panel" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show all privacy sections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle canvas fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle WebGL fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle audio fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle navigator spoofing" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle WebRTC leak protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle tracker blocking" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle timezone spoofing" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show all fingerprint options" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show WebRTC and tracker options" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show timezone spoofing option" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should be able to enable all protections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should be able to disable all protections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="privacy-verification.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="6" failures="0" skipped="6" time="0" errors="0">
+<testcase name="Privacy Verification › should enable fingerprint spoofing and verify settings persist" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should verify WebRTC leak prevention is configurable" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should verify tracker blocking functionality" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should enable all privacy protections simultaneously" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should toggle individual protections without affecting others" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should display privacy protection status indicators" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="proxy-management.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Proxy Management › should display proxy panel" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display add proxy button" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display proxy list or empty state" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should show proxy statistics" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should change rotation strategy" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should toggle proxy panel visibility" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display all rotation strategy options" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="proxy-rotation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Proxy Rotation › should display rotation strategy selector" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should have all rotation strategy options available" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Round Robin strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Random strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Least Used strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Fastest strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Failure Aware strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Weighted strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should cycle through all rotation strategies" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should maintain rotation strategy after panel toggle" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should display proxy statistics relevant to rotation" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should display Add Proxy button for expanding rotation pool" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="scheduling-system.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Scheduling System › should display automation panel for scheduling" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should setup automation task that can be scheduled" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should configure search engine for scheduled task" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should display task counts for scheduling overview" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should support multiple target domains for scheduled execution" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should have start button for immediate execution" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should display automation controls for schedule management" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should allow removal of scheduled keywords" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should allow removal of scheduled domains" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should maintain schedule configuration across panel switches" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="session-isolation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="firefox" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Session Isolation › should display tab bar with initial tab" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should have new tab button functional" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display proxy status for current session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should be able to configure proxy for session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should verify session panel can be toggled" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display session statistics" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should maintain UI state across panel switches" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display address bar for navigation" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should have navigation controls for session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should support multiple rotation strategies for session isolation" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="automation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Automation › should display automation panel" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should show search engine selector with all options" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add keyword using button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add keyword using Enter key" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add target domain using button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should add target domain using Enter key" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should show start button" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should disable start button when no keywords" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should enable start button when keywords added" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should change search engine" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should display keyword count" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Automation › should display domain count" classname="automation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="captcha-detection.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Captcha Detection › should display automation panel for captcha-aware automation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should allow search engine selection for captcha handling" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should setup automation that may encounter captchas" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should have start/stop controls for captcha-interrupted automation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should display keyword list that may trigger captchas" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should support domain targeting for captcha avoidance" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should verify automation panel has all required elements" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should allow keyword removal for captcha rate management" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should display address bar for manual captcha solving navigation" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Captcha Detection › should have navigation controls for captcha page handling" classname="captcha-detection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="circuit-breaker.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Circuit Breaker › should display proxy failure statistics" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display active proxy count for circuit breaker decisions" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should have failure-aware rotation strategy for circuit breaker" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display proxy list with status indicators" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display total proxy count for circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should allow adding proxies to circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display all three status categories for circuit breaker" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should support switching between rotation strategies for resilience" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should maintain circuit breaker configuration after panel toggle" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Circuit Breaker › should display empty state when no proxies in circuit breaker pool" classname="circuit-breaker.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="creator-support.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Creator Support Flow › should be able to add creator URL as target domain" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to add multiple creator domains" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should setup automation for creator support" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to start creator support automation" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should validate creator domain format" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should display creator support statistics after setup" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Creator Support Flow › should be able to remove creator from list" classname="creator-support.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Navigation &amp; UI › should display main UI elements" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display all toolbar buttons" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should switch between panels" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open activity log panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open stats panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should open settings panel" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should close panel when clicking same button" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should show navigation controls" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display proxy status indicator" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Navigation &amp; UI › should display tab bar with new tab button" classname="navigation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="privacy-protection.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="14" failures="0" skipped="14" time="0" errors="0">
+<testcase name="Privacy Protection › should display privacy panel" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show all privacy sections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle canvas fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle WebGL fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle audio fingerprint protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle navigator spoofing" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle WebRTC leak protection" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle tracker blocking" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should toggle timezone spoofing" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show all fingerprint options" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show WebRTC and tracker options" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should show timezone spoofing option" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should be able to enable all protections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Protection › should be able to disable all protections" classname="privacy-protection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="privacy-verification.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="6" failures="0" skipped="6" time="0" errors="0">
+<testcase name="Privacy Verification › should enable fingerprint spoofing and verify settings persist" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should verify WebRTC leak prevention is configurable" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should verify tracker blocking functionality" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should enable all privacy protections simultaneously" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should toggle individual protections without affecting others" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Privacy Verification › should display privacy protection status indicators" classname="privacy-verification.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="proxy-management.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Proxy Management › should display proxy panel" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display add proxy button" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display proxy list or empty state" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should show proxy statistics" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should change rotation strategy" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should toggle proxy panel visibility" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Management › should display all rotation strategy options" classname="proxy-management.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="proxy-rotation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Proxy Rotation › should display rotation strategy selector" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should have all rotation strategy options available" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Round Robin strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Random strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Least Used strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Fastest strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Failure Aware strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should change to Weighted strategy" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should cycle through all rotation strategies" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should maintain rotation strategy after panel toggle" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should display proxy statistics relevant to rotation" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proxy Rotation › should display Add Proxy button for expanding rotation pool" classname="proxy-rotation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="scheduling-system.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Scheduling System › should display automation panel for scheduling" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should setup automation task that can be scheduled" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should configure search engine for scheduled task" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should display task counts for scheduling overview" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should support multiple target domains for scheduled execution" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should have start button for immediate execution" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should display automation controls for schedule management" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should allow removal of scheduled keywords" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should allow removal of scheduled domains" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scheduling System › should maintain schedule configuration across panel switches" classname="scheduling-system.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="session-isolation.spec.ts" timestamp="2026-01-30T08:37:20.626Z" hostname="webkit" tests="10" failures="0" skipped="10" time="0" errors="0">
+<testcase name="Session Isolation › should display tab bar with initial tab" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should have new tab button functional" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display proxy status for current session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should be able to configure proxy for session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should verify session panel can be toggled" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display session statistics" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should maintain UI state across panel switches" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should display address bar for navigation" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should have navigation controls for session" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Session Isolation › should support multiple rotation strategies for session isolation" classname="session-isolation.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>
