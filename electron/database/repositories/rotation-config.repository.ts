@@ -44,7 +44,23 @@ export class RotationConfigRepository {
    */
   toRuntimeConfig(dto: RotationConfigDTO): RuntimeRotationConfig {
     const common = dto.commonConfig;
-    const strategy = dto.strategyConfig as any;
+    // Strategy config is dynamically typed based on strategy type
+    interface StrategySpecificConfig {
+      geographicPreferences?: string[];
+      excludeCountries?: string[];
+      preferredRegions?: string[];
+      stickySessionTTL?: number;
+      stickyHashAlgorithm?: 'consistent' | 'random' | 'round-robin';
+      stickyFallbackOnFailure?: boolean;
+      jitterPercent?: number;
+      minInterval?: number;
+      maxInterval?: number;
+      rotateOnFailure?: boolean;
+      scheduleWindows?: Array<{ startHour: number; endHour: number; daysOfWeek: number[] }>;
+      weights?: Record<string, number>;
+      rules?: RuntimeRotationConfig['rules'];
+    }
+    const strategy = dto.strategyConfig as StrategySpecificConfig;
 
     return {
       strategy: dto.strategy,
@@ -120,7 +136,7 @@ export class RotationConfigRepository {
    */
   findAll(options?: { enabled?: boolean; strategy?: string }): RotationConfigDTO[] {
     let sql = 'SELECT * FROM rotation_configs WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (options?.enabled !== undefined) {
       sql += ' AND enabled = ?';
@@ -169,7 +185,7 @@ export class RotationConfigRepository {
     if (!existing) return null;
 
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (input.name !== undefined) {
       updates.push('name = ?');

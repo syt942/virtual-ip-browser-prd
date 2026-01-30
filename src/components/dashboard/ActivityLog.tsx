@@ -14,7 +14,20 @@ interface ActivityLogEntry {
   level: 'debug' | 'info' | 'warning' | 'error' | 'success';
   category: string;
   message: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
+  sessionId?: string;
+  tabId?: string;
+  proxyId?: string;
+}
+
+/** Raw log entry from API before date parsing */
+interface RawLogEntry {
+  id: string;
+  timestamp: string;
+  level: ActivityLogEntry['level'];
+  category: string;
+  message: string;
+  metadata?: Record<string, unknown>;
   sessionId?: string;
   tabId?: string;
   proxyId?: string;
@@ -59,7 +72,7 @@ export function ActivityLog({ enableRealTime: _enableRealTime = false, pageSize 
       setIsLoading(true);
       setError(null);
 
-      const queryParams: Record<string, any> = {
+      const queryParams: Record<string, string | number> = {
         page: filters.page,
         pageSize
       };
@@ -70,10 +83,10 @@ export function ActivityLog({ enableRealTime: _enableRealTime = false, pageSize 
       if (filters.startDate) queryParams.startDate = filters.startDate;
       if (filters.endDate) queryParams.endDate = filters.endDate;
 
-      const result = await window.api.analytics.getActivityLogs(queryParams) as { success: boolean; data?: any[]; total?: number };
+      const result = await window.api.analytics.getActivityLogs(queryParams) as { success: boolean; data?: RawLogEntry[]; total?: number };
 
       if (result.success && result.data) {
-        const parsedLogs = result.data.map((log: any) => ({
+        const parsedLogs = result.data.map((log: RawLogEntry) => ({
           ...log,
           timestamp: new Date(log.timestamp)
         }));

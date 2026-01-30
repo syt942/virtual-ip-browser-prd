@@ -6,6 +6,7 @@
 import type { 
   ProxyConfig, 
   RotationContext, 
+  RotationConfig,
   ProxyRule,
   RuleCondition,
   RuleActionConfig,
@@ -17,7 +18,7 @@ export class CustomRulesStrategy extends BaseStrategy {
   private rules: ProxyRule[] = [];
   private lastUsedIndex = 0;
 
-  constructor(config: any) {
+  constructor(config: RotationConfig) {
     super(config);
     if (config.rules) {
       this.rules = [...config.rules].sort((a, b) => b.priority - a.priority);
@@ -112,7 +113,10 @@ export class CustomRulesStrategy extends BaseStrategy {
         try {
           const regex = new RegExp(String(compareValue), caseSensitive ? '' : 'i');
           return regex.test(String(fieldValue));
-        } catch {
+        } catch (error) {
+          // Invalid regex pattern in rule configuration
+          console.warn('[CustomRules] Invalid regex pattern in rule:', String(compareValue),
+            error instanceof Error ? error.message : 'Invalid regex');
           return false;
         }
       
@@ -150,7 +154,11 @@ export class CustomRulesStrategy extends BaseStrategy {
           try {
             const url = new URL(context.url);
             return url.pathname;
-          } catch {
+          } catch (error) {
+            // Invalid URL in context - return empty path
+            console.debug('[CustomRules] Failed to parse URL for path extraction:', 
+              context.url.substring(0, 50),
+              error instanceof Error ? error.message : 'Invalid URL');
             return '';
           }
         }

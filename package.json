@@ -1,6 +1,6 @@
 {
   "name": "virtual-ip-browser",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Enhanced Privacy-Focused Browser with Proxy Management and Fingerprint Spoofing",
   "main": "out/main/index.js",
   "type": "module",

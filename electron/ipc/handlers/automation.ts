@@ -37,7 +37,12 @@ export function setupAutomationHandlers(automationManager: AutomationManager) {
       const session = await automationManager.startSession(validation.data);
       return { success: true, session };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start automation session';
+      console.error('[IPC:automation:startSearch] Error:', errorMessage, { 
+        engine: validation.data.engine,
+        keywordCount: validation.data.keywords?.length 
+      });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -59,7 +64,9 @@ export function setupAutomationHandlers(automationManager: AutomationManager) {
       const result = automationManager.stopSession(validation.data);
       return { success: result };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to stop automation session';
+      console.error('[IPC:automation:stopSearch] Error:', errorMessage, { sessionId: validation.data });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -86,7 +93,12 @@ export function setupAutomationHandlers(automationManager: AutomationManager) {
       const task = await automationManager.addKeyword(sessionValidation.data, keywordValidation.data);
       return { success: true, task };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add keyword';
+      console.error('[IPC:automation:addKeyword] Error:', errorMessage, { 
+        sessionId: sessionValidation.data,
+        keyword: keywordValidation.data.substring(0, 50) 
+      });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -115,7 +127,9 @@ export function setupAutomationHandlers(automationManager: AutomationManager) {
       const targetDomain = await automationManager.addTargetDomain(domainValidation.data, pattern);
       return { success: true, domain: targetDomain };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add domain';
+      console.error('[IPC:automation:addDomain] Error:', errorMessage, { domain: domainValidation.data });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -137,7 +151,9 @@ export function setupAutomationHandlers(automationManager: AutomationManager) {
       const session = automationManager.getSession(validation.data);
       return { success: true, tasks: session?.tasks || [] };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get tasks';
+      console.error('[IPC:automation:getTasks] Error:', errorMessage, { sessionId: validation.data });
+      return { success: false, error: errorMessage };
     }
   });
 

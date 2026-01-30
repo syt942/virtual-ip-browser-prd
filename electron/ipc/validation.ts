@@ -136,9 +136,15 @@ export const SafeUrlSchema = z.string()
         }
         
         return true;
-      } catch {
-        // Allow relative URLs
-        return url.startsWith('/') || url.startsWith('./');
+      } catch (error) {
+        // URL parsing failed - allow relative URLs but log for debugging
+        // This is expected for relative paths like "/page" or "./resource"
+        const isRelativeUrl = url.startsWith('/') || url.startsWith('./');
+        if (!isRelativeUrl) {
+          console.debug('[IPC Validation] URL parse failed, not a relative URL:', 
+            url.substring(0, 50), error instanceof Error ? error.message : 'Parse error');
+        }
+        return isRelativeUrl;
       }
     },
     { message: 'Invalid or blocked URL' }
@@ -201,7 +207,15 @@ export const DomainPatternSchema = z.string()
   .refine(
     (pattern) => {
       if (!pattern) return true;
-      try { new RegExp(pattern); return true; } catch { return false; }
+      try { 
+        new RegExp(pattern); 
+        return true; 
+      } catch (error) { 
+        // Invalid regex pattern - log for debugging
+        console.debug('[IPC Validation] Invalid regex pattern:', pattern,
+          error instanceof Error ? error.message : 'Invalid regex');
+        return false; 
+      }
     },
     { message: 'Invalid regex pattern' }
   )
@@ -240,7 +254,12 @@ export const TimezoneSchema = z.string()
       try {
         Intl.DateTimeFormat(undefined, { timeZone: tz });
         return true;
-      } catch { return false; }
+      } catch (error) { 
+        // Invalid timezone - Intl.DateTimeFormat threw an error
+        console.debug('[IPC Validation] Invalid timezone:', tz,
+          error instanceof Error ? error.message : 'Invalid timezone');
+        return false; 
+      }
     },
     { message: 'Invalid timezone' }
   );
@@ -304,31 +323,49 @@ export function validateInput<T>(
   // Handle different Zod versions - some have .errors array, some have .issues
   let errorMessages = 'Validation failed';
   
+  /** Zod validation issue structure */
+  interface ZodIssue {
+    path?: (string | number)[];
+    message: string;
+  }
+  
+  /** Zod error-like structure compatible with multiple versions */
+  interface ZodErrorLike {
+    issues?: ZodIssue[];
+    errors?: ZodIssue[];
+    message?: string;
+  }
+  
   try {
-    const zodError = result.error;
+    const zodError = result.error as ZodErrorLike;
     if (zodError && typeof zodError === 'object') {
       // Try to get issues/errors array
-      const issues = (zodError as any).issues || (zodError as any).errors;
+      const issues = zodError.issues || zodError.errors;
       if (Array.isArray(issues)) {
         errorMessages = issues
-          .map((e: any) => `${e.path?.length > 0 ? e.path.join('.') + ': ' : ''}${e.message}`)
+          .map((e: ZodIssue) => `${e.path?.length ? e.path.join('.') + ': ' : ''}${e.message}`)
           .join(', ');
       } else if (zodError.message) {
         // Try to parse the message as JSON (newer Zod versions)
         try {
-          const parsed = JSON.parse(zodError.message);
+          const parsed = JSON.parse(zodError.message) as ZodIssue[];
           if (Array.isArray(parsed)) {
             errorMessages = parsed
-              .map((e: any) => `${e.path?.length > 0 ? e.path.join('.') + ': ' : ''}${e.message}`)
+              .map((e: ZodIssue) => `${e.path?.length ? e.path.join('.') + ': ' : ''}${e.message}`)
               .join(', ');
           }
-        } catch {
+        } catch (parseError) {
+          // JSON parse of error message failed - use raw message
+          console.debug('[IPC Validation] Failed to parse Zod error JSON:', 
+            parseError instanceof Error ? parseError.message : 'Parse error');
           errorMessages = zodError.message;
         }
       }
     }
-  } catch {
-    // Fallback to default message
+  } catch (extractError) {
+    // Failed to extract error details - use fallback message
+    console.debug('[IPC Validation] Failed to extract validation error details:',
+      extractError instanceof Error ? extractError.message : 'Unknown error');
   }
   
   return { success: false, error: errorMessages };
@@ -353,7 +390,9 @@ export function createValidatedHandler<TInput, TOutput>(
       const result = await handler(validData);
       return { success: true, data: result };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Unknown handler error';
+      console.error('[IPC Validation] Handler execution failed:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   };
 }

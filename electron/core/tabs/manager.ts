@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { BrowserView, BrowserWindow } from 'electron';
-import type { TabConfig } from './types';
+import type { TabConfig, FingerprintConfig } from './types';
 import type { PrivacyManager } from '../privacy/manager';
 import type { ProxyManager } from '../proxy-engine/manager';
 
@@ -250,7 +250,7 @@ export class TabManager extends EventEmitter {
    */
   private async applyFingerprintProtection(
     view: BrowserView,
-    fingerprint: any
+    fingerprint: FingerprintConfig
   ): Promise<void> {
     if (!this.privacyManager) return;
 
@@ -259,8 +259,8 @@ export class TabManager extends EventEmitter {
       canvas: fingerprint.canvas !== false,
       webgl: fingerprint.webgl !== false,
       audio: fingerprint.audio !== false,
-      navigator: fingerprint.navigator !== false,
-      timezone: fingerprint.timezone !== false,
+      navigator: fingerprint.navigator !== false && fingerprint.navigator !== undefined,
+      timezone: typeof fingerprint.timezone === 'string' || fingerprint.timezone === true,
       webrtc: true,
       trackerBlocking: true
     });

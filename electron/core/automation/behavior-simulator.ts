@@ -3,6 +3,66 @@
  * Generates human-like behavior patterns for automation
  */
 
+import {
+  DEFAULT_TYPING_SPEED_MIN_MS,
+  DEFAULT_TYPING_SPEED_MAX_MS,
+  DEFAULT_VARIANCE_PERCENT,
+  TYPING_PAUSE_PROBABILITY,
+  TYPING_PAUSE_MIN_MS,
+  TYPING_PAUSE_MAX_MS,
+  MAX_INITIAL_SCROLL_TIME_MS,
+  INITIAL_SCROLL_TIME_FRACTION,
+  MIN_REMAINING_TIME_MS,
+  READING_TIME_MEAN_MS,
+  READING_TIME_STD_DEV_MS,
+  READING_TIME_MAX_FRACTION,
+  MIN_READING_TIME_MS,
+  MIN_TIME_FOR_SCROLL_MS,
+  SCROLL_DURATION_MIN_MS,
+  SCROLL_DURATION_RANGE_MS,
+  SCROLL_TIME_MAX_FRACTION,
+  MOUSE_MOVE_PROBABILITY,
+  MIN_TIME_FOR_MOUSE_MOVE_MS,
+  MOUSE_MOVE_DURATION_MIN_MS,
+  MOUSE_MOVE_DURATION_RANGE_MS,
+  MOUSE_MOVE_TIME_MAX_FRACTION,
+  PAUSE_PROBABILITY,
+  MIN_TIME_FOR_PAUSE_MS,
+  PAUSE_DURATION_MIN_MS,
+  PAUSE_DURATION_RANGE_MS,
+  PAUSE_TIME_MAX_FRACTION,
+  MIN_SCROLL_SEGMENTS,
+  SCROLL_SEGMENTS_RANGE,
+  SEGMENT_HEIGHT_MIN_MULTIPLIER,
+  SEGMENT_HEIGHT_VARIANCE,
+  SCROLL_ANIMATION_MIN_MS,
+  SCROLL_ANIMATION_RANGE_MS,
+  SCROLL_PAUSE_PROBABILITY,
+  SCROLL_PAUSE_MIN_MS,
+  SCROLL_PAUSE_RANGE_MS,
+  SCROLL_DEPTHS,
+  SCROLL_DEPTH_WEIGHTS,
+  MOUSE_BASE_DELAY_MS,
+  MOUSE_MIN_SPEED_FACTOR,
+  MOUSE_MAX_JITTER_PX,
+  DEFAULT_JITTER_PX,
+  READING_WPM_MEAN,
+  READING_WPM_STD_DEV,
+  AVERAGE_WORD_LENGTH,
+  READING_TIME_MIN_VARIANCE,
+  READING_TIME_VARIANCE_RANGE,
+  READING_SCROLL_INTERVAL_MS,
+  READING_MOUSE_INTERVAL_MS,
+  NAVIGATION_DELAY_MEAN_MS,
+  NAVIGATION_DELAY_STD_DEV_MS,
+  HOVER_DELAY_MIN_MS,
+  HOVER_DELAY_RANGE_MS,
+  CLICK_DELAY_MIN_MS,
+  CLICK_DELAY_RANGE_MS,
+  CLICK_HOLD_MIN_MS,
+  CLICK_HOLD_RANGE_MS
+} from './constants';
+
 export interface Point {
   x: number;
   y: number;
@@ -23,9 +83,9 @@ export interface BehaviorConfig {
 }
 
 const DEFAULT_CONFIG: BehaviorConfig = {
-  typingSpeedMin: 50,
-  typingSpeedMax: 200,
-  variancePercent: 0.3,
+  typingSpeedMin: DEFAULT_TYPING_SPEED_MIN_MS,
+  typingSpeedMax: DEFAULT_TYPING_SPEED_MAX_MS,
+  variancePercent: DEFAULT_VARIANCE_PERCENT,
 };
 
 export class BehaviorSimulator {
@@ -71,8 +131,8 @@ export class BehaviorSimulator {
       totalDelay += this.generateTypingDelay();
       
       // Occasional longer pause (thinking)
-      if (Math.random() < 0.05) {
-        totalDelay += Math.floor(Math.random() * 300) + 100;
+      if (Math.random() < TYPING_PAUSE_PROBABILITY) {
+        totalDelay += Math.floor(Math.random() * (TYPING_PAUSE_MAX_MS - TYPING_PAUSE_MIN_MS)) + TYPING_PAUSE_MIN_MS;
       }
     }
     
@@ -87,42 +147,42 @@ export class BehaviorSimulator {
     let remainingTime = totalDuration;
 
     // Initial scroll
-    const initialScrollTime = Math.min(remainingTime * 0.1, 2000);
+    const initialScrollTime = Math.min(remainingTime * INITIAL_SCROLL_TIME_FRACTION, MAX_INITIAL_SCROLL_TIME_MS);
     actions.push({ type: 'scroll', duration: initialScrollTime });
     remainingTime -= initialScrollTime;
 
     // Main interaction loop
-    while (remainingTime > 5000) {
+    while (remainingTime > MIN_REMAINING_TIME_MS) {
       // Reading phase
       const readTime = Math.min(
-        this.generateGaussianRandom(8000, 3000),
-        remainingTime * 0.4
+        this.generateGaussianRandom(READING_TIME_MEAN_MS, READING_TIME_STD_DEV_MS),
+        remainingTime * READING_TIME_MAX_FRACTION
       );
-      if (readTime > 1000) {
-        actions.push({ type: 'read', duration: Math.max(1000, readTime) });
+      if (readTime > MIN_READING_TIME_MS) {
+        actions.push({ type: 'read', duration: Math.max(MIN_READING_TIME_MS, readTime) });
         remainingTime -= readTime;
       }
 
       // Scroll phase
-      if (remainingTime > 3000) {
+      if (remainingTime > MIN_TIME_FOR_SCROLL_MS) {
         const scrollTime = Math.min(
-          Math.random() * 1500 + 500,
-          remainingTime * 0.1
+          Math.random() * SCROLL_DURATION_RANGE_MS + SCROLL_DURATION_MIN_MS,
+          remainingTime * SCROLL_TIME_MAX_FRACTION
         );
         actions.push({ type: 'scroll', duration: scrollTime });
         remainingTime -= scrollTime;
       }
 
       // Optional mouse movement
-      if (Math.random() < 0.3 && remainingTime > 2000) {
-        const moveTime = Math.min(Math.random() * 500 + 200, remainingTime * 0.05);
+      if (Math.random() < MOUSE_MOVE_PROBABILITY && remainingTime > MIN_TIME_FOR_MOUSE_MOVE_MS) {
+        const moveTime = Math.min(Math.random() * MOUSE_MOVE_DURATION_RANGE_MS + MOUSE_MOVE_DURATION_MIN_MS, remainingTime * MOUSE_MOVE_TIME_MAX_FRACTION);
         actions.push({ type: 'mousemove', duration: moveTime });
         remainingTime -= moveTime;
       }
 
       // Optional pause (simulating focus change or distraction)
-      if (Math.random() < 0.2 && remainingTime > 3000) {
-        const pauseTime = Math.min(Math.random() * 2000 + 500, remainingTime * 0.1);
+      if (Math.random() < PAUSE_PROBABILITY && remainingTime > MIN_TIME_FOR_PAUSE_MS) {
+        const pauseTime = Math.min(Math.random() * PAUSE_DURATION_RANGE_MS + PAUSE_DURATION_MIN_MS, remainingTime * PAUSE_TIME_MAX_FRACTION);
         actions.push({ type: 'pause', duration: pauseTime });
         remainingTime -= pauseTime;
       }
@@ -139,7 +199,7 @@ export class BehaviorSimulator {
   /**
    * Add jitter to a point for more human-like positioning
    */
-  addJitter(point: Point, maxJitter: number = 3): Point {
+  addJitter(point: Point, maxJitter: number = DEFAULT_JITTER_PX): Point {
     return {
       x: point.x + (Math.random() - 0.5) * maxJitter * 2,
       y: point.y + (Math.random() - 0.5) * maxJitter * 2,
@@ -159,17 +219,17 @@ export class BehaviorSimulator {
     const targetPosition = pageHeight * targetDepth;
     
     let currentPosition = 0;
-    const segments = Math.floor(Math.random() * 4) + 3; // 3-6 scroll segments
+    const segments = Math.floor(Math.random() * SCROLL_SEGMENTS_RANGE) + MIN_SCROLL_SEGMENTS;
     const segmentHeight = targetPosition / segments;
 
     for (let i = 0; i < segments; i++) {
-      currentPosition += segmentHeight * (0.8 + Math.random() * 0.4);
+      currentPosition += segmentHeight * (SEGMENT_HEIGHT_MIN_MULTIPLIER + Math.random() * SEGMENT_HEIGHT_VARIANCE);
       currentPosition = Math.min(currentPosition, targetPosition);
 
       behaviors.push({
         scrollTo: Math.round(currentPosition),
-        duration: Math.floor(Math.random() * 800) + 400,
-        pauseAfter: Math.random() < 0.6 ? Math.floor(Math.random() * 2000) + 500 : 0,
+        duration: Math.floor(Math.random() * SCROLL_ANIMATION_RANGE_MS) + SCROLL_ANIMATION_MIN_MS,
+        pauseAfter: Math.random() < SCROLL_PAUSE_PROBABILITY ? Math.floor(Math.random() * SCROLL_PAUSE_RANGE_MS) + SCROLL_PAUSE_MIN_MS : 0,
       });
     }
 
@@ -180,20 +240,17 @@ export class BehaviorSimulator {
    * Generate scroll depth
    */
   private generateScrollDepth(): number {
-    const depths = [0.4, 0.6, 0.75, 0.9, 1.0];
-    const weights = [0.15, 0.3, 0.3, 0.15, 0.1];
-    
     const random = Math.random();
     let cumulative = 0;
     
-    for (let i = 0; i < weights.length; i++) {
-      cumulative += weights[i];
+    for (let i = 0; i < SCROLL_DEPTH_WEIGHTS.length; i++) {
+      cumulative += SCROLL_DEPTH_WEIGHTS[i];
       if (random < cumulative) {
-        return depths[i];
+        return SCROLL_DEPTHS[i];
       }
     }
     
-    return depths[depths.length - 1];
+    return SCROLL_DEPTHS[SCROLL_DEPTHS.length - 1];
   }
 
   /**
@@ -206,8 +263,7 @@ export class BehaviorSimulator {
       const progress = i / pathLength;
       // Slower at start and end (ease-in-out effect)
       const speedFactor = 1 - Math.pow(Math.abs(progress - 0.5) * 2, 2);
-      const baseDelay = 15;
-      const delay = baseDelay / Math.max(0.3, speedFactor) + Math.random() * 8;
+      const delay = MOUSE_BASE_DELAY_MS / Math.max(MOUSE_MIN_SPEED_FACTOR, speedFactor) + Math.random() * MOUSE_MAX_JITTER_PX;
       timings.push(Math.round(delay));
     }
     
@@ -222,17 +278,17 @@ export class BehaviorSimulator {
     scrollEvents: number;
     mouseMovements: number;
   } {
-    const wordsPerMinute = this.generateGaussianRandom(200, 50);
-    const estimatedWords = contentLength / 5; // Average word length
+    const wordsPerMinute = this.generateGaussianRandom(READING_WPM_MEAN, READING_WPM_STD_DEV);
+    const estimatedWords = contentLength / AVERAGE_WORD_LENGTH;
     const baseReadTime = (estimatedWords / wordsPerMinute) * 60 * 1000;
     
     // Add variance
-    const totalTime = baseReadTime * (0.8 + Math.random() * 0.4);
+    const totalTime = baseReadTime * (READING_TIME_MIN_VARIANCE + Math.random() * READING_TIME_VARIANCE_RANGE);
     
     return {
       totalTime: Math.round(totalTime),
-      scrollEvents: Math.floor(totalTime / 8000) + 1,
-      mouseMovements: Math.floor(totalTime / 15000),
+      scrollEvents: Math.floor(totalTime / READING_SCROLL_INTERVAL_MS) + 1,
+      mouseMovements: Math.floor(totalTime / READING_MOUSE_INTERVAL_MS),
     };
   }
 
@@ -241,7 +297,7 @@ export class BehaviorSimulator {
    */
   generateNavigationDelay(): number {
     // 2-8 seconds between pages
-    return Math.floor(this.generateGaussianRandom(4000, 1500));
+    return Math.floor(this.generateGaussianRandom(NAVIGATION_DELAY_MEAN_MS, NAVIGATION_DELAY_STD_DEV_MS));
   }
 
   /**
@@ -260,9 +316,9 @@ export class BehaviorSimulator {
     holdDuration: number;
   } {
     return {
-      hoverDelay: Math.floor(Math.random() * 300) + 100, // Time hovering before click
-      clickDelay: Math.floor(Math.random() * 50) + 20,   // Time to initiate click
-      holdDuration: Math.floor(Math.random() * 80) + 40, // Mouse button hold time
+      hoverDelay: Math.floor(Math.random() * HOVER_DELAY_RANGE_MS) + HOVER_DELAY_MIN_MS, // Time hovering before click
+      clickDelay: Math.floor(Math.random() * CLICK_DELAY_RANGE_MS) + CLICK_DELAY_MIN_MS,   // Time to initiate click
+      holdDuration: Math.floor(Math.random() * CLICK_HOLD_RANGE_MS) + CLICK_HOLD_MIN_MS, // Mouse button hold time
     };
   }
 }

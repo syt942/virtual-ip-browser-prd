@@ -16,11 +16,23 @@ export interface PrivacySettings {
   trackerBlocking: boolean;
 }
 
+/** Navigator spoofing configuration */
+export interface NavigatorSpoofConfig {
+  userAgent?: string;
+  platform?: string;
+  language?: string;
+  languages?: string[];
+  vendor?: string;
+  hardwareConcurrency?: number;
+  deviceMemory?: number;
+  maxTouchPoints?: number;
+}
+
 export interface FingerprintProfile {
   id: string;
   name: string;
   settings: PrivacySettings;
-  navigatorConfig?: any;
+  navigatorConfig?: NavigatorSpoofConfig;
   timezoneRegion?: string;
   isActive: boolean;
 }

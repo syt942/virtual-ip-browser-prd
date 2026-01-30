@@ -3,7 +3,7 @@
  * Handles extracting and parsing search results from various search engines
  */
 
-import { BrowserView } from 'electron';
+import type { AutomationViewLike } from '../executor';
 import type { SearchEngine, SearchResult } from '../types';
 
 // Search engine configurations
@@ -158,7 +158,7 @@ export class SearchResultExtractor {
    * Extract search results from page
    */
   async extractResults(
-    view: BrowserView,
+    view: AutomationViewLike,
     engine: SearchEngine
   ): Promise<SearchResult[]> {
     const selector = SEARCH_ENGINE_CONFIGS[engine].selector;
@@ -197,7 +197,7 @@ export class SearchResultExtractor {
           
           return results;
         })();
-      `);
+      `) as SearchResult[];
 
       return results;
     } catch (error) {

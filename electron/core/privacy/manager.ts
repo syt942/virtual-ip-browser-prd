@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import { CanvasFingerprintProtection } from './fingerprint/canvas';
 import { WebGLFingerprintProtection } from './fingerprint/webgl';
 import { AudioFingerprintProtection } from './fingerprint/audio';
-import { NavigatorFingerprintProtection } from './fingerprint/navigator';
+import { NavigatorFingerprintProtection, type NavigatorSpoofConfig } from './fingerprint/navigator';
 import { TimezoneFingerprintProtection } from './fingerprint/timezone';
 import { WebRTCProtection } from './webrtc';
 import { TrackerBlocker } from './tracker-blocker';
@@ -20,7 +20,7 @@ export interface PrivacyConfig {
   timezone: boolean;
   webrtc: boolean;
   trackerBlocking: boolean;
-  navigatorConfig?: any;
+  navigatorConfig?: NavigatorSpoofConfig;
   timezoneRegion?: string;
 }
 

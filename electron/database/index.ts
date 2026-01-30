@@ -339,8 +339,11 @@ export class DatabaseManager {
 
   /**
    * Execute a query
+   * @template T - The expected row type
+   * @param sql - SQL query string
+   * @param params - Array of parameters to bind (string, number, bigint, Buffer, null, or undefined)
    */
-  query<T = any>(sql: string, params?: any[]): T[] {
+  query<T = Record<string, unknown>>(sql: string, params?: unknown[]): T[] {
     if (!this.db) throw new Error('Database not initialized');
     const stmt = this.db.prepare(sql);
     return stmt.all(params) as T[];
@@ -348,8 +351,11 @@ export class DatabaseManager {
 
   /**
    * Execute a single row query
+   * @template T - The expected row type
+   * @param sql - SQL query string
+   * @param params - Array of parameters to bind
    */
-  queryOne<T = any>(sql: string, params?: any[]): T | undefined {
+  queryOne<T = Record<string, unknown>>(sql: string, params?: unknown[]): T | undefined {
     if (!this.db) throw new Error('Database not initialized');
     const stmt = this.db.prepare(sql);
     return stmt.get(params) as T | undefined;
@@ -357,8 +363,10 @@ export class DatabaseManager {
 
   /**
    * Execute an insert/update/delete
+   * @param sql - SQL statement string
+   * @param params - Array of parameters to bind
    */
-  execute(sql: string, params?: any[]): Database.RunResult {
+  execute(sql: string, params?: unknown[]): Database.RunResult {
     if (!this.db) throw new Error('Database not initialized');
     const stmt = this.db.prepare(sql);
     return stmt.run(params);

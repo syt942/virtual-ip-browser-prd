@@ -223,6 +223,123 @@ ipcMain.handle('proxy:add', async (_, data) => {
 });
 ```
 
+### Named Constants (No Magic Numbers)
+
+All numeric and string literals with special meaning must be defined as named constants:
+
+1. **Location**: Create constants in dedicated `constants.ts` files within each module
+2. **Naming**: Use `UPPER_SNAKE_CASE` for constant names
+3. **Documentation**: Add JSDoc comments explaining the purpose and origin of values
+
+```typescript
+// ✅ Good - Named constant with documentation
+/** WebGL extension parameter for unmasked vendor string */
+export const WEBGL_UNMASKED_VENDOR = 37445;
+
+if (parameter === WEBGL_UNMASKED_VENDOR) {
+  return spoofConfig.vendor;
+}
+
+// ❌ Bad - Magic number
+if (parameter === 37445) {
+  return spoofConfig.vendor;
+}
+```
+
+**Constants Files**:
+- `electron/core/privacy/fingerprint/constants.ts` - WebGL, canvas constants
+- `electron/core/resilience/constants.ts` - Circuit breaker constants
+- `electron/core/automation/constants.ts` - Automation, scheduler constants
+
+### Error Handling Standards
+
+All error handling must follow these patterns:
+
+1. **Always bind error variable**: Use `catch (error)` not `catch`
+2. **Type-safe extraction**: Check `error instanceof Error` before accessing `.message`
+3. **Contextual logging**: Include operation name and relevant context
+4. **Use custom error classes**: For domain-specific errors
+
+```typescript
+// ✅ Good - Proper error handling
+import { ProxyConnectionError, getErrorMessage } from '../errors';
+
+try {
+  await connectProxy(config);
+} catch (error) {
+  const errorMessage = getErrorMessage(error);
+  console.error('[Proxy] Connection failed:', {
+    operation: 'connectProxy',
+    proxyId: config.id,
+    error: errorMessage
+  });
+  throw new ProxyConnectionError(errorMessage, {
+    code: 'CONNECTION_FAILED',
+    operation: 'connectProxy',
+    proxyId: config.id
+  });
+}
+
+// ❌ Bad - Empty catch block
+try {
+  await connectProxy(config);
+} catch {
+  // Silent failure
+}
+
+// ❌ Bad - Unsafe type assertion
+} catch (error) {
+  console.log((error as Error).message);
+}
+```
+
+**Custom Error Classes** (in `electron/core/errors/index.ts`):
+- `AppError` - Base error class
+- `ProxyConnectionError` - Proxy operations
+- `DatabaseError` - Database operations
+- `IPCError` - IPC communication
+- `AutomationError` - Automation tasks
+- `EncryptionError` - Credential encryption
+- `NetworkError` - Network operations
+
+### No `any` Types Policy
+
+TypeScript's `any` type defeats type safety. Avoid it:
+
+1. **Use specific types**: Define interfaces for complex objects
+2. **Use `unknown`**: When type is truly unknown, use `unknown` and narrow with type guards
+3. **Use generics**: For reusable code with variable types
+
+```typescript
+// ✅ Good - Specific interface
+interface ProxyConfig {
+  host: string;
+  port: number;
+  protocol: 'http' | 'https' | 'socks4' | 'socks5';
+}
+
+function validateProxy(config: ProxyConfig): boolean {
+  // Type-safe access
+}
+
+// ✅ Good - Unknown with type guard
+function handleError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+// ❌ Bad - Using any
+function validateProxy(config: any): boolean {
+  // No type safety
+}
+```
+
+**Acceptable `any` uses** (rare exceptions):
+- Dynamic metadata storage: `Record<string, unknown>` preferred
+- Third-party library interop where types unavailable
+
 ---
 
 ## Pull Request Process

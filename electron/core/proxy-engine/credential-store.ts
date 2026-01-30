@@ -19,8 +19,11 @@ try {
   // Dynamic import to handle both main process and test environments
   const electron = require('electron');
   safeStorage = electron.safeStorage;
-} catch {
+} catch (error) {
   // safeStorage not available (running in tests or renderer)
+  // This is expected in test environments and renderer process
+  console.debug('[CredentialStore] safeStorage not available:', 
+    error instanceof Error ? error.message : 'Unknown error');
   safeStorage = null;
 }
 
@@ -68,7 +71,10 @@ export interface DecryptedCredentials {
 export function isSafeStorageAvailable(): boolean {
   try {
     return safeStorage !== null && safeStorage.isEncryptionAvailable();
-  } catch {
+  } catch (error) {
+    // safeStorage.isEncryptionAvailable() may throw if called before app is ready
+    console.debug('[CredentialStore] Failed to check safeStorage availability:', 
+      error instanceof Error ? error.message : 'Unknown error');
     return false;
   }
 }

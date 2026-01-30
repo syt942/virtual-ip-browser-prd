@@ -15,6 +15,11 @@ import { EventEmitter } from 'events';
 import type { TaskSchedule, ScheduleType } from './types';
 import { CronParser, CronParseError } from './cron-parser';
 import type { ParsedCron, CronValidationResult } from './cron-parser';
+import {
+  CRON_CHECK_INTERVAL_MS,
+  CONTINUOUS_SCHEDULE_DELAY_MS,
+  MAX_DAY_SEARCH_ITERATIONS
+} from './constants';
 
 export class TaskScheduler extends EventEmitter {
   private schedules: Map<string, TaskSchedule> = new Map();
@@ -48,7 +53,7 @@ export class TaskScheduler extends EventEmitter {
         return;
       }
       this.checkSchedules();
-    }, 60000);
+    }, CRON_CHECK_INTERVAL_MS);
 
     console.log('[Scheduler] Task scheduler started');
     this.emit('scheduler:started');
@@ -128,7 +133,10 @@ export class TaskScheduler extends EventEmitter {
     try {
       const parsed = this.cronParser.parse(expression);
       return this.cronParser.getNextExecution(parsed, fromTime);
-    } catch {
+    } catch (error) {
+      // Invalid cron expression - return null to indicate no next execution
+      console.debug('[Scheduler] Failed to parse cron expression:', expression,
+        error instanceof Error ? error.message : 'Unknown error');
       return null;
     }
   }
@@ -145,7 +153,10 @@ export class TaskScheduler extends EventEmitter {
     try {
       const parsed = this.cronParser.parse(expression);
       return this.cronParser.getNextExecutions(parsed, count, fromTime);
-    } catch {
+    } catch (error) {
+      // Invalid cron expression - return empty array to indicate no executions
+      console.debug('[Scheduler] Failed to get cron executions for:', expression,
+        error instanceof Error ? error.message : 'Unknown error');
       return [];
     }
   }
@@ -364,7 +375,7 @@ export class TaskScheduler extends EventEmitter {
 
       case 'continuous':
         // Run immediately after completion (with small delay to prevent CPU spinning)
-        const continuousNext = new Date(now.getTime() + 1000);
+        const continuousNext = new Date(now.getTime() + CONTINUOUS_SCHEDULE_DELAY_MS);
         return continuousNext;
 
       case 'cron':
@@ -414,9 +425,8 @@ export class TaskScheduler extends EventEmitter {
       ? new Date(schedule.lastRun.getTime() + intervalMinutes * 60000)
       : (startTime && startTime > now ? startTime : now);
 
-    // Find the next valid day
-    const maxIterations = 7; // Check up to a week ahead
-    for (let i = 0; i < maxIterations; i++) {
+    // Find the next valid day (check up to a week ahead)
+    for (let i = 0; i < MAX_DAY_SEARCH_ITERATIONS; i++) {
       if (daysOfWeek.includes(candidate.getDay())) {
         if (candidate > now) {
           return candidate;

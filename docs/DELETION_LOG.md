@@ -361,3 +361,78 @@ After each phase:
 - `canvas-confetti` suggests celebration animations were planned
 - `class-variance-authority` is typically used with shadcn/ui but components use custom styling
 - The codebase shows signs of multiple refactoring attempts (Enhanced* components replacing originals)
+
+## [2025-01-XX] TypeScript 'any' Type Reduction
+
+### Summary
+Systematic reduction of `any` type usage across the codebase to improve type safety.
+
+### Initial Count
+- Total 'any' usage in source files: **134 instances**
+- Breakdown:
+  - `: any` (type annotations): ~90 instances
+  - `as any` (type assertions): ~44 instances
+
+### Final Count (excluding tests)
+- Total 'any' usage in source files: **1 instance**
+- The remaining instance is intentional: `BoundEventHandler` type in `electron/core/automation/manager.ts`
+  - Reason: Required for EventEmitter compatibility with Node.js event system
+
+### Files Modified
+
+#### Core Type Definitions
+- `electron/types/common.ts` - **CREATED** - New shared types for common patterns
+- `electron/core/proxy-engine/types.ts` - Added `RuleActionParams` interface
+- `electron/core/tabs/types.ts` - Updated `FingerprintConfig` interface
+- `electron/core/automation/executor.ts` - Added `AutomationViewLike` interface
+- `electron/core/automation/types.ts` - Reference file (no changes needed)
+
+#### Logger & Database
+- `electron/utils/logger.ts` - Replaced `any` with `LogMetadata` and `ActivityLogRow`
+- `electron/database/index.ts` - Changed `any[]` params to `unknown[]`
+
+#### Repository Files
+- `electron/database/repositories/proxy.repository.ts` - Added `ProxyRow` interface
+- `electron/database/repositories/proxy-usage-stats.repository.ts` - Added typed row interfaces
+- `electron/database/repositories/execution-logs.repository.ts` - Added `ExecutionSummaryRow` interface
+- `electron/database/repositories/creator-support-history.repository.ts` - Added `CreatorStatsRow` interface
+- `electron/database/repositories/rotation-config.repository.ts` - Added `StrategySpecificConfig` interface
+- `electron/database/repositories/sticky-session.repository.ts` - Added inline type for stats query
+- `electron/database/repositories/encrypted-credentials.repository.ts` - Changed `any[]` to `unknown[]`
+- `electron/database/repositories/rotation-rules.repository.ts` - Changed `any[]` to `unknown[]`
+
+#### Core Modules
+- `electron/core/automation/manager.ts` - Updated event handler types with comments
+- `electron/core/automation/search-engine.ts` - Updated to use `AutomationViewLike`
+- `electron/core/automation/search/search-executor.ts` - Updated to use `AutomationViewLike`
+- `electron/core/automation/search/result-extractor.ts` - Updated to use `AutomationViewLike`
+- `electron/core/proxy-engine/strategies/custom-rules.ts` - Typed constructor with `RotationConfig`
+- `electron/core/privacy/manager.ts` - Typed `navigatorConfig` with `NavigatorSpoofConfig`
+- `electron/core/session/manager.ts` - Added `SessionRow` interface, typed `privacyConfig`
+- `electron/core/tabs/manager.ts` - Typed `fingerprint` parameter with `FingerprintConfig`
+
+#### IPC & Preload
+- `electron/ipc/validation.ts` - Added `ZodIssue` and `ZodErrorLike` interfaces
+- `electron/main/preload.ts` - Fixed callback type assertion with documentation
+
+#### Frontend Files
+- `src/stores/privacyStore.ts` - Added `NavigatorSpoofConfig` interface
+- `src/hooks/useActivityLogs.ts` - Added `RawLogEntry` interface, typed metadata
+- `src/components/dashboard/ActivityLog.tsx` - Added `RawLogEntry` interface, typed queries
+- `src/components/browser/EnhancedAutomationPanel.tsx` - Typed select onChange handler
+- `src/components/browser/EnhancedProxyPanel.tsx` - Typed select onChange handler
+
+### Test Coverage
+- 75 `any` usages remain in test files (`tests/` directory)
+- These are acceptable for test mocks and fixtures
+
+### Verification
+- ✅ TypeScript compilation passes (`npx tsc --noEmit`)
+- ✅ Build succeeds (`npm run build`)
+
+### Impact
+- **Type safety significantly improved**
+- **Better IDE autocompletion and error detection**
+- **Reduced risk of runtime type errors**
+- **Code more self-documenting with explicit types**
+

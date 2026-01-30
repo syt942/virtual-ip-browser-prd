@@ -6,8 +6,8 @@
  * Implementation details are in separate modules under ./search/
  */
 
-import { BrowserView } from 'electron';
 import type { SearchEngine, SearchResult } from './types';
+import type { AutomationViewLike } from './executor';
 import { 
   SearchExecutor, 
   SearchResultExtractor,
@@ -76,7 +76,7 @@ export class SearchEngineAutomation {
    * Perform a search with circuit breaker protection
    */
   async performSearch(
-    view: BrowserView,
+    view: AutomationViewLike,
     keyword: string,
     engine: SearchEngine
   ): Promise<SearchResult[]> {
@@ -112,14 +112,14 @@ export class SearchEngineAutomation {
   /**
    * Click on a result with human-like behavior
    */
-  async clickResult(view: BrowserView, position: number): Promise<void> {
+  async clickResult(view: AutomationViewLike, position: number): Promise<void> {
     return this.executor.clickResult(view, position);
   }
 
   /**
    * Simulate human behavior on page
    */
-  async simulateHumanBehavior(view: BrowserView): Promise<void> {
+  async simulateHumanBehavior(view: AutomationViewLike): Promise<void> {
     return this.executor.simulateHumanBehavior(view);
   }
 
@@ -159,7 +159,7 @@ export class SearchEngineAutomation {
    * Perform a search with translation support
    */
   async performSearchWithTranslation(
-    view: BrowserView,
+    view: AutomationViewLike,
     keyword: string,
     engine: SearchEngine,
     proxyCountry?: string,

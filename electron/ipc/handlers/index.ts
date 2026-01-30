@@ -59,7 +59,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       const proxy = await proxyManager.addProxy(validation.data);
       return { success: true, proxy };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add proxy';
+      console.error('[IPC:proxy:add] Error:', errorMessage, { host: validation.data.host });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -80,7 +82,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       const result = proxyManager.removeProxy(validation.data);
       return { success: result };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to remove proxy';
+      console.error('[IPC:proxy:remove] Error:', errorMessage, { proxyId: validation.data });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -95,7 +99,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       const proxies = proxyManager.getAllProxies();
       return { success: true, proxies };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to list proxies';
+      console.error('[IPC:proxy:list] Error:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -116,7 +122,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       const result = await proxyManager.validateProxy(validation.data);
       return { success: true, result };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Proxy validation failed';
+      console.error('[IPC:proxy:validate] Error:', errorMessage, { proxyId: validation.data });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -137,7 +145,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       proxyManager.setRotationStrategy(validation.data);
       return { success: true };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to set rotation strategy';
+      console.error('[IPC:proxy:setRotation] Error:', errorMessage, { strategy: validation.data.strategy });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -159,7 +169,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       const tab = await tabManager.createTab(validation.data);
       return { success: true, tab };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create tab';
+      console.error('[IPC:tab:create] Error:', errorMessage, { url: validation.data.url });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -180,7 +192,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       const result = tabManager.closeTab(validation.data);
       return { success: result };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to close tab';
+      console.error('[IPC:tab:close] Error:', errorMessage, { tabId: validation.data });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -195,7 +209,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       const tabs = tabManager.getAllTabs();
       return { success: true, tabs };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to list tabs';
+      console.error('[IPC:tab:list] Error:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -221,7 +237,9 @@ export function setupIpcHandlers(context: HandlerContext) {
       const tab = tabManager.updateTab(idValidation.data, updatesValidation.data);
       return { success: true, tab };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update tab';
+      console.error('[IPC:tab:update] Error:', errorMessage, { tabId: idValidation.data });
+      return { success: false, error: errorMessage };
     }
   });
 

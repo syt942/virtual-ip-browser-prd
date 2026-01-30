@@ -804,6 +804,114 @@ Provides fault tolerance patterns for the application:
 
 ---
 
+## Error Handling Architecture (v1.2.1)
+
+The application uses a comprehensive error handling system with custom error classes and consistent patterns.
+
+### Error Class Hierarchy
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          ERROR CLASS HIERARCHY                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│                           ┌─────────────┐                                   │
+│                           │   Error     │  (JavaScript built-in)            │
+│                           └──────┬──────┘                                   │
+│                                  │                                          │
+│                           ┌──────┴──────┐                                   │
+│                           │  AppError   │  (Base application error)         │
+│                           │             │                                   │
+│                           │ • code      │                                   │
+│                           │ • operation │                                   │
+│                           │ • recoverable│                                  │
+│                           │ • timestamp │                                   │
+│                           └──────┬──────┘                                   │
+│                                  │                                          │
+│     ┌────────────────────────────┼────────────────────────────┐            │
+│     │              │             │             │               │            │
+│     ▼              ▼             ▼             ▼               ▼            │
+│ ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────┐       │
+│ │ Proxy   │  │Database │  │  IPC    │  │Automation│  │ Encryption  │       │
+│ │Connection│  │ Error   │  │ Error   │  │ Error   │  │   Error     │       │
+│ │ Error   │  │         │  │         │  │         │  │             │       │
+│ └─────────┘  └─────────┘  └─────────┘  └─────────┘  └─────────────┘       │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Error Handling Patterns
+
+#### Main Process (Electron)
+
+```typescript
+// electron/core/errors/index.ts
+import { ProxyConnectionError, getErrorMessage } from './errors';
+
+async function connectProxy(config: ProxyConfig): Promise<void> {
+  try {
+    await performConnection(config);
+  } catch (error) {
+    throw new ProxyConnectionError(getErrorMessage(error), {
+      code: 'CONNECTION_FAILED',
+      operation: 'connectProxy',
+      proxyId: config.id,
+      recoverable: true
+    });
+  }
+}
+```
+
+#### Renderer Process (React)
+
+```typescript
+// src/components/ui/ErrorBoundary.tsx
+<ErrorBoundary 
+  componentName="ProxyPanel"
+  onError={(error, info) => logError(error, info)}
+>
+  <ProxyPanel />
+</ErrorBoundary>
+```
+
+### Helper Functions
+
+| Function | Purpose |
+|----------|---------|
+| `isAppError()` | Type guard for AppError instances |
+| `getErrorMessage()` | Safe error message extraction |
+| `getErrorCode()` | Safe error code extraction |
+| `wrapError()` | Wrap unknown errors in AppError |
+| `formatErrorForLogging()` | Consistent log formatting |
+
+---
+
+## Constants Organization (v1.2.1)
+
+Named constants are organized in dedicated files within each module:
+
+```
+electron/core/
+├── privacy/fingerprint/
+│   └── constants.ts      # WEBGL_*, CANVAS_*, MAX_INT32
+├── resilience/
+│   └── constants.ts      # MAX_REQUEST_HISTORY_SIZE, FAILURE_THRESHOLD
+└── automation/
+    └── constants.ts      # CRON_*, TYPING_*, SCROLL_*, MOUSE_*
+```
+
+### Constants Naming Convention
+
+| Category | Prefix | Example |
+|----------|--------|---------|
+| WebGL | `WEBGL_` | `WEBGL_UNMASKED_VENDOR` |
+| Canvas | `CANVAS_` | `CANVAS_MIN_OPERATION_TIME_MS` |
+| Timing | `*_MS` | `DEFAULT_RESET_TIMEOUT_MS` |
+| Limits | `MAX_`, `MIN_` | `MAX_PORT`, `MIN_SCROLL_SEGMENTS` |
+| Defaults | `DEFAULT_` | `DEFAULT_FAILURE_THRESHOLD` |
+
+---
+
 ## Related Documentation
 
 - [CODEMAPS Index](./CODEMAPS/INDEX.md) - Module-specific documentation
@@ -811,10 +919,12 @@ Provides fault tolerance patterns for the application:
 - [API Reference](./CODEMAPS/api-reference.md) - IPC channel documentation
 - [Contributing Guidelines](../CONTRIBUTING.md) - Development guidelines
 - [Testing Documentation](../TESTING.md) - Test coverage and strategy
+- [Error Handling](./ERROR_HANDLING_IMPROVEMENTS.md) - Error handling patterns
+- [Magic Numbers Refactoring](./MAGIC_NUMBERS_REFACTORING.md) - Constants documentation
 
 ---
 
-*Last Updated: 2025-01-30*
+*Last Updated: 2025-01-16*
 ```
 
 ---

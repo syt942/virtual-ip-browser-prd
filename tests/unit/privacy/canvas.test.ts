@@ -209,7 +209,8 @@ describe('CanvasFingerprintProtection', () => {
       const script = protection.generateInjectionScript();
       
       expect(script).toContain('pixels[i]');
-      expect(script).toContain('Math.min(255, Math.max(0');
+      // Uses MAX_COLOR constant (255) for clamping values
+      expect(script).toContain('Math.min(MAX_COLOR, Math.max(0');
     });
   });
 
@@ -318,7 +319,8 @@ describe('CanvasFingerprintProtection', () => {
     it('should clamp values to valid range (0-255)', () => {
       const script = protection.generateInjectionScript();
       
-      expect(script).toContain('Math.min(255, Math.max(0');
+      // Uses MAX_COLOR constant (255) for clamping values
+      expect(script).toContain('Math.min(MAX_COLOR, Math.max(0');
     });
 
     it('should iterate in steps of 4 (RGBA)', () => {

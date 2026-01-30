@@ -67,3 +67,6 @@ export {
   SERVICE_TYPE_PRESETS,
   CircuitBreakerOpenError
 } from './types';
+
+// Named constants for magic numbers
+export * from './constants';

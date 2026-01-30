@@ -4,7 +4,29 @@
  */
 
 import type Database from 'better-sqlite3';
-// ProxyConfig type used for reference in comments
+
+/** Raw database row for proxy table */
+interface ProxyRow {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  protocol: string;
+  username?: string;
+  password?: string;
+  status: string;
+  latency?: number;
+  last_checked?: string;
+  failure_count: number;
+  total_requests: number;
+  success_rate: number;
+  region?: string;
+  tags?: string;
+  weight: number;
+  rotation_group?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface ProxyWithRotationConfig {
   id: string;
@@ -102,7 +124,7 @@ export class ProxyRepository {
       SELECT * FROM proxies 
       WHERE rotation_group = ? AND status = 'active'
       ORDER BY weight DESC, success_rate DESC
-    `).all(rotationGroup) as any[];
+    `).all(rotationGroup) as ProxyRow[];
 
     return rows.map(row => this.toDTO(row));
   }
@@ -116,7 +138,7 @@ export class ProxyRepository {
       SELECT * FROM proxies 
       WHERE rotation_group IN (${placeholders}) AND status = 'active'
       ORDER BY weight DESC, success_rate DESC
-    `).all(...rotationGroups) as any[];
+    `).all(...rotationGroups) as ProxyRow[];
 
     return rows.map(row => this.toDTO(row));
   }
@@ -142,7 +164,7 @@ export class ProxyRepository {
       SELECT * FROM proxies 
       WHERE status = 'active'
       ORDER BY rotation_group, weight DESC
-    `).all() as any[];
+    `).all() as ProxyRow[];
 
     const grouped: Record<string, ProxyWithRotationConfig[]> = {
       '_ungrouped': []
@@ -169,7 +191,7 @@ export class ProxyRepository {
       SELECT * FROM proxies 
       WHERE status = 'active' AND weight > 0
       ORDER BY weight DESC
-    `).all() as any[];
+    `).all() as ProxyRow[];
 
     return rows.map(row => this.toDTO(row));
   }
@@ -179,7 +201,7 @@ export class ProxyRepository {
    */
   getTotalWeight(rotationGroup?: string): number {
     let sql = 'SELECT COALESCE(SUM(weight), 0) as total FROM proxies WHERE status = \'active\'';
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (rotationGroup) {
       sql += ' AND rotation_group = ?';
@@ -210,14 +232,21 @@ export class ProxyRepository {
       FROM proxies 
       WHERE status = 'active'
     `;
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (rotationGroup) {
       sql += ' AND rotation_group = ?';
       params.push(rotationGroup);
     }
 
-    return this.db.prepare(sql).get(...params) as any;
+    interface WeightStats {
+      min: number;
+      max: number;
+      avg: number;
+      total: number;
+      count: number;
+    }
+    return this.db.prepare(sql).get(...params) as WeightStats;
   }
 
   /**
@@ -234,7 +263,7 @@ export class ProxyRepository {
       SET weight = weight * ?, updated_at = CURRENT_TIMESTAMP
       WHERE status = 'active'
     `;
-    const params: any[] = [factor];
+    const params: unknown[] = [factor];
 
     if (rotationGroup) {
       sql += ' AND rotation_group = ?';
@@ -249,7 +278,7 @@ export class ProxyRepository {
    */
   equalizeWeights(rotationGroup?: string): void {
     let countSql = 'SELECT COUNT(*) as count FROM proxies WHERE status = \'active\'';
-    const countParams: any[] = [];
+    const countParams: unknown[] = [];
 
     if (rotationGroup) {
       countSql += ' AND rotation_group = ?';
@@ -266,7 +295,7 @@ export class ProxyRepository {
       SET weight = ?, updated_at = CURRENT_TIMESTAMP
       WHERE status = 'active'
     `;
-    const updateParams: any[] = [equalWeight];
+    const updateParams: unknown[] = [equalWeight];
 
     if (rotationGroup) {
       updateSql += ' AND rotation_group = ?';
@@ -298,7 +327,7 @@ export class ProxyRepository {
   /**
    * Convert database row to DTO
    */
-  private toDTO(row: any): ProxyWithRotationConfig {
+  private toDTO(row: ProxyRow): ProxyWithRotationConfig {
     return {
       id: row.id,
       name: row.name,

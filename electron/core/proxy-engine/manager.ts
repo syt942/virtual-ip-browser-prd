@@ -16,6 +16,7 @@ import { ProxyValidator, ProxyValidationError, type SSRFConfig } from './validat
 import { ProxyRotationStrategy } from './rotation';
 import { CredentialStore, type EncryptedCredential } from './credential-store';
 import { CircuitBreakerRegistry, getCircuitBreakerRegistry, type CircuitBreaker } from '../resilience';
+import { DEFAULT_MAX_PROXIES, MAX_PROXY_NAME_LENGTH, MAX_PROXY_TAG_LENGTH } from '../automation/constants';
 
 /**
  * Configuration options for ProxyManager
@@ -72,7 +73,7 @@ export class ProxyManager extends EventEmitter {
     this.validator = new ProxyValidator(config.ssrfConfig, this.credentialStore);
 
     this.rotationStrategy = new ProxyRotationStrategy();
-    this.maxProxies = config.maxProxies ?? 100;
+    this.maxProxies = config.maxProxies ?? DEFAULT_MAX_PROXIES;
     this.autoValidate = config.autoValidate ?? true;
     this.enableCircuitBreaker = config.enableCircuitBreaker ?? true;
     
@@ -488,8 +489,8 @@ export class ProxyManager extends EventEmitter {
   private sanitizeName(name: string): string {
     return name
       .trim()
-      .slice(0, 100) // Limit length
-      .replace(/[<>'"&\\]/g, ''); // Remove potentially dangerous chars
+      .slice(0, MAX_PROXY_NAME_LENGTH) // Limit length
+      .replace(/[<>'\"&\\]/g, ''); // Remove potentially dangerous chars
   }
 
   /**
@@ -499,7 +500,7 @@ export class ProxyManager extends EventEmitter {
     return tag
       .trim()
       .toLowerCase()
-      .slice(0, 50)
+      .slice(0, MAX_PROXY_TAG_LENGTH)
       .replace(/[^a-z0-9-_]/g, '');
   }
 }

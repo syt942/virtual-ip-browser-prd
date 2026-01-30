@@ -341,10 +341,10 @@ describe('ProxyUsageStatsRepository', () => {
 
       // Assert
       expect(top.length).toBe(3);
-      // Field names from SQL may be snake_case
-      expect((top[0] as any).proxy_id).toBe('proxy-3'); // 99%
-      expect((top[1] as any).proxy_id).toBe('proxy-1'); // 95%
-      expect((top[2] as any).proxy_id).toBe('proxy-2'); // 80%
+      // Field names are now mapped to camelCase
+      expect(top[0].proxyId).toBe('proxy-3'); // 99%
+      expect(top[1].proxyId).toBe('proxy-1'); // 95%
+      expect(top[2].proxyId).toBe('proxy-2'); // 80%
     });
 
     it('should respect limit parameter', () => {

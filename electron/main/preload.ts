@@ -177,7 +177,9 @@ contextBridge.exposeInMainWorld('api', {
       return;
     }
 
-    ipcRenderer.removeListener(channel, callback as any);
+    // Type assertion needed because ipcRenderer.removeListener expects Electron's callback signature
+    // but we expose a simplified callback type to the renderer
+    ipcRenderer.removeListener(channel, callback as Parameters<typeof ipcRenderer.removeListener>[1]);
   },
 
   // Utility: Check if channel is allowed (for debugging)

@@ -88,7 +88,7 @@ export class ExecutionLogsRepository {
    */
   update(id: number, input: UpdateExecutionLogInput): ExecutionLogDTO | null {
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (input.endTime !== undefined) {
       updates.push('end_time = ?');
@@ -168,7 +168,7 @@ export class ExecutionLogsRepository {
   /**
    * Mark execution as failed
    */
-  fail(id: number, errorDetails?: any[]): ExecutionLogDTO | null {
+  fail(id: number, errorDetails?: Array<{ message: string; timestamp: number; code?: string }>): ExecutionLogDTO | null {
     const current = this.findById(id);
     return this.update(id, {
       status: 'failed',
@@ -256,6 +256,20 @@ export class ExecutionLogsRepository {
    * Get execution summary by type
    */
   getSummaryByType(): Record<ExecutionType, ExecutionSummary> {
+    interface ExecutionSummaryRow {
+      execution_type: ExecutionType;
+      total_executions: number;
+      completed_count: number;
+      failed_count: number;
+      cancelled_count: number;
+      running_count: number;
+      avg_duration: number | null;
+      total_keywords: number;
+      total_results: number;
+      total_creators: number;
+      total_rotations: number;
+      total_errors: number;
+    }
     const rows = this.db.prepare(`
       SELECT 
         execution_type,
@@ -272,7 +286,7 @@ export class ExecutionLogsRepository {
         SUM(errors_count) as total_errors
       FROM execution_logs
       GROUP BY execution_type
-    `).all() as any[];
+    `).all() as ExecutionSummaryRow[];
 
     const result: Record<ExecutionType, ExecutionSummary> = {
       search: this.createEmptySummary(),
@@ -359,7 +373,7 @@ export class ExecutionLogsRepository {
       FROM execution_logs
       WHERE end_time IS NOT NULL
     `;
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (executionType) {
       sql += ' AND execution_type = ?';

@@ -14,6 +14,8 @@
  * @module electron/core/automation/cron-parser
  */
 
+import { MAX_CRON_ITERATIONS, CRON_FIELD_COUNT } from './constants';
+
 /**
  * Custom error class for cron parsing errors
  */
@@ -142,10 +144,10 @@ export class CronParser {
     const trimmed = expression.trim();
     const fields = trimmed.split(/\s+/);
 
-    if (fields.length !== 5) {
+    if (fields.length !== CRON_FIELD_COUNT) {
       return this.createInvalidResult(
         expression,
-        `Expected 5 fields, got ${fields.length}. Format: minute hour dayOfMonth month dayOfWeek`
+        `Expected ${CRON_FIELD_COUNT} fields, got ${fields.length}. Format: minute hour dayOfMonth month dayOfWeek`
       );
     }
 
@@ -231,10 +233,9 @@ export class CronParser {
     current.setMinutes(current.getMinutes() + 1);
 
     // Maximum iterations to prevent infinite loop (1 year worth of minutes)
-    const maxIterations = 525600;
     let iterations = 0;
 
-    while (iterations < maxIterations) {
+    while (iterations < MAX_CRON_ITERATIONS) {
       if (this.matchesExpression(current, parsed)) {
         return current;
       }

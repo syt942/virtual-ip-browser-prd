@@ -29,6 +29,10 @@ import {
   SERVICE_TYPE_PRESETS,
   CircuitBreakerOpenError
 } from './types';
+import {
+  MAX_REQUEST_HISTORY_SIZE,
+  TRIMMED_REQUEST_HISTORY_SIZE
+} from './constants';
 
 /**
  * Circuit Breaker class implementing the circuit breaker pattern
@@ -494,9 +498,9 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
       r => r.timestamp.getTime() >= windowStart
     );
 
-    // Limit history size
-    if (this.requestHistory.length > 1000) {
-      this.requestHistory = this.requestHistory.slice(-500);
+    // Limit history size to prevent memory bloat
+    if (this.requestHistory.length > MAX_REQUEST_HISTORY_SIZE) {
+      this.requestHistory = this.requestHistory.slice(-TRIMMED_REQUEST_HISTORY_SIZE);
     }
   }
 

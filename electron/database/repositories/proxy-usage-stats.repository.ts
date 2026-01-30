@@ -101,7 +101,7 @@ export class ProxyUsageStatsRepository {
     if (existing) {
       // Update existing record
       const updates: string[] = [];
-      const params: any[] = [];
+      const params: unknown[] = [];
 
       if (stats.requests) {
         updates.push('total_requests = total_requests + ?');
@@ -239,7 +239,7 @@ export class ProxyUsageStatsRepository {
     options?: { startTime?: Date; endTime?: Date; limit?: number }
   ): ProxyUsageStatsDTO[] {
     let sql = 'SELECT * FROM proxy_usage_stats WHERE proxy_id = ?';
-    const params: any[] = [proxyId];
+    const params: unknown[] = [proxyId];
 
     if (options?.startTime) {
       sql += ' AND time_bucket >= ?';
@@ -267,6 +267,16 @@ export class ProxyUsageStatsRepository {
   getAggregatedStats(proxyId: string, hours: number = 24): AggregatedStats {
     const startTime = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
+    interface AggregatedStatsRow {
+      total_requests: number;
+      successful_requests: number;
+      failed_requests: number;
+      avg_latency_ms: number | null;
+      bytes_sent: number;
+      bytes_received: number;
+      rotation_count: number;
+    }
+
     const result = this.db.prepare(`
       SELECT 
         COALESCE(SUM(total_requests), 0) as total_requests,
@@ -278,7 +288,7 @@ export class ProxyUsageStatsRepository {
         COALESCE(SUM(rotation_count), 0) as rotation_count
       FROM proxy_usage_stats
       WHERE proxy_id = ? AND time_bucket >= ?
-    `).get(proxyId, startTime) as any;
+    `).get(proxyId, startTime) as AggregatedStatsRow;
 
     const totalRequests = result.total_requests || 0;
     const successfulRequests = result.successful_requests || 0;
@@ -301,6 +311,13 @@ export class ProxyUsageStatsRepository {
   getTimeSeries(proxyId: string, hours: number = 24): TimeSeriesDataPoint[] {
     const startTime = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
+    interface TimeSeriesRow {
+      time_bucket: string;
+      total_requests: number;
+      successful_requests: number;
+      avg_latency_ms: number | null;
+    }
+
     const rows = this.db.prepare(`
       SELECT 
         time_bucket,
@@ -310,7 +327,7 @@ export class ProxyUsageStatsRepository {
       FROM proxy_usage_stats
       WHERE proxy_id = ? AND time_bucket >= ?
       ORDER BY time_bucket ASC
-    `).all(proxyId, startTime) as any[];
+    `).all(proxyId, startTime) as TimeSeriesRow[];
 
     return rows.map(row => ({
       timeBucket: new Date(row.time_bucket),
@@ -339,7 +356,13 @@ export class ProxyUsageStatsRepository {
   }> {
     const startTime = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
-    return this.db.prepare(`
+    interface TopProxyRow {
+      proxy_id: string;
+      success_rate: number;
+      total_requests: number;
+    }
+
+    const rows = this.db.prepare(`
       SELECT 
         proxy_id,
         SUM(successful_requests) * 100.0 / NULLIF(SUM(total_requests), 0) as success_rate,
@@ -350,7 +373,14 @@ export class ProxyUsageStatsRepository {
       HAVING total_requests > 0
       ORDER BY success_rate DESC
       LIMIT ?
-    `).all(startTime, limit) as any[];
+    `).all(startTime, limit) as TopProxyRow[];
+
+    // Map database column names to camelCase
+    return rows.map(row => ({
+      proxyId: row.proxy_id,
+      successRate: row.success_rate,
+      totalRequests: row.total_requests
+    }));
   }
 
   /**

@@ -15,6 +15,16 @@ import { buildSecureProxyUrl, CredentialStore } from './credential-store';
 import * as net from 'net';
 import * as dns from 'dns';
 import { promisify } from 'util';
+import {
+  PROXY_VALIDATION_TIMEOUT_MS,
+  DEFAULT_LATENCY_TEST_ATTEMPTS,
+  MIN_LATENCY_TEST_ATTEMPTS,
+  MAX_LATENCY_TEST_ATTEMPTS,
+  MAX_HOSTNAME_LENGTH,
+  MAX_CREDENTIAL_LENGTH,
+  MIN_PORT,
+  MAX_PORT
+} from '../automation/constants';
 
 const dnsLookup = promisify(dns.lookup);
 
@@ -121,9 +131,9 @@ export class ProxyValidator {
       throw new ProxyValidationError('Host cannot be empty', 'EMPTY_HOST', 'host');
     }
 
-    // Maximum length check
-    if (trimmedHost.length > 253) {
-      throw new ProxyValidationError('Host exceeds maximum length (253 characters)', 'HOST_TOO_LONG', 'host');
+    // Maximum length check (RFC 1123)
+    if (trimmedHost.length > MAX_HOSTNAME_LENGTH) {
+      throw new ProxyValidationError(`Host exceeds maximum length (${MAX_HOSTNAME_LENGTH} characters)`, 'HOST_TOO_LONG', 'host');
     }
 
     // Check for dangerous characters that could enable injection
@@ -179,9 +189,9 @@ export class ProxyValidator {
       throw new ProxyValidationError('Port must be an integer', 'INVALID_PORT_TYPE', 'port');
     }
 
-    if (port < 1 || port > 65535) {
+    if (port < MIN_PORT || port > MAX_PORT) {
       throw new ProxyValidationError(
-        'Port must be between 1 and 65535',
+        `Port must be between ${MIN_PORT} and ${MAX_PORT}`,
         'PORT_OUT_OF_RANGE',
         'port'
       );
@@ -215,11 +225,11 @@ export class ProxyValidator {
     }
 
     // Check for excessively long credentials (potential DoS)
-    if (username && username.length > 256) {
+    if (username && username.length > MAX_CREDENTIAL_LENGTH) {
       throw new ProxyValidationError('Username exceeds maximum length', 'USERNAME_TOO_LONG', 'username');
     }
 
-    if (password && password.length > 256) {
+    if (password && password.length > MAX_CREDENTIAL_LENGTH) {
       throw new ProxyValidationError('Password exceeds maximum length', 'PASSWORD_TOO_LONG', 'password');
     }
   }
@@ -430,7 +440,7 @@ export class ProxyValidator {
       
       // Test connection with timeout
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeout = setTimeout(() => controller.abort(), PROXY_VALIDATION_TIMEOUT_MS);
 
       const response = await fetch(this.testUrls[0], {
         signal: controller.signal,
@@ -497,10 +507,10 @@ export class ProxyValidator {
   /**
    * Test proxy latency
    */
-  async testLatency(proxy: ProxyConfig, attempts: number = 3): Promise<number> {
+  async testLatency(proxy: ProxyConfig, attempts: number = DEFAULT_LATENCY_TEST_ATTEMPTS): Promise<number> {
     // Validate attempts parameter
-    if (typeof attempts !== 'number' || attempts < 1 || attempts > 10) {
-      attempts = 3;
+    if (typeof attempts !== 'number' || attempts < MIN_LATENCY_TEST_ATTEMPTS || attempts > MAX_LATENCY_TEST_ATTEMPTS) {
+      attempts = DEFAULT_LATENCY_TEST_ATTEMPTS;
     }
 
     const latencies: number[] = [];

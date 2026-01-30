@@ -11,7 +11,7 @@ export interface ActivityLogEntry {
   level: 'debug' | 'info' | 'warning' | 'error' | 'success';
   category: string;
   message: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   sessionId?: string;
   tabId?: string;
   proxyId?: string;
@@ -57,7 +57,20 @@ export function useActivityLogs(): UseActivityLogsReturn {
       setIsLoading(true);
       setError(null);
 
-      const queryParams: Record<string, any> = { ...currentFilters };
+      /** Raw log entry from API */
+      interface RawLogEntry {
+        id: string;
+        timestamp: string;
+        level: ActivityLogEntry['level'];
+        category: string;
+        message: string;
+        metadata?: Record<string, unknown>;
+        sessionId?: string;
+        tabId?: string;
+        proxyId?: string;
+      }
+
+      const queryParams: Record<string, string | number | Date | undefined> = { ...currentFilters };
       
       // Only include non-empty filters
       if (currentFilters.level && currentFilters.level !== 'all') {
@@ -70,10 +83,10 @@ export function useActivityLogs(): UseActivityLogsReturn {
         queryParams.status = currentFilters.status;
       }
 
-      const result = await window.api.analytics.getActivityLogs(queryParams) as { success: boolean; data: any[]; total?: number };
+      const result = await window.api.analytics.getActivityLogs(queryParams) as { success: boolean; data: RawLogEntry[]; total?: number };
 
       if (result.success) {
-        setLogs(result.data.map((log: any) => ({
+        setLogs(result.data.map((log: RawLogEntry) => ({
           ...log,
           timestamp: new Date(log.timestamp)
         })));

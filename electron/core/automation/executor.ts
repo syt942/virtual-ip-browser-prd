@@ -7,11 +7,26 @@ import { EventEmitter } from 'events';
 import type { SearchTask, SearchConfig } from './types';
 // SearchEngine type imported but used indirectly via SearchEngineAutomation
 import { SearchEngineAutomation } from './search-engine';
+import { DEFAULT_MAX_CONCURRENT_TASKS, MIN_CONCURRENT_TASKS } from './constants';
+
+/**
+ * Interface representing a view that can be used for automation
+ * Compatible with Electron's BrowserView
+ */
+export interface AutomationViewLike {
+  webContents: {
+    loadURL: (url: string) => Promise<void>;
+    executeJavaScript: (code: string) => Promise<unknown>;
+    getURL: () => string;
+    isLoading: () => boolean;
+    once: (event: string, callback: () => void) => void;
+  };
+}
 
 export class TaskExecutor extends EventEmitter {
   private searchEngine: SearchEngineAutomation;
   private activeTasks: Map<string, SearchTask> = new Map();
-  private maxConcurrentTasks: number = 3;
+  private maxConcurrentTasks: number = DEFAULT_MAX_CONCURRENT_TASKS;
 
   constructor() {
     super();
@@ -24,7 +39,7 @@ export class TaskExecutor extends EventEmitter {
   async executeSearchTask(
     task: SearchTask,
     config: SearchConfig,
-    view: any
+    view: AutomationViewLike
   ): Promise<void> {
     if (this.activeTasks.size >= this.maxConcurrentTasks) {
       throw new Error('Max concurrent tasks reached');
@@ -107,7 +122,7 @@ export class TaskExecutor extends EventEmitter {
   async executeBatch(
     tasks: SearchTask[],
     config: SearchConfig,
-    view: any
+    view: AutomationViewLike
   ): Promise<void> {
     for (const task of tasks) {
       await this.executeSearchTask(task, config, view);
@@ -148,7 +163,7 @@ export class TaskExecutor extends EventEmitter {
    * Set max concurrent tasks
    */
   setMaxConcurrentTasks(max: number): void {
-    this.maxConcurrentTasks = Math.max(1, max);
+    this.maxConcurrentTasks = Math.max(MIN_CONCURRENT_TASKS, max);
   }
 
   /**

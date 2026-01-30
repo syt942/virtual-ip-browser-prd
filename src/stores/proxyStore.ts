@@ -68,8 +68,14 @@ export const useProxyStore = create<ProxyState>((set, get) => ({
         }));
       }
     } catch (error) {
-      console.error('Failed to add proxy:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[ProxyStore] Failed to add proxy:', errorMessage, {
+        host: proxyData.host,
+        port: proxyData.port
+      });
       set({ isLoading: false });
+      // Re-throw to allow UI to handle the error
+      throw new Error(`Failed to add proxy: ${errorMessage}`);
     }
   },
 
@@ -83,7 +89,9 @@ export const useProxyStore = create<ProxyState>((set, get) => ({
         }));
       }
     } catch (error) {
-      console.error('Failed to remove proxy:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[ProxyStore] Failed to remove proxy:', errorMessage, { proxyId: id });
+      throw new Error(`Failed to remove proxy: ${errorMessage}`);
     }
   },
 
@@ -99,7 +107,9 @@ export const useProxyStore = create<ProxyState>((set, get) => ({
         }));
       }
     } catch (error) {
-      console.error('Failed to update proxy:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[ProxyStore] Failed to update proxy:', errorMessage, { proxyId: id });
+      throw new Error(`Failed to update proxy: ${errorMessage}`);
     }
   },
 
@@ -117,7 +127,14 @@ export const useProxyStore = create<ProxyState>((set, get) => ({
       // Reload proxies to get updated status
       await get().loadProxies();
     } catch (error) {
-      console.error('Failed to validate proxy:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[ProxyStore] Failed to validate proxy:', errorMessage, { proxyId: id });
+      // Update proxy status to failed on validation error
+      set((state) => ({
+        proxies: state.proxies.map(p =>
+          p.id === id ? { ...p, status: 'failed' as ProxyStatus } : p
+        )
+      }));
     }
   },
 
@@ -126,7 +143,9 @@ export const useProxyStore = create<ProxyState>((set, get) => ({
       await window.api.proxy.setRotation({ strategy });
       set({ rotationStrategy: strategy });
     } catch (error) {
-      console.error('Failed to set rotation strategy:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[ProxyStore] Failed to set rotation strategy:', errorMessage, { strategy });
+      throw new Error(`Failed to set rotation strategy: ${errorMessage}`);
     }
   },
 
@@ -142,8 +161,10 @@ export const useProxyStore = create<ProxyState>((set, get) => ({
         });
       }
     } catch (error) {
-      console.error('Failed to load proxies:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[ProxyStore] Failed to load proxies:', errorMessage);
       set({ isLoading: false });
+      // Don't throw here - allow UI to show empty state with error notification
     }
   },
 

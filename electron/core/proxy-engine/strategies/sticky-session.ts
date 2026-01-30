@@ -135,7 +135,11 @@ export class StickySessionStrategy extends BaseStrategy {
         return url.split('/')[0].toLowerCase();
       }
       return url.toLowerCase();
-    } catch {
+    } catch (error) {
+      // URL parsing failed - return lowercase input as fallback
+      // This is expected for malformed URLs or simple domain strings
+      console.debug('[StickySession] URL normalization fallback for:', url.substring(0, 50),
+        error instanceof Error ? error.message : 'Parse error');
       return url.toLowerCase();
     }
   }

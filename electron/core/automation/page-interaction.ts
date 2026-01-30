@@ -230,8 +230,11 @@ export class PageInteraction {
         const url = new URL(link.href);
         return url.hostname === currentDomain ||
                url.hostname.endsWith('.' + currentDomain);
-      } catch {
-        // Relative links are internal
+      } catch (error) {
+        // URL parsing failed - treat as relative/internal link if it doesn't start with a protocol
+        // This handles malformed URLs and relative paths gracefully
+        console.debug('[PageInteraction] URL parse failed, checking as relative:', link.href.substring(0, 50),
+          error instanceof Error ? error.message : 'Parse error');
         return !link.href.startsWith('http') && 
                !link.href.startsWith('mailto:') &&
                !link.href.startsWith('tel:') &&
@@ -271,7 +274,11 @@ export class PageInteraction {
     try {
       const url = new URL(href);
       return url.pathname;
-    } catch {
+    } catch (error) {
+      // URL parsing failed - return href as-is (likely a relative path)
+      // This is expected for relative URLs like "/page" or "page.html"
+      console.debug('[PageInteraction] Path extraction fallback for:', href.substring(0, 50),
+        error instanceof Error ? error.message : 'Parse error');
       return href;
     }
   }

@@ -109,7 +109,10 @@ export class PlatformDetector {
     try {
       // Validate URL format
       new URL(url);
-    } catch {
+    } catch (error) {
+      // Invalid URL format - return unknown platform
+      console.debug('[PlatformDetection] Invalid URL format:', url.substring(0, 50),
+        error instanceof Error ? error.message : 'Parse error');
       return 'unknown';
     }
 

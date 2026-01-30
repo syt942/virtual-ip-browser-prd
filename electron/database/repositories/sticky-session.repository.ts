@@ -271,7 +271,12 @@ export class StickySessionRepository {
         SUM(CASE WHEN expires_at IS NOT NULL AND expires_at <= CURRENT_TIMESTAMP THEN 1 ELSE 0 END) as expired,
         SUM(CASE WHEN is_wildcard = 1 THEN 1 ELSE 0 END) as wildcard
       FROM sticky_session_mappings
-    `).get() as any;
+    `).get() as {
+      total: number;
+      active: number;
+      expired: number;
+      wildcard: number;
+    };
 
     return {
       totalMappings: result.total || 0,

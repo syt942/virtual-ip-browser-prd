@@ -85,6 +85,9 @@ export type {
   SessionStatistics
 } from './types';
 
+// Named constants for magic numbers
+export * from './constants';
+
 // Creator Support Module (EP-007)
 export {
   PlatformDetector,

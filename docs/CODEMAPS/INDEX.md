@@ -1,7 +1,7 @@
 # Virtual IP Browser - Architecture Codemaps
 
-**Last Updated:** 2025-01-30  
-**Version:** 1.2.0
+**Last Updated:** 2025-01-16  
+**Version:** 1.2.1
 
 ## Overview
 
@@ -11,7 +11,7 @@ This directory contains detailed architectural codemaps for the Virtual IP Brows
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           VIRTUAL IP BROWSER v1.2.0                         │
+│                           VIRTUAL IP BROWSER v1.2.1                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -31,6 +31,10 @@ This directory contains detailed architectural codemaps for the Virtual IP Brows
 │  │  ┌──────────────────────────────────────────────────────────────┐   │   │
 │  │  │                    SECURITY LAYER (v1.2.0)                    │   │   │
 │  │  │  Zod │ Rate Limit │ SSRF │ ReDoS │ Sandbox │ Native Masking  │   │   │
+│  │  └──────────────────────────────────────────────────────────────┘   │   │
+│  │  ┌──────────────────────────────────────────────────────────────┐   │   │
+│  │  │                    QUALITY LAYER (v1.2.1)                     │   │   │
+│  │  │  Named Constants │ Custom Errors │ Type Safety │ ErrorBoundary │   │   │
 │  │  └──────────────────────────────────────────────────────────────┘   │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                    ▲                                        │
@@ -69,6 +73,20 @@ This directory contains detailed architectural codemaps for the Virtual IP Brows
 | **Resilience Layer** | Fault tolerance patterns | Circuit Breaker, Registry, State Persistence |
 | **Cron Scheduler** | Task scheduling system | Cron Parser, Scheduler, Timezone Support |
 | **Captcha Detection** | Multi-provider detection | reCAPTCHA, hCaptcha, Cloudflare, Arkose |
+
+### New in v1.2.1 (Quality Release)
+
+| Module | Description | Key Components |
+|--------|-------------|----------------|
+| **Named Constants** | Magic numbers → constants | `constants.ts` files in fingerprint, resilience, automation |
+| **Custom Error Classes** | Structured error handling | `AppError`, `ProxyConnectionError`, `DatabaseError`, etc. |
+| **Error Boundary** | React error handling | `ErrorBoundary`, `withErrorBoundary` HOC |
+| **Type Safety** | 99.3% `any` reduction | Proper TypeScript interfaces throughout |
+
+**Quality Documentation:**
+- [QUALITY_IMPROVEMENTS.md](../../QUALITY_IMPROVEMENTS.md) - Consolidated summary
+- [MAGIC_NUMBERS_REFACTORING.md](../MAGIC_NUMBERS_REFACTORING.md) - Constants documentation
+- [ERROR_HANDLING_IMPROVEMENTS.md](../ERROR_HANDLING_IMPROVEMENTS.md) - Error patterns
 
 ## Module Dependencies
 

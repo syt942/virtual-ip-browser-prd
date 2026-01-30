@@ -150,7 +150,7 @@ export class EncryptedCredentialsRepository {
     }
   ): boolean {
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (data.encryptedUsername !== undefined) {
       updates.push('encrypted_username = ?');

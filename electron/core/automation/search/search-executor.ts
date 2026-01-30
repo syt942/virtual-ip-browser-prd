@@ -3,7 +3,7 @@
  * Handles search navigation, clicking results, and human-like behavior simulation
  */
 
-import { BrowserView } from 'electron';
+import type { AutomationViewLike } from '../executor';
 import type { SearchEngine, SearchResult } from '../types';
 import { SearchResultExtractor } from './result-extractor';
 
@@ -18,7 +18,7 @@ export class SearchExecutor {
    * Perform a search
    */
   async performSearch(
-    view: BrowserView,
+    view: AutomationViewLike,
     keyword: string,
     engine: SearchEngine
   ): Promise<SearchResult[]> {
@@ -48,7 +48,7 @@ export class SearchExecutor {
   /**
    * Click on a result with human-like behavior
    */
-  async clickResult(view: BrowserView, position: number): Promise<void> {
+  async clickResult(view: AutomationViewLike, position: number): Promise<void> {
     try {
       // Scroll to element
       await this.scrollToResult(view, position);
@@ -80,7 +80,7 @@ export class SearchExecutor {
   /**
    * Scroll to result with human-like behavior
    */
-  async scrollToResult(view: BrowserView, position: number): Promise<void> {
+  async scrollToResult(view: AutomationViewLike, position: number): Promise<void> {
     const scrollAmount = position * 100; // Approximate scroll amount
     
     await view.webContents.executeJavaScript(`
@@ -98,7 +98,7 @@ export class SearchExecutor {
   /**
    * Simulate human behavior on page
    */
-  async simulateHumanBehavior(view: BrowserView): Promise<void> {
+  async simulateHumanBehavior(view: AutomationViewLike): Promise<void> {
     // Random scrolling
     await this.randomScroll(view);
     
@@ -114,7 +114,7 @@ export class SearchExecutor {
   /**
    * Random scroll on page
    */
-  async randomScroll(view: BrowserView): Promise<void> {
+  async randomScroll(view: AutomationViewLike): Promise<void> {
     const scrollAmount = Math.floor(Math.random() * 500) + 200;
     
     await view.webContents.executeJavaScript(`
@@ -132,7 +132,7 @@ export class SearchExecutor {
   /**
    * Wait for page to load
    */
-  waitForLoad(view: BrowserView): Promise<void> {
+  waitForLoad(view: AutomationViewLike): Promise<void> {
     return new Promise((resolve) => {
       if (view.webContents.isLoading()) {
         view.webContents.once('did-finish-load', () => resolve());

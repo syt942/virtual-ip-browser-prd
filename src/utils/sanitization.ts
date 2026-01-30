@@ -79,7 +79,10 @@ export function sanitizeUrl(url: string): { valid: boolean; sanitized: string; e
     }
 
     return { valid: true, sanitized: parsed.href };
-  } catch {
+  } catch (error) {
+    // URL parsing failed - provide helpful error message
+    console.debug('[Sanitization] Invalid URL format:', trimmed.substring(0, 50),
+      error instanceof Error ? error.message : 'Parse error');
     return { valid: false, sanitized: '', error: 'Invalid URL format' };
   }
 }

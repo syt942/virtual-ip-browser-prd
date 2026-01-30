@@ -286,8 +286,12 @@ export class CaptchaDetector extends EventEmitter {
             metadata: match.metadata
           };
         }
-      } catch {
-        // Pattern check failed, continue to next
+      } catch (error) {
+        // Pattern check failed (e.g., invalid selector, page navigation) - continue to next pattern
+        this.log('warning', `Pattern check failed for ${pattern.type}`, {
+          pattern: pattern.value?.substring(0, 50),
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
         continue;
       }
     }
@@ -307,7 +311,12 @@ export class CaptchaDetector extends EventEmitter {
     try {
       const result = await webContents.executeJavaScript(script);
       return result;
-    } catch {
+    } catch (error) {
+      // Script execution failed - page may have navigated or webContents destroyed
+      this.log('warning', 'Pattern check script execution failed', {
+        patternType: pattern.type,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
       return { found: false };
     }
   }
@@ -395,8 +404,11 @@ export class CaptchaDetector extends EventEmitter {
         if (result.detected) {
           this.handleDetection(tabId, result);
         }
-      } catch {
-        // Tab may have been closed
+      } catch (error) {
+        // Tab may have been closed or webContents destroyed during scan
+        this.log('info', `Monitoring stopped for tab ${tabId} due to error`, {
+          error: error instanceof Error ? error.message : 'Tab closed or unavailable'
+        });
         this.stopMonitoring(tabId);
       }
     }, this.config.checkInterval);
@@ -620,7 +632,12 @@ export class CaptchaDetector extends EventEmitter {
   private extractDomain(url: string): string {
     try {
       return new URL(url).hostname;
-    } catch {
+    } catch (error) {
+      // Invalid URL format - return unknown to allow processing to continue
+      this.log('warning', 'Failed to extract domain from URL', {
+        url: url.substring(0, 100),
+        error: error instanceof Error ? error.message : 'Invalid URL'
+      });
       return 'unknown';
     }
   }

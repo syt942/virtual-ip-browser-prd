@@ -179,9 +179,24 @@ export interface RuleCondition {
   caseSensitive?: boolean;
 }
 
+/**
+ * Parameters for rule actions
+ */
+export interface RuleActionParams {
+  proxyId?: string;
+  proxyIds?: string[];
+  groupName?: string;
+  country?: string;
+  countries?: string[];
+  excludeProxyId?: string;
+  excludeCountry?: string;
+  /** Allow additional string-keyed properties for extensibility */
+  [key: string]: string | string[] | number | boolean | undefined;
+}
+
 export interface RuleActionConfig {
   action: RuleAction;
-  params: Record<string, any>;
+  params: RuleActionParams;
 }
 
 export interface ProxyRule {

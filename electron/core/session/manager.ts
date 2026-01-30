@@ -5,6 +5,7 @@
 
 import { EventEmitter } from 'events';
 import type { DatabaseManager } from '../../database';
+import type { PrivacyConfig } from '../privacy/manager';
 
 export interface SavedSession {
   id: string;
@@ -19,7 +20,7 @@ interface TabState {
   url: string;
   title: string;
   proxyId?: string;
-  privacyConfig?: any;
+  privacyConfig?: PrivacyConfig;
 }
 
 interface WindowBounds {
@@ -77,7 +78,15 @@ export class SessionManager extends EventEmitter {
    */
   async loadSession(id: string): Promise<SavedSession | null> {
     const sql = `SELECT * FROM sessions WHERE id = ?`;
-    const row = this.db.queryOne<any>(sql, [id]);
+    interface SessionRow {
+      id: string;
+      name: string;
+      tabs: string;
+      window_bounds: string;
+      created_at: string;
+      updated_at: string;
+    }
+    const row = this.db.queryOne<SessionRow>(sql, [id]);
 
     if (!row) return null;
 
@@ -101,7 +110,15 @@ export class SessionManager extends EventEmitter {
    */
   async getAllSessions(): Promise<SavedSession[]> {
     const sql = `SELECT * FROM sessions ORDER BY updated_at DESC`;
-    const rows = this.db.query<any>(sql);
+    interface SessionRow {
+      id: string;
+      name: string;
+      tabs: string;
+      window_bounds: string;
+      created_at: string;
+      updated_at: string;
+    }
+    const rows = this.db.query<SessionRow>(sql);
 
     return rows.map(row => ({
       id: row.id,

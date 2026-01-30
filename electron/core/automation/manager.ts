@@ -9,19 +9,24 @@ import type {
   SearchConfig, 
   AutomationSession, 
   TargetDomain,
-  Creator
+  Creator,
+  TaskSchedule
 } from './types';
 // SessionStatistics is embedded in AutomationSession
 import { TaskScheduler } from './scheduler';
 import { TaskExecutor } from './executor';
 import { DatabaseManager } from '../../database';
 
+/** Event handler function type for bound handlers */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type BoundEventHandler = (...args: any[]) => void;
+
 export class AutomationManager extends EventEmitter {
   private scheduler: TaskScheduler;
   private executor: TaskExecutor;
   private sessions: Map<string, AutomationSession> = new Map();
   private db: DatabaseManager;
-  private boundHandlers: Map<string, Function> = new Map();
+  private boundHandlers: Map<string, BoundEventHandler> = new Map();
 
   constructor(db: DatabaseManager) {
     super();
@@ -37,8 +42,8 @@ export class AutomationManager extends EventEmitter {
    */
   private setupEventListeners(): void {
     // Scheduler events
-    const scheduleHandler = (schedule: any) => {
-      this.emit('schedule:triggered', schedule);
+    const scheduleHandler: BoundEventHandler = (schedule: unknown) => {
+      this.emit('schedule:triggered', schedule as TaskSchedule);
     };
     this.boundHandlers.set('scheduler:task:execute', scheduleHandler);
     this.scheduler.on('task:execute', scheduleHandler);
@@ -75,23 +80,23 @@ export class AutomationManager extends EventEmitter {
     // Remove scheduler listeners
     const scheduleHandler = this.boundHandlers.get('scheduler:task:execute');
     if (scheduleHandler) {
-      this.scheduler.off('task:execute', scheduleHandler as any);
+      this.scheduler.off('task:execute', scheduleHandler);
     }
 
     // Remove executor listeners
     const taskStartedHandler = this.boundHandlers.get('executor:task:started');
     if (taskStartedHandler) {
-      this.executor.off('task:started', taskStartedHandler as any);
+      this.executor.off('task:started', taskStartedHandler);
     }
 
     const taskCompletedHandler = this.boundHandlers.get('executor:task:completed');
     if (taskCompletedHandler) {
-      this.executor.off('task:completed', taskCompletedHandler as any);
+      this.executor.off('task:completed', taskCompletedHandler);
     }
 
     const taskFailedHandler = this.boundHandlers.get('executor:task:failed');
     if (taskFailedHandler) {
-      this.executor.off('task:failed', taskFailedHandler as any);
+      this.executor.off('task:failed', taskFailedHandler);
     }
 
     // Clear bound handlers

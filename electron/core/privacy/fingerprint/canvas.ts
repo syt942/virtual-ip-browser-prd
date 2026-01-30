@@ -9,14 +9,22 @@
  * - OffscreenCanvas protection
  */
 
+import {
+  MAX_INT32,
+  UINT32_RANGE,
+  CANVAS_MIN_OPERATION_TIME_MS,
+  DEFAULT_CANVAS_NOISE,
+  MAX_COLOR_CHANNEL_VALUE
+} from './constants';
+
 export class CanvasFingerprintProtection {
   private noise: number;
   private sessionSeed: number;
 
-  constructor(noise: number = 0.01) {
+  constructor(noise: number = DEFAULT_CANVAS_NOISE) {
     this.noise = noise;
     // Generate session seed for deterministic but unique noise per session
-    this.sessionSeed = Math.floor(Math.random() * 2147483647);
+    this.sessionSeed = Math.floor(Math.random() * MAX_INT32);
   }
 
   /**
@@ -41,6 +49,7 @@ export class CanvasFingerprintProtection {
         
         // SECURITY: Seeded PRNG for deterministic noise (prevents detection via multiple calls)
         // Uses Mulberry32 algorithm - fast and good distribution
+        const UINT32_RANGE = ${UINT32_RANGE};
         function createSeededRandom(seed) {
           let state = seed;
           return function() {
@@ -48,7 +57,7 @@ export class CanvasFingerprintProtection {
             let t = state;
             t = Math.imul(t ^ (t >>> 15), t | 1);
             t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            return ((t ^ (t >>> 14)) >>> 0) / UINT32_RANGE;
           };
         }
         
@@ -80,7 +89,7 @@ export class CanvasFingerprintProtection {
         
         // SECURITY: Timing attack prevention
         // Canvas operations should take consistent time regardless of content
-        const MIN_OPERATION_TIME = 2; // Minimum 2ms for canvas operations
+        const MIN_OPERATION_TIME = ${CANVAS_MIN_OPERATION_TIME_MS}; // Minimum ms for canvas operations
         
         function enforceMinTime(startTime, callback) {
           const elapsed = performance.now() - startTime;
@@ -110,11 +119,12 @@ export class CanvasFingerprintProtection {
             const pixelRandom = createSeededRandom(getPixelSeed(x, y, canvasId));
             
             // Add noise that's consistent for same pixel position
-            const delta = Math.floor((pixelRandom() - 0.5) * 2 * noise * 255);
+            const MAX_COLOR = ${MAX_COLOR_CHANNEL_VALUE};
+            const delta = Math.floor((pixelRandom() - 0.5) * 2 * noise * MAX_COLOR);
             
-            data[i] = Math.min(255, Math.max(0, data[i] + delta));     // R
-            data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + delta)); // G
-            data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + delta)); // B
+            data[i] = Math.min(MAX_COLOR, Math.max(0, data[i] + delta));     // R
+            data[i + 1] = Math.min(MAX_COLOR, Math.max(0, data[i + 1] + delta)); // G
+            data[i + 2] = Math.min(MAX_COLOR, Math.max(0, data[i + 2] + delta)); // B
             // Keep alpha channel unchanged for consistency
           }
           return imageData;
@@ -203,12 +213,13 @@ export class CanvasFingerprintProtection {
             // Add noise to WebGL pixel data
             if (pixels && pixels.length) {
               const canvasId = this.canvas ? getCanvasId(this.canvas) : 0;
+              const MAX_COLOR = ${MAX_COLOR_CHANNEL_VALUE};
               for (let i = 0; i < pixels.length; i += 4) {
                 const pixelRandom = createSeededRandom(getPixelSeed(i, canvasId, sessionSeed));
-                const delta = Math.floor((pixelRandom() - 0.5) * 2 * noise * 255);
-                pixels[i] = Math.min(255, Math.max(0, pixels[i] + delta));
-                pixels[i + 1] = Math.min(255, Math.max(0, pixels[i + 1] + delta));
-                pixels[i + 2] = Math.min(255, Math.max(0, pixels[i + 2] + delta));
+                const delta = Math.floor((pixelRandom() - 0.5) * 2 * noise * MAX_COLOR);
+                pixels[i] = Math.min(MAX_COLOR, Math.max(0, pixels[i] + delta));
+                pixels[i + 1] = Math.min(MAX_COLOR, Math.max(0, pixels[i + 1] + delta));
+                pixels[i + 2] = Math.min(MAX_COLOR, Math.max(0, pixels[i + 2] + delta));
               }
             }
             
@@ -225,12 +236,13 @@ export class CanvasFingerprintProtection {
             
             if (pixels && pixels.length) {
               const canvasId = this.canvas ? getCanvasId(this.canvas) : 0;
+              const MAX_COLOR = ${MAX_COLOR_CHANNEL_VALUE};
               for (let i = 0; i < pixels.length; i += 4) {
                 const pixelRandom = createSeededRandom(getPixelSeed(i, canvasId, sessionSeed));
-                const delta = Math.floor((pixelRandom() - 0.5) * 2 * noise * 255);
-                pixels[i] = Math.min(255, Math.max(0, pixels[i] + delta));
-                pixels[i + 1] = Math.min(255, Math.max(0, pixels[i + 1] + delta));
-                pixels[i + 2] = Math.min(255, Math.max(0, pixels[i + 2] + delta));
+                const delta = Math.floor((pixelRandom() - 0.5) * 2 * noise * MAX_COLOR);
+                pixels[i] = Math.min(MAX_COLOR, Math.max(0, pixels[i] + delta));
+                pixels[i + 1] = Math.min(MAX_COLOR, Math.max(0, pixels[i + 1] + delta));
+                pixels[i + 2] = Math.min(MAX_COLOR, Math.max(0, pixels[i + 2] + delta));
               }
             }
             
@@ -275,7 +287,7 @@ export class CanvasFingerprintProtection {
    * Regenerate session seed (call when creating new browser session)
    */
   regenerateSeed(): void {
-    this.sessionSeed = Math.floor(Math.random() * 2147483647);
+    this.sessionSeed = Math.floor(Math.random() * MAX_INT32);
   }
   
   /**

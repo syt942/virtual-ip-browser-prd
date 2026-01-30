@@ -192,7 +192,10 @@ export class EncryptionService {
     try {
       const data = JSON.parse(result.decrypted) as T;
       return { data, success: true };
-    } catch {
+    } catch (error) {
+      // JSON parse failed - data may be corrupted or not JSON format
+      console.error('[EncryptionService] Failed to parse decrypted JSON:',
+        error instanceof Error ? error.message : 'Parse error');
       return { data: null, success: false, error: 'Failed to parse decrypted JSON' };
     }
   }

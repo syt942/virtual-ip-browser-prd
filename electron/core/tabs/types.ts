@@ -17,8 +17,8 @@ export interface FingerprintConfig {
   canvas: boolean;
   webgl: boolean;
   audio: boolean;
-  navigator: NavigatorSpoofing;
-  timezone?: string;
+  navigator: boolean | NavigatorSpoofing;
+  timezone?: boolean | string;
   language?: string;
   platform?: string;
 }

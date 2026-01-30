@@ -7,6 +7,12 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { WebGLFingerprintProtection, WebGLSpoofConfig } from '../../../electron/core/privacy/fingerprint/webgl';
+import {
+  WEBGL_UNMASKED_VENDOR,
+  WEBGL_UNMASKED_RENDERER,
+  WEBGL_VERSION,
+  WEBGL_SHADING_LANGUAGE_VERSION
+} from '../../../electron/core/privacy/fingerprint/constants';
 
 describe('WebGLFingerprintProtection', () => {
   let protection: WebGLFingerprintProtection;
@@ -161,12 +167,19 @@ describe('WebGLFingerprintProtection', () => {
     it('should spoof same parameters for WebGL2', () => {
       const script = protection.generateInjectionScript();
       
-      // Count occurrences of parameter constants in WebGL2 section
+      // The constants are defined once at the top and used via named references in WebGL2 section
+      // Check that the constant values are defined at the top
+      expect(script).toContain(`UNMASKED_VENDOR = ${WEBGL_UNMASKED_VENDOR}`);
+      expect(script).toContain(`UNMASKED_RENDERER = ${WEBGL_UNMASKED_RENDERER}`);
+      expect(script).toContain(`VERSION = ${WEBGL_VERSION}`);
+      expect(script).toContain(`SHADING_LANG_VERSION = ${WEBGL_SHADING_LANGUAGE_VERSION}`);
+      
+      // Check that WebGL2 section uses the named constants
       const webgl2Section = script.substring(script.indexOf('WebGL2RenderingContext'));
-      expect(webgl2Section).toContain('37445');
-      expect(webgl2Section).toContain('37446');
-      expect(webgl2Section).toContain('7938');
-      expect(webgl2Section).toContain('35724');
+      expect(webgl2Section).toContain('UNMASKED_VENDOR');
+      expect(webgl2Section).toContain('UNMASKED_RENDERER');
+      expect(webgl2Section).toContain('VERSION');
+      expect(webgl2Section).toContain('SHADING_LANG_VERSION');
     });
   });
 

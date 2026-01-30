@@ -160,6 +160,15 @@ export class CreatorSupportHistoryRepository {
    * Get statistics for a creator
    */
   getCreatorStats(creatorId: number): CreatorSupportStats {
+    interface CreatorStatsRow {
+      total_actions: number;
+      successful_actions: number;
+      failed_actions: number;
+      total_clicks: number;
+      total_scrolls: number;
+      total_visits: number;
+      last_action_timestamp: number | null;
+    }
     const result = this.db.prepare(`
       SELECT 
         COUNT(*) as total_actions,
@@ -171,7 +180,7 @@ export class CreatorSupportHistoryRepository {
         MAX(timestamp) as last_action_timestamp
       FROM creator_support_history
       WHERE creator_id = ?
-    `).get(creatorId) as any;
+    `).get(creatorId) as CreatorStatsRow;
 
     return {
       creatorId,

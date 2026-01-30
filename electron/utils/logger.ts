@@ -4,6 +4,7 @@
  */
 
 import type { DatabaseManager } from '../database';
+import type { LogMetadata, ActivityLogRow } from '../types/common';
 
 export type LogLevel = 'debug' | 'info' | 'warning' | 'error' | 'success';
 
@@ -13,7 +14,7 @@ export interface LogEntry {
   level: LogLevel;
   category: string;
   message: string;
-  metadata?: any;
+  metadata?: LogMetadata;
   sessionId?: string;
   tabId?: string;
   proxyId?: string;
@@ -31,14 +32,14 @@ export class Logger {
   /**
    * Log debug message
    */
-  debug(category: string, message: string, metadata?: any): void {
+  debug(category: string, message: string, metadata?: LogMetadata): void {
     this.log('debug', category, message, metadata);
   }
 
   /**
    * Log info message
    */
-  info(category: string, message: string, metadata?: any): void {
+  info(category: string, message: string, metadata?: LogMetadata): void {
     this.log('info', category, message, metadata);
     console.log(`[${category}] ${message}`);
   }
@@ -46,7 +47,7 @@ export class Logger {
   /**
    * Log warning message
    */
-  warning(category: string, message: string, metadata?: any): void {
+  warning(category: string, message: string, metadata?: LogMetadata): void {
     this.log('warning', category, message, metadata);
     console.warn(`[${category}] ${message}`);
   }
@@ -54,7 +55,7 @@ export class Logger {
   /**
    * Log error message
    */
-  error(category: string, message: string, metadata?: any): void {
+  error(category: string, message: string, metadata?: LogMetadata): void {
     this.log('error', category, message, metadata);
     console.error(`[${category}] ${message}`, metadata);
   }
@@ -62,7 +63,7 @@ export class Logger {
   /**
    * Log success message
    */
-  success(category: string, message: string, metadata?: any): void {
+  success(category: string, message: string, metadata?: LogMetadata): void {
     this.log('success', category, message, metadata);
     console.log(`[${category}] ✓ ${message}`);
   }
@@ -74,7 +75,7 @@ export class Logger {
     level: LogLevel,
     category: string,
     message: string,
-    metadata?: any,
+    metadata?: LogMetadata,
     tabId?: string,
     proxyId?: string
   ): void {
@@ -127,7 +128,7 @@ export class Logger {
     `;
 
     const params = level ? [level, limit] : [limit];
-    const rows = this.db.query<any>(sql, params);
+    const rows = this.db.query<ActivityLogRow>(sql, params);
 
     return rows.map(row => ({
       id: row.id,
@@ -136,9 +137,9 @@ export class Logger {
       category: row.category,
       message: row.message,
       metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
-      sessionId: row.session_id,
-      tabId: row.tab_id,
-      proxyId: row.proxy_id
+      sessionId: row.session_id ?? undefined,
+      tabId: row.tab_id ?? undefined,
+      proxyId: row.proxy_id ?? undefined
     }));
   }
 

@@ -54,7 +54,9 @@ export function setupPrivacyHandlers(privacyManager: PrivacyManager) {
       const script = privacyManager.generateProtectionScript(privacyConfig);
       return { success: true, script };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to set fingerprint config';
+      console.error('[IPC:privacy:setFingerprint] Error:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -77,7 +79,9 @@ export function setupPrivacyHandlers(privacyManager: PrivacyManager) {
       webrtc.setBlockWebRTC(validation.data);
       return { success: true };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to toggle WebRTC';
+      console.error('[IPC:privacy:toggleWebRTC] Error:', errorMessage, { enabled: validation.data });
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -100,7 +104,9 @@ export function setupPrivacyHandlers(privacyManager: PrivacyManager) {
       blocker.setEnabled(validation.data);
       return { success: true };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      const errorMessage = error instanceof Error ? error.message : 'Failed to toggle tracker blocking';
+      console.error('[IPC:privacy:toggleTrackerBlocking] Error:', errorMessage, { enabled: validation.data });
+      return { success: false, error: errorMessage };
     }
   });
 

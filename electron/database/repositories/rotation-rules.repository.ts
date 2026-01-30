@@ -126,7 +126,7 @@ export class RotationRulesRepository {
     if (!existing) return null;
 
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (input.name !== undefined) {
       updates.push('name = ?');
