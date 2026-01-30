@@ -1,7 +1,9 @@
 # Virtual IP Browser
 
-[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/virtualipbrowser/virtual-ip-browser)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/virtualipbrowser/virtual-ip-browser/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux-lightgrey.svg)](docs/DISTRIBUTION.md)
+[![Downloads](https://img.shields.io/badge/downloads-.deb%20|%20.rpm%20|%20AppImage-orange.svg)](https://github.com/virtualipbrowser/virtual-ip-browser/releases)
 [![Tests](https://img.shields.io/badge/tests-54_files-brightgreen.svg)](./TESTING.md)
 [![Coverage](https://img.shields.io/badge/coverage-85%25+-brightgreen.svg)](./coverage/index.html)
 [![Security](https://img.shields.io/badge/security-hardened-brightgreen.svg)](./docs/SECURITY_CONSOLIDATED.md)
@@ -16,6 +18,94 @@ A next-generation, privacy-focused Electron-based desktop browser designed to pr
 ![React](https://img.shields.io/badge/react-19.x-blue)
 ![TypeScript](https://img.shields.io/badge/typescript-5.6-blue)
 ![Security](https://img.shields.io/badge/security-enterprise--grade-brightgreen)
+
+---
+
+## 📥 Installation
+
+### Quick Install (Debian/Ubuntu)
+
+```bash
+# Download the latest .deb package
+wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.2.1/virtual-ip-browser_1.2.1_amd64.deb
+
+# Install with apt (recommended - handles dependencies)
+sudo apt install ./virtual-ip-browser_1.2.1_amd64.deb
+
+# Launch the application
+virtual-ip-browser
+```
+
+### System Requirements
+
+| Requirement | Specification |
+|-------------|---------------|
+| **OS** | Linux (64-bit) - Ubuntu 20.04+, Debian 11+, Fedora 35+ |
+| **Architecture** | x86_64 (amd64) |
+| **RAM** | 2 GB minimum, 4 GB recommended |
+| **Disk Space** | 500 MB |
+
+### Available Packages
+
+| Format | File | Size | Best For |
+|--------|------|------|----------|
+| **Debian** | `virtual-ip-browser_1.2.1_amd64.deb` | 94 MB | Ubuntu, Debian, Mint, Pop!_OS |
+| **AppImage** | `Virtual IP Browser-1.2.1-x86_64.AppImage` | 123 MB | Any Linux (portable) |
+| **RPM** | `virtual-ip-browser-1.2.1.x86_64.rpm` | 82 MB | Fedora, RHEL, openSUSE |
+
+### Install by Distribution
+
+<details>
+<summary><strong>Ubuntu / Debian / Linux Mint</strong></summary>
+
+```bash
+# Method 1: Using apt (recommended)
+sudo apt install ./virtual-ip-browser_1.2.1_amd64.deb
+
+# Method 2: Using dpkg
+sudo dpkg -i virtual-ip-browser_1.2.1_amd64.deb
+sudo apt-get install -f  # Fix dependencies if needed
+```
+</details>
+
+<details>
+<summary><strong>Fedora / RHEL / CentOS</strong></summary>
+
+```bash
+sudo dnf install ./virtual-ip-browser-1.2.1.x86_64.rpm
+```
+</details>
+
+<details>
+<summary><strong>openSUSE</strong></summary>
+
+```bash
+sudo zypper install ./virtual-ip-browser-1.2.1.x86_64.rpm
+```
+</details>
+
+<details>
+<summary><strong>AppImage (Any Distribution)</strong></summary>
+
+```bash
+chmod +x Virtual-IP-Browser-1.2.1-x86_64.AppImage
+./Virtual-IP-Browser-1.2.1-x86_64.AppImage
+```
+</details>
+
+### Post-Installation
+
+After installation, launch the browser:
+
+1. **Application Menu**: Search for "Virtual IP Browser" in your desktop's application menu
+2. **Command Line**: Run `virtual-ip-browser` in terminal
+3. **First Run**: The app creates its configuration in `~/.config/virtual-ip-browser/`
+
+> ⚠️ **Important**: Run as a regular user, not as root. Electron apps require a non-root user for security sandbox.
+
+For detailed installation instructions, see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md).
+
+---
 
 ## ✨ Key Features
 
@@ -175,16 +265,23 @@ Based on code review and security audit findings:
 
 ## 🚀 Quick Start
 
-### Prerequisites
+> **For end users**: See the [Installation](#-installation) section above to download and install the pre-built packages.
+
+### Development Setup
+
+For developers who want to build from source:
+
+#### Prerequisites
 
 - Node.js >= 18.0.0
 - npm >= 8.0.0
+- Linux, macOS, or Windows (for development)
 
-### Installation
+#### Clone and Run
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/virtual-ip-browser.git
+git clone https://github.com/virtualipbrowser/virtual-ip-browser.git
 cd virtual-ip-browser
 
 # Install dependencies
@@ -194,9 +291,9 @@ npm install
 npm run dev
 ```
 
-### Environment Setup
+#### Environment Setup (Optional)
 
-Create a `.env` file in the root directory (optional):
+Create a `.env` file in the root directory:
 
 ```env
 # Database
@@ -209,7 +306,7 @@ ENCRYPTION_KEY=your-32-byte-hex-key
 LOG_LEVEL=info
 ```
 
-### Verify Installation
+#### Verify Development Setup
 
 ```bash
 # Run setup verification
@@ -224,6 +321,8 @@ npm run lint
 # Run tests
 npm test
 ```
+
+See [QUICK_START.md](QUICK_START.md) for a complete quick reference guide.
 
 ---
 
@@ -399,6 +498,16 @@ npm run package:linux  # Linux (AppImage, DEB)
 
 ## 📚 Documentation
 
+### Installation & Distribution
+
+| Document | Description |
+|----------|-------------|
+| [Quick Start](QUICK_START.md) | Download, install, launch, configure quick reference |
+| [Distribution Guide](docs/DISTRIBUTION.md) | Package formats, system requirements, installation |
+| [Packaging Guide](docs/PACKAGING.md) | Building packages from source |
+| [Build Log](BUILD_LOG.md) | Build execution details |
+| [Installation Verification](INSTALLATION_VERIFICATION.md) | Installation verification report |
+
 ### Core Documentation
 
 | Document | Description |
@@ -529,4 +638,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Virtual IP Browser** - Take control of your online privacy.
 
-*Last Updated: 2025-01-30*
+*Last Updated: January 2026*

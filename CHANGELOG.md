@@ -20,11 +20,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.1] - 2025-01-16
 
-### Quality Release: Code Quality Improvements
+### Quality Release: Code Quality Improvements + Packaging
 
-This release focuses on code quality improvements addressing issues identified in the code quality audit. No functional changes - pure quality and maintainability improvements.
+This release focuses on code quality improvements and introduces production-ready distribution packages. The application is now available as installable packages for Linux systems.
 
 ### Added
+
+#### Distribution Packages 📦
+- **Debian Package (.deb)** - Native package for Ubuntu/Debian systems
+  - File: `virtual-ip-browser_1.2.1_amd64.deb` (94 MB)
+  - Installed size: ~359 MB
+  - Full desktop integration (menu entries, icons, file associations)
+  - Automatic dependency management via APT
+- **AppImage** - Universal Linux package
+  - File: `Virtual IP Browser-1.2.1-x86_64.AppImage` (123 MB)
+  - Self-contained, runs on any Linux distribution
+  - No installation required
+- **RPM Package** - Native package for Fedora/RHEL systems
+  - File: `virtual-ip-browser-1.2.1.x86_64.rpm` (82 MB)
+  - Full desktop integration
+  - Automatic dependency management via DNF/Zypper
+
+#### Packaging Documentation
+- **New File**: `docs/DISTRIBUTION.md` - Comprehensive distribution guide
+- **New File**: `docs/PACKAGING.md` - Build and packaging instructions
+- **New File**: `BUILD_LOG.md` - Build execution log
+- **New File**: `INSTALLATION_VERIFICATION.md` - Installation verification report
+- **Updated**: `QUICK_START.md` - Added installation quick start section
+
+#### Installation Features
+- Desktop menu integration
+- Application icons at multiple resolutions (16x16 to 512x512)
+- File type associations (HTML, XHTML)
+- Post-install scripts for desktop database updates
+- Symlink at `/usr/bin/virtual-ip-browser` for CLI access
 
 #### Named Constants System
 - **New File**: `electron/core/privacy/fingerprint/constants.ts` - WebGL and canvas fingerprint constants
@@ -427,16 +456,21 @@ This release completes all PRD requirements including core features, automation,
 
 ## Version Comparison
 
-| Feature | v0.1.0 | v0.9.0 | v1.0.0 | v1.1.0 |
-|---------|--------|--------|--------|--------|
-| Multi-tab | ❌ | ✅ | ✅ | ✅ |
-| Proxy Strategies | 0 | 6 | 10 | 10 |
-| Fingerprint Spoofing | ❌ | Basic | Full | Full |
-| Domain Targeting | ❌ | ❌ | ✅ | ✅ |
-| Creator Support | ❌ | ❌ | ✅ | ✅ |
-| Translation | ❌ | ❌ | ✅ | ✅ |
-| Security Controls | ❌ | ❌ | Basic | Enterprise |
-| Test Coverage | 0% | ~30% | ~45% | ~45% |
+| Feature | v0.1.0 | v0.9.0 | v1.0.0 | v1.1.0 | v1.2.0 | v1.2.1 |
+|---------|--------|--------|--------|--------|--------|--------|
+| Multi-tab | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Proxy Strategies | 0 | 6 | 10 | 10 | 10 | 10 |
+| Fingerprint Spoofing | ❌ | Basic | Full | Full | Full | Full |
+| Domain Targeting | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Creator Support | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Translation | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Security Controls | ❌ | ❌ | Basic | Enterprise | Enterprise | Enterprise |
+| Circuit Breaker | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Cron Scheduler | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Captcha Detection | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Test Coverage | 0% | ~30% | ~45% | ~45% | 85%+ | 85%+ |
+| Distribution Packages | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Code Quality Rating | - | - | 3.5/5 | 4/5 | 4/5 | 4.5/5 |
 
 ---
 
@@ -460,6 +494,9 @@ This release completes all PRD requirements including core features, automation,
 ## Links
 
 - [README](README.md)
+- [Quick Start](QUICK_START.md)
+- [Distribution Guide](docs/DISTRIBUTION.md)
+- [Packaging Guide](docs/PACKAGING.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](docs/SECURITY_CONSOLIDATED.md)
 - [Architecture](docs/ARCHITECTURE.md)
@@ -468,3 +505,5 @@ This release completes all PRD requirements including core features, automation,
 ---
 
 *For detailed commit history, see the git log.*
+
+*Last Updated: January 2026*

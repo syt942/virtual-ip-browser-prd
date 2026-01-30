@@ -73,13 +73,26 @@
   "build": {
     "appId": "com.virtualipbrowser.app",
     "productName": "Virtual IP Browser",
+    "copyright": "Copyright © 2024-2026 Virtual IP Browser Development Team",
     "directories": {
       "output": "release",
       "buildResources": "resources"
     },
     "files": [
       "out/**/*",
-      "resources/**/*"
+      "resources/**/*",
+      "!resources/icons/source/**"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/",
+        "to": "resources/",
+        "filter": ["**/*", "!icons/source/**"]
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/*.node"
     ],
     "mac": {
       "target": [
@@ -87,7 +100,9 @@
         "zip"
       ],
       "category": "public.app-category.utilities",
-      "icon": "resources/icons/icon.icns"
+      "icon": "resources/icons/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
     },
     "win": {
       "target": [
@@ -99,14 +114,73 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb"
+        "deb",
+        "rpm"
       ],
-      "category": "Utility",
+      "category": "Network;WebBrowser;Utility;Security",
       "icon": "resources/icons",
-      "maintainer": "dev@virtualipbrowser.com",
+      "maintainer": "Virtual IP Browser Development Team <dev@virtualipbrowser.com>",
       "vendor": "Virtual IP Browser Development Team",
       "synopsis": "Privacy-Focused Browser with Proxy Management",
-      "description": "Enhanced Privacy-Focused Browser with Proxy Management and Fingerprint Spoofing"
+      "description": "Virtual IP Browser is an enhanced privacy-focused browser featuring advanced proxy management, fingerprint spoofing, WebRTC leak protection, and automated browsing capabilities. Perfect for privacy-conscious users, security researchers, and developers who need to test applications under different network conditions.",
+      "executableName": "virtual-ip-browser",
+      "desktop": {
+        "Name": "Virtual IP Browser",
+        "GenericName": "Privacy Browser",
+        "Comment": "Privacy-Focused Browser with Proxy Management and Fingerprint Spoofing",
+        "Categories": "Network;WebBrowser;Utility;Security",
+        "Keywords": "browser;privacy;proxy;vpn;fingerprint;security",
+        "StartupWMClass": "virtual-ip-browser",
+        "MimeType": "text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https"
+      }
+    },
+    "deb": {
+      "priority": "optional",
+      "compression": "xz",
+      "depends": [
+        "libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0",
+        "libuuid1",
+        "libsecret-1-0",
+        "libgbm1",
+        "libasound2"
+      ],
+      "recommends": [
+        "libappindicator3-1"
+      ],
+      "afterInstall": "scripts/linux/postinst.sh",
+      "afterRemove": "scripts/linux/postrm.sh"
+    },
+    "rpm": {
+      "compression": "xz",
+      "depends": [
+        "gtk3",
+        "libnotify",
+        "nss",
+        "libXScrnSaver",
+        "libXtst",
+        "xdg-utils",
+        "at-spi2-core",
+        "libuuid",
+        "libsecret",
+        "libgbm",
+        "alsa-lib"
+      ]
+    },
+    "appImage": {
+      "artifactName": "${productName}-${version}-${arch}.AppImage",
+      "category": "Network"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "virtualipbrowser",
+      "repo": "virtual-ip-browser",
+      "releaseType": "release"
     }
   }
 }

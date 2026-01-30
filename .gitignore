@@ -47,3 +47,12 @@ electron-builder-output/
 tmp/
 temp/
 *.tmp
+release/
+*.deb
+*.rpm
+*.AppImage
+
+# Build outputs (binaries too large for git)
+release/
+dist/
+out/

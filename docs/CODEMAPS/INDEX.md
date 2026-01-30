@@ -1,6 +1,6 @@
 # Virtual IP Browser - Architecture Codemaps
 
-**Last Updated:** 2025-01-16  
+**Last Updated:** January 2026  
 **Version:** 1.2.1
 
 ## Overview
@@ -87,6 +87,21 @@ This directory contains detailed architectural codemaps for the Virtual IP Brows
 - [QUALITY_IMPROVEMENTS.md](../../QUALITY_IMPROVEMENTS.md) - Consolidated summary
 - [MAGIC_NUMBERS_REFACTORING.md](../MAGIC_NUMBERS_REFACTORING.md) - Constants documentation
 - [ERROR_HANDLING_IMPROVEMENTS.md](../ERROR_HANDLING_IMPROVEMENTS.md) - Error patterns
+
+### Distribution & Packaging (v1.2.1)
+
+| Document | Description |
+|----------|-------------|
+| [QUICK_START.md](../../QUICK_START.md) | Download, install, launch quick reference |
+| [DISTRIBUTION.md](../DISTRIBUTION.md) | Package formats, system requirements, installation |
+| [PACKAGING.md](../PACKAGING.md) | Building packages from source |
+| [BUILD_LOG.md](../../BUILD_LOG.md) | Build execution details |
+| [INSTALLATION_VERIFICATION.md](../../INSTALLATION_VERIFICATION.md) | Installation verification report |
+
+**Available Packages:**
+- `.deb` - Debian/Ubuntu (94 MB)
+- `.rpm` - Fedora/RHEL (82 MB)  
+- `.AppImage` - Universal Linux (123 MB)
 
 ## Module Dependencies
 
