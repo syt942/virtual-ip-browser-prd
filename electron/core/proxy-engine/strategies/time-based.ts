@@ -14,7 +14,7 @@ export class TimeBasedStrategy extends BaseStrategy {
   private lastUsedIndex = 0;
 
   selectProxy(proxies: ProxyConfig[], _context?: RotationContext): ProxyConfig | null {
-    if (proxies.length === 0) return null;
+    if (proxies.length === 0) {return null;}
 
     const now = Date.now();
     const interval = this.config.interval || 60000; // Default 1 minute
@@ -103,7 +103,7 @@ export class TimeBasedStrategy extends BaseStrategy {
     const currentDay = now.getDay();
 
     for (const window of this.config.scheduleWindows || []) {
-      if (!window.daysOfWeek.includes(currentDay)) continue;
+      if (!window.daysOfWeek.includes(currentDay)) {continue;}
       
       if (window.startHour <= window.endHour) {
         // Normal window (e.g., 9-17)
@@ -143,7 +143,7 @@ export class TimeBasedStrategy extends BaseStrategy {
   }
 
   getTimeUntilNextRotation(): number | null {
-    if (!this.lastRotation) return null;
+    if (!this.lastRotation) {return null;}
     const interval = this.config.interval || 60000;
     const elapsed = Date.now() - this.lastRotation.getTime();
     return Math.max(0, interval - elapsed);

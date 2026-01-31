@@ -49,21 +49,21 @@ function isPrivateOrBlockedIP(hostname: string): boolean {
     'metadata.goog'
   ];
   
-  if (blockedHosts.includes(hostname.toLowerCase())) return true;
+  if (blockedHosts.includes(hostname.toLowerCase())) {return true;}
   
   // Check for IP addresses
   const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
   if (ipPattern.test(hostname)) {
     const octets = hostname.split('.').map(Number);
-    if (octets.some(o => o < 0 || o > 255)) return true;
+    if (octets.some(o => o < 0 || o > 255)) {return true;}
     
     // 10.x.x.x, 172.16-31.x.x, 192.168.x.x, 127.x.x.x, 0.x.x.x
-    if (octets[0] === 10) return true;
-    if (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) return true;
-    if (octets[0] === 192 && octets[1] === 168) return true;
-    if (octets[0] === 127) return true;
-    if (octets[0] === 0) return true;
-    if (octets[0] === 169 && octets[1] === 254) return true;
+    if (octets[0] === 10) {return true;}
+    if (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) {return true;}
+    if (octets[0] === 192 && octets[1] === 168) {return true;}
+    if (octets[0] === 127) {return true;}
+    if (octets[0] === 0) {return true;}
+    if (octets[0] === 169 && octets[1] === 254) {return true;}
   }
   
   return false;
@@ -115,7 +115,7 @@ export const SafeUrlSchema = z.string()
   .transform(sanitize)
   .refine(
     (url) => {
-      if (!url) return true;
+      if (!url) {return true;}
       
       try {
         const parsed = new URL(url);
@@ -197,7 +197,7 @@ export const DomainPatternSchema = z.string()
   .transform(sanitize)
   .refine(
     (pattern) => {
-      if (!pattern) return true;
+      if (!pattern) {return true;}
       // Check for ReDoS patterns
       const redosPatterns = [/\(\.\*\)\+/, /\(\.\+\)\+/, /\([^)]+\+\)\+/];
       return !redosPatterns.some(p => p.test(pattern));
@@ -206,7 +206,7 @@ export const DomainPatternSchema = z.string()
   )
   .refine(
     (pattern) => {
-      if (!pattern) return true;
+      if (!pattern) {return true;}
       try { 
         new RegExp(pattern); 
         return true; 

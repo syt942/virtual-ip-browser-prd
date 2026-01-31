@@ -179,7 +179,7 @@ export class ProxyManager extends EventEmitter {
     }
 
     const proxy = this.proxies.get(id);
-    if (!proxy) return false;
+    if (!proxy) {return false;}
 
     // Clear encrypted credentials from memory
     if (proxy.encryptedCredentials) {
@@ -204,7 +204,7 @@ export class ProxyManager extends EventEmitter {
       p => p.status === 'active'
     );
 
-    if (activeProxies.length === 0) return null;
+    if (activeProxies.length === 0) {return null;}
 
     const selected = this.rotationStrategy.selectProxy(activeProxies);
     return selected ? this.toSafeProxy(selected) : null;
@@ -298,7 +298,7 @@ export class ProxyManager extends EventEmitter {
     }
 
     const proxy = this.proxies.get(id);
-    if (!proxy) return;
+    if (!proxy) {return;}
 
     proxy.totalRequests++;
     if (!success) {
@@ -350,7 +350,7 @@ export class ProxyManager extends EventEmitter {
     }
     
     const proxy = this.proxies.get(id);
-    if (!proxy) return null;
+    if (!proxy) {return null;}
     
     return this.circuitBreakerRegistry.getForProxy(id, proxy.name);
   }
@@ -478,7 +478,7 @@ export class ProxyManager extends EventEmitter {
    * Validate UUID format
    */
   private isValidUUID(id: string): boolean {
-    if (typeof id !== 'string') return false;
+    if (typeof id !== 'string') {return false;}
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuidRegex.test(id);
   }

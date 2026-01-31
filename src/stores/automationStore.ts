@@ -115,7 +115,7 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
 
   addKeyword: (keyword) => {
     const trimmed = keyword.trim();
-    if (!trimmed) return;
+    if (!trimmed) {return;}
     
     set((state) => ({
       keywords: state.keywords.includes(trimmed)
@@ -132,7 +132,7 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
 
   addTargetDomain: async (domain) => {
     const trimmed = domain.trim();
-    if (!trimmed) return;
+    if (!trimmed) {return;}
     
     try {
       await window.api.automation.addDomain(trimmed);

@@ -10,7 +10,7 @@ export class RoundRobinStrategy extends BaseStrategy {
   private lastUsedIndex = 0;
 
   selectProxy(proxies: ProxyConfig[], _context?: RotationContext): ProxyConfig | null {
-    if (proxies.length === 0) return null;
+    if (proxies.length === 0) {return null;}
     
     const proxy = proxies[this.lastUsedIndex % proxies.length];
     this.lastUsedIndex++;

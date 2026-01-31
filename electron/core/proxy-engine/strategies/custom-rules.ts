@@ -26,7 +26,7 @@ export class CustomRulesStrategy extends BaseStrategy {
   }
 
   selectProxy(proxies: ProxyConfig[], context?: RotationContext): ProxyConfig | null {
-    if (proxies.length === 0) return null;
+    if (proxies.length === 0) {return null;}
 
     const result = this.evaluateRules(context || {}, proxies);
     

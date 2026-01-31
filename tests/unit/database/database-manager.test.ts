@@ -39,25 +39,25 @@ class TestDatabaseManager {
   }
 
   query<T = any>(sql: string, params?: any[]): T[] {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     const stmt = this.db.prepare(sql);
     return (params ? stmt.all(...params) : stmt.all()) as T[];
   }
 
   queryOne<T = any>(sql: string, params?: any[]): T | undefined {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     const stmt = this.db.prepare(sql);
     return (params ? stmt.get(...params) : stmt.get()) as T | undefined;
   }
 
   execute(sql: string, params?: any[]): Database.RunResult {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     const stmt = this.db.prepare(sql);
     return params ? stmt.run(...params) : stmt.run();
   }
 
   transaction<T>(fn: () => T): T {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     const txn = this.db.transaction(fn);
     return txn();
   }

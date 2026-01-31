@@ -106,12 +106,12 @@ const createConfettiParticle = (
 
   let frame = 0
   const animate = () => {
-    if (frame >= ticks) return
+    if (frame >= ticks) {return}
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight)
 
     particles.forEach(particle => {
-      if (particle.life <= 0) return
+      if (particle.life <= 0) {return}
 
       particle.x += particle.vx
       particle.vy += gravity * 0.5
@@ -165,7 +165,7 @@ const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
 
   // Respect prefers-reduced-motion
   const prefersReducedMotion = useMemo(() => {
-    if (typeof window === 'undefined') return false
+    if (typeof window === 'undefined') {return false}
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches
   }, [])
 
@@ -191,10 +191,10 @@ const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
 
   const fire = useCallback(
     (opts: ConfettiOptions = {}) => {
-      if (!shouldAnimate || !canvasRef.current) return
+      if (!shouldAnimate || !canvasRef.current) {return}
 
       const ctx = canvasRef.current.getContext('2d')
-      if (!ctx) return
+      if (!ctx) {return}
 
       createConfettiParticle(
         ctx,

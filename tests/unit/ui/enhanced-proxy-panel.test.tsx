@@ -34,7 +34,7 @@ vi.mock('framer-motion', () => ({
   useSpring: (value: any) => ({
     ...value,
     on: vi.fn((event: string, callback: Function) => {
-      if (event === 'change') callback(value.get?.() || 0);
+      if (event === 'change') {callback(value.get?.() || 0);}
       return () => {};
     }),
   }),

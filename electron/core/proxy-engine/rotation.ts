@@ -80,7 +80,7 @@ export class ProxyRotationStrategy {
   }
 
   selectProxy(proxies: ProxyConfig[], context?: RotationContext): ProxyConfig | null {
-    if (proxies.length === 0) return null;
+    if (proxies.length === 0) {return null;}
 
     switch (this.config.strategy) {
       case 'round-robin':

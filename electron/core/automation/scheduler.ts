@@ -38,7 +38,7 @@ export class TaskScheduler extends EventEmitter {
    * Start the scheduler
    */
   start(): void {
-    if (this.running) return;
+    if (this.running) {return;}
     
     this.running = true;
     this.scheduleAllTasks();
@@ -180,7 +180,7 @@ export class TaskScheduler extends EventEmitter {
    */
   removeSchedule(id: string): boolean {
     const schedule = this.schedules.get(id);
-    if (!schedule) return false;
+    if (!schedule) {return false;}
 
     // Clear timer if exists
     const timer = this.timers.get(id);
@@ -206,7 +206,7 @@ export class TaskScheduler extends EventEmitter {
    */
   updateSchedule(id: string, updates: Partial<TaskSchedule>): TaskSchedule | undefined {
     const schedule = this.schedules.get(id);
-    if (!schedule) return undefined;
+    if (!schedule) {return undefined;}
 
     // Validate cron expression if being updated
     if (updates.cronExpression && updates.cronExpression !== schedule.cronExpression) {
@@ -263,7 +263,7 @@ export class TaskScheduler extends EventEmitter {
    */
   enableSchedule(id: string): boolean {
     const schedule = this.schedules.get(id);
-    if (!schedule) return false;
+    if (!schedule) {return false;}
 
     schedule.enabled = true;
     schedule.updatedAt = new Date();
@@ -282,7 +282,7 @@ export class TaskScheduler extends EventEmitter {
    */
   disableSchedule(id: string): boolean {
     const schedule = this.schedules.get(id);
-    if (!schedule) return false;
+    if (!schedule) {return false;}
 
     schedule.enabled = false;
     schedule.updatedAt = new Date();
@@ -335,7 +335,7 @@ export class TaskScheduler extends EventEmitter {
     }
 
     const nextRun = this.calculateNextRun(schedule);
-    if (!nextRun) return;
+    if (!nextRun) {return;}
 
     schedule.nextRun = nextRun;
     this.schedules.set(schedule.id, schedule);
@@ -367,7 +367,7 @@ export class TaskScheduler extends EventEmitter {
 
     switch (schedule.type) {
       case 'one-time':
-        if (!schedule.startTime) return null;
+        if (!schedule.startTime) {return null;}
         return schedule.startTime > now ? schedule.startTime : null;
 
       case 'recurring':
@@ -391,7 +391,7 @@ export class TaskScheduler extends EventEmitter {
    * Calculate next run time for recurring schedules
    */
   private calculateRecurringNextRun(schedule: TaskSchedule, now: Date): Date | null {
-    if (!schedule.intervalMinutes) return null;
+    if (!schedule.intervalMinutes) {return null;}
 
     // If has days of week restriction, check them
     if (schedule.daysOfWeek && schedule.daysOfWeek.length > 0) {
@@ -419,7 +419,7 @@ export class TaskScheduler extends EventEmitter {
    */
   private calculateRecurringWithDays(schedule: TaskSchedule, now: Date): Date | null {
     const { daysOfWeek, intervalMinutes, startTime } = schedule;
-    if (!intervalMinutes || !daysOfWeek || daysOfWeek.length === 0) return null;
+    if (!intervalMinutes || !daysOfWeek || daysOfWeek.length === 0) {return null;}
 
     let candidate = schedule.lastRun 
       ? new Date(schedule.lastRun.getTime() + intervalMinutes * 60000)
@@ -497,8 +497,8 @@ export class TaskScheduler extends EventEmitter {
     const now = new Date();
 
     for (const schedule of this.schedules.values()) {
-      if (!schedule.enabled) continue;
-      if (!schedule.nextRun) continue;
+      if (!schedule.enabled) {continue;}
+      if (!schedule.nextRun) {continue;}
 
       if (schedule.nextRun <= now) {
         this.executeTask(schedule);
@@ -552,7 +552,7 @@ export class TaskScheduler extends EventEmitter {
   getActiveScheduleCount(): number {
     let count = 0;
     for (const schedule of this.schedules.values()) {
-      if (schedule.enabled) count++;
+      if (schedule.enabled) {count++;}
     }
     return count;
   }

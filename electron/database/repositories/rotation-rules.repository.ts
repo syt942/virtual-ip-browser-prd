@@ -123,7 +123,7 @@ export class RotationRulesRepository {
     input: Partial<Omit<CreateRotationRuleInput, 'configId'>>
   ): ProxyRotationRuleDTO | null {
     const existing = this.findById(id);
-    if (!existing) return null;
+    if (!existing) {return null;}
 
     const updates: string[] = [];
     const params: unknown[] = [];
@@ -161,7 +161,7 @@ export class RotationRulesRepository {
       params.push(input.enabled ? 1 : 0);
     }
 
-    if (updates.length === 0) return existing;
+    if (updates.length === 0) {return existing;}
 
     params.push(id);
     this.db.prepare(`
@@ -232,7 +232,7 @@ export class RotationRulesRepository {
    */
   duplicate(id: string, targetConfigId?: string, newName?: string): ProxyRotationRuleDTO | null {
     const original = this.findById(id);
-    if (!original) return null;
+    if (!original) {return null;}
 
     return this.create({
       configId: targetConfigId || original.configId,
@@ -252,7 +252,7 @@ export class RotationRulesRepository {
    */
   addCondition(id: string, condition: RuleCondition): boolean {
     const rule = this.findById(id);
-    if (!rule) return false;
+    if (!rule) {return false;}
 
     const conditions = [...rule.conditions, condition];
     const result = this.db.prepare(
@@ -284,7 +284,7 @@ export class RotationRulesRepository {
    */
   addAction(id: string, action: RuleActionConfig): boolean {
     const rule = this.findById(id);
-    if (!rule) return false;
+    if (!rule) {return false;}
 
     const actions = [...rule.actions, action];
     const result = this.db.prepare(

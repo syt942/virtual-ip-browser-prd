@@ -169,7 +169,7 @@ export class EncryptedCredentialsRepository {
       params.push(data.keyId);
     }
 
-    if (updates.length === 0) return false;
+    if (updates.length === 0) {return false;}
 
     updates.push('last_rotated_at = CURRENT_TIMESTAMP');
     params.push(id);

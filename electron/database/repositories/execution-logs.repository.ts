@@ -360,7 +360,7 @@ export class ExecutionLogsRepository {
       WHERE start_time >= ? AND status != 'running'
     `).get(startTimestamp) as { total: number; successful: number };
 
-    if (result.total === 0) return 100;
+    if (result.total === 0) {return 100;}
     return (result.successful / result.total) * 100;
   }
 

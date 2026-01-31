@@ -206,7 +206,7 @@ export class LanguageDetector {
    * Check if a language is supported
    */
   isSupported(langCode: string): boolean {
-    if (!langCode) return false;
+    if (!langCode) {return false;}
     return langCode.toLowerCase() in this.supportedLanguages;
   }
 

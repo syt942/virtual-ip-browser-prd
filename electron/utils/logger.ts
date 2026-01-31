@@ -120,7 +120,7 @@ export class Logger {
    * Get recent logs
    */
   getRecentLogs(limit: number = 100, level?: LogLevel): LogEntry[] {
-    let sql = `
+    const sql = `
       SELECT * FROM activity_logs
       ${level ? 'WHERE level = ?' : ''}
       ORDER BY timestamp DESC

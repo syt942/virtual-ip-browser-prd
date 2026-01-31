@@ -21,6 +21,8 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "lint:ci": "eslint . --ext .ts,.tsx --max-warnings 500",
     "test": "vitest",
     "test:e2e": "playwright test",
     "package": "electron-builder",

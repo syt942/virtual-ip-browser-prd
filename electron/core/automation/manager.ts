@@ -159,7 +159,7 @@ export class AutomationManager extends EventEmitter {
    */
   stopSession(sessionId: string): boolean {
     const session = this.sessions.get(sessionId);
-    if (!session) return false;
+    if (!session) {return false;}
 
     session.status = 'stopped';
     session.completedAt = new Date();
@@ -174,7 +174,7 @@ export class AutomationManager extends EventEmitter {
    */
   pauseSession(sessionId: string): boolean {
     const session = this.sessions.get(sessionId);
-    if (!session) return false;
+    if (!session) {return false;}
 
     session.status = 'paused';
     session.pausedAt = new Date();
@@ -189,7 +189,7 @@ export class AutomationManager extends EventEmitter {
    */
   resumeSession(sessionId: string): boolean {
     const session = this.sessions.get(sessionId);
-    if (!session || session.status !== 'paused') return false;
+    if (!session || session.status !== 'paused') {return false;}
 
     session.status = 'active';
     session.pausedAt = undefined;
@@ -331,7 +331,7 @@ export class AutomationManager extends EventEmitter {
    */
   private updateSessionStatistics(sessionId: string): void {
     const session = this.sessions.get(sessionId);
-    if (!session) return;
+    if (!session) {return;}
 
     const completed = session.tasks.filter(t => t.status === 'completed').length;
     const failed = session.tasks.filter(t => t.status === 'failed').length;

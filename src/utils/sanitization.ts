@@ -199,8 +199,8 @@ export function validateRegexPattern(pattern: string): { valid: boolean; error?:
  * Truncate string safely for display
  */
 export function truncate(str: string, maxLength: number): string {
-  if (typeof str !== 'string') return '';
-  if (str.length <= maxLength) return str;
+  if (typeof str !== 'string') {return '';}
+  if (str.length <= maxLength) {return str;}
   return str.substring(0, maxLength - 3) + '...';
 }
 
@@ -208,6 +208,6 @@ export function truncate(str: string, maxLength: number): string {
  * Strip all HTML tags from string
  */
 export function stripHtml(html: string): string {
-  if (typeof html !== 'string') return '';
+  if (typeof html !== 'string') {return '';}
   return html.replace(/<[^>]*>/g, '');
 }

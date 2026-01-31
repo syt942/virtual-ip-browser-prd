@@ -225,7 +225,7 @@ export class CreatorSupportScheduler extends EventEmitter {
         let daysUntilNext = 7;
         for (const day of schedule.daysOfWeek) {
           let diff = day - currentDay;
-          if (diff < 0) diff += 7;
+          if (diff < 0) {diff += 7;}
           if (diff === 0) {
             const todayTime = new Date(now);
             todayTime.setHours(hours, minutes, 0, 0);
@@ -320,7 +320,7 @@ export class CreatorSupportScheduler extends EventEmitter {
    * Start the scheduler
    */
   start(): void {
-    if (this.running) return;
+    if (this.running) {return;}
     this.running = true;
 
     for (const schedule of this.schedules.values()) {
@@ -336,7 +336,7 @@ export class CreatorSupportScheduler extends EventEmitter {
    * Stop the scheduler
    */
   stop(): void {
-    if (!this.running) return;
+    if (!this.running) {return;}
     this.running = false;
 
     for (const [_id, timer] of this.timers) {

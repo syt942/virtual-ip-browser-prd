@@ -254,7 +254,7 @@ export class ProxyRepository {
    */
   normalizeWeights(rotationGroup?: string): void {
     const stats = this.getWeightStats(rotationGroup);
-    if (stats.total === 0 || stats.count === 0) return;
+    if (stats.total === 0 || stats.count === 0) {return;}
 
     const factor = 100 / stats.total;
 
@@ -286,7 +286,7 @@ export class ProxyRepository {
     }
 
     const { count } = this.db.prepare(countSql).get(...countParams) as { count: number };
-    if (count === 0) return;
+    if (count === 0) {return;}
 
     const equalWeight = 100 / count;
 

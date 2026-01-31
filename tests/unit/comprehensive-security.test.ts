@@ -569,7 +569,7 @@ describe('Vulnerabilities #4-6: Zod Validation', () => {
 
 describe('Vulnerability #7: UI Input Sanitization', () => {
   function sanitizeForDisplay(input: string): string {
-    if (typeof input !== 'string') return '';
+    if (typeof input !== 'string') {return '';}
     return input
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -584,8 +584,8 @@ describe('Vulnerability #7: UI Input Sanitization', () => {
       return { valid: false, error: 'Keyword must be a string' };
     }
     const trimmed = keyword.trim();
-    if (!trimmed) return { valid: false, error: 'Keyword is required' };
-    if (trimmed.length > 500) return { valid: false, error: 'Keyword too long' };
+    if (!trimmed) {return { valid: false, error: 'Keyword is required' };}
+    if (trimmed.length > 500) {return { valid: false, error: 'Keyword too long' };}
     
     const dangerousPatterns = [
       /<script/i, /javascript:/i, /on\w+\s*=/i, /data:/i, /vbscript:/i,

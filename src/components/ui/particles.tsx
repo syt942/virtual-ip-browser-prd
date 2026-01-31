@@ -111,7 +111,7 @@ export const Particles: React.FC<ParticlesProps> = ({
   const shouldRender = enabled && !prefersReducedMotion
 
   useEffect(() => {
-    if (!shouldRender) return
+    if (!shouldRender) {return}
     
     if (canvasRef.current) {
       context.current = canvasRef.current.getContext("2d")

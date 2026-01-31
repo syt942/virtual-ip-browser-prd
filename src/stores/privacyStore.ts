@@ -177,7 +177,7 @@ export const usePrivacyStore = create<PrivacyState>()(
 
       activateProfile: (id) => {
         const profile = get().profiles.find(p => p.id === id);
-        if (!profile) return;
+        if (!profile) {return;}
 
         set((state) => ({
           currentSettings: profile.settings,

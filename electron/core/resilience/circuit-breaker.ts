@@ -103,7 +103,7 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
    * Check if a request can be executed
    */
   canExecute(): boolean {
-    if (this.destroyed) return false;
+    if (this.destroyed) {return false;}
     
     switch (this.state) {
       case 'CLOSED':
@@ -185,7 +185,7 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
    * Record a successful request
    */
   recordSuccess(duration?: number): void {
-    if (this.destroyed) return;
+    if (this.destroyed) {return;}
 
     const now = new Date();
     
@@ -227,7 +227,7 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
    * Record a failed request
    */
   recordFailure(error?: string): void {
-    if (this.destroyed) return;
+    if (this.destroyed) {return;}
 
     const now = new Date();
     
@@ -268,7 +268,7 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
    * Manually reset the circuit breaker
    */
   reset(): void {
-    if (this.destroyed) return;
+    if (this.destroyed) {return;}
     
     this.clearResetTimer();
     this.metrics.halfOpenSuccesses = 0;
@@ -280,7 +280,7 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
    * Manually trip the circuit breaker
    */
   trip(_reason?: string): void {
-    if (this.destroyed) return;
+    if (this.destroyed) {return;}
     
     this.transitionTo('OPEN', 'manual_trip');
   }
@@ -306,7 +306,7 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
    * Restore state from a snapshot
    */
   restoreFromSnapshot(snapshot: Partial<CircuitBreakerSnapshot>): void {
-    if (this.destroyed) return;
+    if (this.destroyed) {return;}
     
     if (snapshot.state) {
       this.state = snapshot.state;
@@ -352,7 +352,7 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
    * Transition to a new state
    */
   private transitionTo(newState: CircuitBreakerState, reason: StateChangeReason): void {
-    if (this.state === newState) return;
+    if (this.state === newState) {return;}
 
     const previousState = this.state;
     const now = new Date();
@@ -440,7 +440,7 @@ export class CircuitBreaker extends EventEmitter implements ICircuitBreaker {
       r => r.timestamp.getTime() >= windowStart
     );
 
-    if (recentRequests.length === 0) return 0;
+    if (recentRequests.length === 0) {return 0;}
 
     const failures = recentRequests.filter(r => !r.success).length;
     return (failures / recentRequests.length) * 100;

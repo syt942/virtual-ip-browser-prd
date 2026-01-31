@@ -128,7 +128,7 @@ export class StickySessionRepository {
    * Check if mapping is expired
    */
   private isExpired(mapping: StickySessionMappingDTO): boolean {
-    if (!mapping.expiresAt) return false;
+    if (!mapping.expiresAt) {return false;}
     return mapping.expiresAt < new Date();
   }
 
@@ -228,10 +228,10 @@ export class StickySessionRepository {
       'SELECT ttl_seconds FROM sticky_session_mappings WHERE id = ?'
     ).get(id) as { ttl_seconds: number | null } | undefined;
 
-    if (!mapping) return false;
+    if (!mapping) {return false;}
 
     const ttl = ttlSeconds ?? mapping.ttl_seconds;
-    if (!ttl) return false;
+    if (!ttl) {return false;}
 
     const expiresAt = new Date(Date.now() + ttl * 1000).toISOString();
     

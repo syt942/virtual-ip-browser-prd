@@ -126,7 +126,7 @@ describe('Security Vulnerability 1: Zod Validation Schemas', () => {
     const TabConfigSchema = z.object({
       url: z.string().max(2048).optional().refine(
         (url) => {
-          if (!url) return true;
+          if (!url) {return true;}
           const lower = url.toLowerCase();
           // Block dangerous protocols
           if (lower.startsWith('javascript:') || 

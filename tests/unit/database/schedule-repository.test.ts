@@ -118,7 +118,7 @@ class TestScheduleRepository {
     runCount: number;
   }>): Schedule | null {
     const existing = this.findById(id);
-    if (!existing) return null;
+    if (!existing) {return null;}
 
     const updates: string[] = ['updated_at = CURRENT_TIMESTAMP'];
     const params: any[] = [];

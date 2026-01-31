@@ -37,7 +37,7 @@ class PerformancePage extends BasePage {
 
   async measurePanelOpenTime(panelButton: string): Promise<number> {
     const button = this.page.locator(panelButton);
-    if (!await button.isVisible()) return -1;
+    if (!await button.isVisible()) {return -1;}
     
     const start = Date.now();
     await button.click();
@@ -397,7 +397,7 @@ test.describe('Performance Benchmarks @performance', () => {
       // Force GC if available
       await page.evaluate(() => {
         // @ts-ignore
-        if (window.gc) window.gc();
+        if (window.gc) {window.gc();}
       });
       
       await page.waitForTimeout(500);

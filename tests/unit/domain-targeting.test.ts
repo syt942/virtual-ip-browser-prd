@@ -241,7 +241,7 @@ describe('PageInteraction', () => {
         let cumulative = 0;
         for (let i = 0; i < weights.length; i++) {
           cumulative += weights[i];
-          if (random < cumulative) return depths[i];
+          if (random < cumulative) {return depths[i];}
         }
         return depths[depths.length - 1];
       };
@@ -426,7 +426,7 @@ describe('BounceRateControl', () => {
   describe('Bounce Rate Calculation', () => {
     it('should calculate bounce rate correctly', () => {
       const calculateBounceRate = (bounces: number, totalVisits: number): number => {
-        if (totalVisits === 0) return 0;
+        if (totalVisits === 0) {return 0;}
         return (bounces / totalVisits) * 100;
       };
       
@@ -453,7 +453,7 @@ describe('BounceRateControl', () => {
         }
         
         getBounceRate(): number {
-          if (this.history.length === 0) return 0;
+          if (this.history.length === 0) {return 0;}
           const bounces = this.history.filter(b => b).length;
           return (bounces / this.history.length) * 100;
         }
@@ -484,7 +484,7 @@ describe('BounceRateControl', () => {
       // When current rate is already at target, should not bounce
       let bounceDecisions = 0;
       for (let i = 0; i < 100; i++) {
-        if (shouldBounce(40, 40)) bounceDecisions++;
+        if (shouldBounce(40, 40)) {bounceDecisions++;}
       }
       expect(bounceDecisions).toBe(0);
     });
@@ -510,7 +510,7 @@ describe('BounceRateControl', () => {
         
         recordVisit(bounced: boolean): void {
           this.total++;
-          if (bounced) this.bounces++;
+          if (bounced) {this.bounces++;}
         }
         
         getBounceRate(): number {
@@ -859,7 +859,7 @@ describe('DomainTargeting Class', () => {
       // At target, should not bounce
       let bounces = 0;
       for (let i = 0; i < 100; i++) {
-        if (targeting.shouldBounce()) bounces++;
+        if (targeting.shouldBounce()) {bounces++;}
       }
       
       expect(bounces).toBe(0);

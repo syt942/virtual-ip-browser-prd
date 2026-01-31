@@ -86,13 +86,13 @@ export class PatternMatcher {
    * Add a single pattern
    */
   addPattern(pattern: string): void {
-    if (!pattern || typeof pattern !== 'string') return;
+    if (!pattern || typeof pattern !== 'string') {return;}
     
     const trimmed = pattern.trim();
-    if (trimmed.length === 0 || trimmed.length > 500) return;
+    if (trimmed.length === 0 || trimmed.length > 500) {return;}
     
     // Skip if already exists
-    if (this.compiledPatterns.has(trimmed)) return;
+    if (this.compiledPatterns.has(trimmed)) {return;}
 
     const compiled = this.compilePattern(trimmed);
     this.compiledPatterns.set(trimmed, compiled);
@@ -114,7 +114,7 @@ export class PatternMatcher {
    */
   removePattern(pattern: string): void {
     const compiled = this.compiledPatterns.get(pattern);
-    if (!compiled) return;
+    if (!compiled) {return;}
 
     this.compiledPatterns.delete(pattern);
     
@@ -136,7 +136,7 @@ export class PatternMatcher {
    * Check if URL matches any pattern
    */
   matches(url: string): boolean {
-    if (!this.initialized || !url) return false;
+    if (!this.initialized || !url) {return false;}
 
     try {
       const parsed = new URL(url.toLowerCase());

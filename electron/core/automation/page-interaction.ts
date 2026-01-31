@@ -128,8 +128,8 @@ export class PageInteraction {
    */
   private selectScrollSpeed(): 'slow' | 'medium' | 'fast' {
     const random = Math.random();
-    if (random < 0.2) return 'slow';
-    if (random < 0.8) return 'medium';
+    if (random < 0.2) {return 'slow';}
+    if (random < 0.8) {return 'medium';}
     return 'fast';
   }
 

@@ -261,7 +261,7 @@ export class CronParser {
 
     for (let i = 0; i < count; i++) {
       const next = this.getNextExecution(expressionOrParsed, current);
-      if (!next) break;
+      if (!next) {break;}
 
       results.push(next);
       current = next;
@@ -307,19 +307,19 @@ export class CronParser {
 
     // Time description
     const timeDesc = this.describeTime(parsed.minute, parsed.hour);
-    if (timeDesc) parts.push(timeDesc);
+    if (timeDesc) {parts.push(timeDesc);}
 
     // Day of month description
     const domDesc = this.describeDayOfMonth(parsed.dayOfMonth);
-    if (domDesc) parts.push(domDesc);
+    if (domDesc) {parts.push(domDesc);}
 
     // Month description
     const monthDesc = this.describeMonth(parsed.month);
-    if (monthDesc) parts.push(monthDesc);
+    if (monthDesc) {parts.push(monthDesc);}
 
     // Day of week description
     const dowDesc = this.describeDayOfWeek(parsed.dayOfWeek);
-    if (dowDesc) parts.push(dowDesc);
+    if (dowDesc) {parts.push(dowDesc);}
 
     return parts.join(', ') || 'Every minute';
   }
@@ -581,7 +581,7 @@ export class CronParser {
    * Describe day of month field
    */
   private describeDayOfMonth(field: CronField): string {
-    if (field.isWildcard) return '';
+    if (field.isWildcard) {return '';}
 
     if (field.values.length === 1) {
       return `on day ${field.values[0]}`;
@@ -594,7 +594,7 @@ export class CronParser {
    * Describe month field
    */
   private describeMonth(field: CronField): string {
-    if (field.isWildcard) return '';
+    if (field.isWildcard) {return '';}
 
     const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -612,7 +612,7 @@ export class CronParser {
    * Describe day of week field
    */
   private describeDayOfWeek(field: CronField): string {
-    if (field.isWildcard) return '';
+    if (field.isWildcard) {return '';}
 
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 
                       'Thursday', 'Friday', 'Saturday'];
@@ -660,7 +660,7 @@ export class CronParser {
    * Check if array values are consecutive
    */
   private isConsecutive(values: number[]): boolean {
-    if (values.length <= 1) return true;
+    if (values.length <= 1) {return true;}
 
     for (let i = 1; i < values.length; i++) {
       if (values[i] !== values[i - 1] + 1) {
@@ -674,7 +674,7 @@ export class CronParser {
    * Check if two arrays are equal
    */
   private arraysEqual(a: number[], b: number[]): boolean {
-    if (a.length !== b.length) return false;
+    if (a.length !== b.length) {return false;}
     return a.every((val, idx) => val === b[idx]);
   }
 }

@@ -395,7 +395,7 @@ export class CaptchaDetector extends EventEmitter {
     }
 
     const interval = setInterval(async () => {
-      if (!this.config.enabled) return;
+      if (!this.config.enabled) {return;}
 
       try {
         const currentUrl = webContents.getURL();
@@ -484,9 +484,9 @@ export class CaptchaDetector extends EventEmitter {
    * Get severity level for a detection
    */
   private getSeverity(result: CaptchaDetectionResult): 'low' | 'medium' | 'high' | 'critical' {
-    if (result.confidence >= 0.95) return 'critical';
-    if (result.confidence >= 0.8) return 'high';
-    if (result.confidence >= 0.6) return 'medium';
+    if (result.confidence >= 0.95) {return 'critical';}
+    if (result.confidence >= 0.8) {return 'high';}
+    if (result.confidence >= 0.6) {return 'medium';}
     return 'low';
   }
 
@@ -660,7 +660,7 @@ export class CaptchaDetector extends EventEmitter {
    * Log a message
    */
   private log(level: 'info' | 'error' | 'warning', message: string, data?: Record<string, unknown>): void {
-    if (!this.config.logging) return;
+    if (!this.config.logging) {return;}
 
     const logMessage = `[CaptchaDetector] ${message}`;
     

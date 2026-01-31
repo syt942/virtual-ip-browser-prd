@@ -238,7 +238,7 @@ describe('ProxyRotationStrategy - New Strategies', () => {
 
       for (const domain of domains) {
         const proxy = strategy.selectProxy(sessionProxies, { domain });
-        if (proxy) selections.add(`${domain}:${proxy.id}`);
+        if (proxy) {selections.add(`${domain}:${proxy.id}`);}
       }
 
       // Each domain should have a consistent mapping

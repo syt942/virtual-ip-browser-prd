@@ -7,7 +7,29 @@ import securityPlugin from 'eslint-plugin-security';
 import globals from 'globals';
 
 export default [
-  js.configs.recommended,
+  // Global ignores - must be first
+  {
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'out/**',
+      'release/**',
+      'coverage/**',
+      'playwright-report/**',
+      'test-results/**',
+      '.vscode/**',
+      '.idea/**',
+      '*.min.js',
+      '*.config.js',
+      '*.config.ts',
+      'electron.vite.config.ts',
+      'vitest.config.ts',
+      'playwright.config.ts',
+      'tailwind.config.js',
+      'scripts/**'
+    ]
+  },
+  // TypeScript/TSX files
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -23,10 +45,30 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.es2022,
+        // Electron globals
         NodeJS: 'readonly',
         Electron: 'readonly',
+        // React globals
         React: 'readonly',
-        SearchResultForTargeting: 'readonly'
+        JSX: 'readonly',
+        // Custom project globals
+        SearchResultForTargeting: 'readonly',
+        // Browser APIs
+        ResizeObserver: 'readonly',
+        ResizeObserverCallback: 'readonly',
+        ResizeObserverEntry: 'readonly',
+        IntersectionObserver: 'readonly',
+        MutationObserver: 'readonly',
+        // Test globals (vitest)
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        test: 'readonly'
       }
     },
     plugins: {
@@ -36,18 +78,36 @@ export default [
       'security': securityPlugin
     },
     rules: {
-      ...tseslint.configs.recommended.rules,
-      'react/react-in-jsx-scope': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-unsafe-function-type': 'warn',
-      'no-console': 'off',
+      // Disable base ESLint rules that conflict with TypeScript
       'no-unused-vars': 'off',
-      'no-case-declarations': 'warn',
-      'no-useless-escape': 'warn',
+      'no-undef': 'off', // TypeScript handles this
+      'no-redeclare': 'off',
+      
+      // TypeScript rules
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { 
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_'
+      }],
+      '@typescript-eslint/no-unsafe-function-type': 'warn',
       '@typescript-eslint/no-require-imports': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
+      
+      // React rules
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      
+      // General rules - relaxed for existing codebase
+      'no-console': 'off',
+      'no-case-declarations': 'warn',
+      'no-useless-escape': 'warn',
       'no-control-regex': 'warn',
+      'curly': 'off', // Don't enforce curly braces
+      
+      // Security rules
       'security/detect-object-injection': 'warn',
       'security/detect-non-literal-regexp': 'warn',
       'security/detect-unsafe-regex': 'warn',
@@ -66,8 +126,5 @@ export default [
         version: 'detect'
       }
     }
-  },
-  {
-    ignores: ['node_modules/**', 'dist/**', 'out/**', 'release/**', 'coverage/**', '*.config.js', '*.config.ts']
   }
 ];

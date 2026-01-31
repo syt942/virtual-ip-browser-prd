@@ -233,52 +233,52 @@ export class DatabaseManager {
   // ============================================================
 
   get rotationConfigs(): RotationConfigRepository {
-    if (!this._rotationConfigs) throw new Error('Database not initialized');
+    if (!this._rotationConfigs) {throw new Error('Database not initialized');}
     return this._rotationConfigs;
   }
 
   get proxyUsageStats(): ProxyUsageStatsRepository {
-    if (!this._proxyUsageStats) throw new Error('Database not initialized');
+    if (!this._proxyUsageStats) {throw new Error('Database not initialized');}
     return this._proxyUsageStats;
   }
 
   get encryptedCredentials(): EncryptedCredentialsRepository {
-    if (!this._encryptedCredentials) throw new Error('Database not initialized');
+    if (!this._encryptedCredentials) {throw new Error('Database not initialized');}
     return this._encryptedCredentials;
   }
 
   get stickySession(): StickySessionRepository {
-    if (!this._stickySession) throw new Error('Database not initialized');
+    if (!this._stickySession) {throw new Error('Database not initialized');}
     return this._stickySession;
   }
 
   get rotationEvents(): RotationEventsRepository {
-    if (!this._rotationEvents) throw new Error('Database not initialized');
+    if (!this._rotationEvents) {throw new Error('Database not initialized');}
     return this._rotationEvents;
   }
 
   get rotationRules(): RotationRulesRepository {
-    if (!this._rotationRules) throw new Error('Database not initialized');
+    if (!this._rotationRules) {throw new Error('Database not initialized');}
     return this._rotationRules;
   }
 
   get proxies(): ProxyRepository {
-    if (!this._proxies) throw new Error('Database not initialized');
+    if (!this._proxies) {throw new Error('Database not initialized');}
     return this._proxies;
   }
 
   get creatorSupportHistory(): CreatorSupportHistoryRepository {
-    if (!this._creatorSupportHistory) throw new Error('Database not initialized');
+    if (!this._creatorSupportHistory) {throw new Error('Database not initialized');}
     return this._creatorSupportHistory;
   }
 
   get executionLogs(): ExecutionLogsRepository {
-    if (!this._executionLogs) throw new Error('Database not initialized');
+    if (!this._executionLogs) {throw new Error('Database not initialized');}
     return this._executionLogs;
   }
 
   get circuitBreakers(): CircuitBreakerRepository {
-    if (!this._circuitBreakers) throw new Error('Database not initialized');
+    if (!this._circuitBreakers) {throw new Error('Database not initialized');}
     return this._circuitBreakers;
   }
 
@@ -290,7 +290,7 @@ export class DatabaseManager {
    * Get migration runner for advanced migration operations
    */
   getMigrationRunner(): MigrationRunner {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     return new MigrationRunner(this.db, join(__dirname, 'migrations'));
   }
 
@@ -344,7 +344,7 @@ export class DatabaseManager {
    * @param params - Array of parameters to bind (string, number, bigint, Buffer, null, or undefined)
    */
   query<T = Record<string, unknown>>(sql: string, params?: unknown[]): T[] {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     const stmt = this.db.prepare(sql);
     return stmt.all(params) as T[];
   }
@@ -356,7 +356,7 @@ export class DatabaseManager {
    * @param params - Array of parameters to bind
    */
   queryOne<T = Record<string, unknown>>(sql: string, params?: unknown[]): T | undefined {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     const stmt = this.db.prepare(sql);
     return stmt.get(params) as T | undefined;
   }
@@ -367,7 +367,7 @@ export class DatabaseManager {
    * @param params - Array of parameters to bind
    */
   execute(sql: string, params?: unknown[]): Database.RunResult {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     const stmt = this.db.prepare(sql);
     return stmt.run(params);
   }
@@ -376,7 +376,7 @@ export class DatabaseManager {
    * Begin transaction
    */
   beginTransaction(): Database.Transaction {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     return this.db.transaction((callback: Function) => callback());
   }
 
@@ -384,7 +384,7 @@ export class DatabaseManager {
    * Run operations in a transaction
    */
   transaction<T>(fn: () => T): T {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     const txn = this.db.transaction(fn);
     return txn();
   }
@@ -393,7 +393,7 @@ export class DatabaseManager {
    * Create a database backup
    */
   backup(backupPath: string): void {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {throw new Error('Database not initialized');}
     this.db.backup(backupPath);
   }
 

@@ -63,7 +63,7 @@ export class RateLimiter {
    */
   getRetryAfter(key: string): number {
     const timestamps = this.requests.get(key) || [];
-    if (timestamps.length === 0) return 0;
+    if (timestamps.length === 0) {return 0;}
     
     const oldest = Math.min(...timestamps);
     const retryAfter = oldest + this.windowMs - Date.now();

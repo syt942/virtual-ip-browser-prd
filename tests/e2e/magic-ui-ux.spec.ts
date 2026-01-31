@@ -17,7 +17,7 @@ const TEST_TIMEOUT = 30000;
 async function hasAnimation(page: Page, selector: string): Promise<boolean> {
   return page.evaluate((sel) => {
     const element = document.querySelector(sel);
-    if (!element) return false;
+    if (!element) {return false;}
     const style = window.getComputedStyle(element);
     return style.animationName !== 'none' || style.animationDuration !== '0s';
   }, selector);
@@ -239,7 +239,7 @@ test.describe('NeonGradientCard Visual Tests', () => {
       // Card should have gradient styling
       const hasGradient = await page.evaluate(() => {
         const cards = document.querySelectorAll('[class*="neon"]');
-        if (cards.length === 0) return false;
+        if (cards.length === 0) {return false;}
         const style = window.getComputedStyle(cards[0]);
         return style.background.includes('gradient') || 
                style.backgroundImage.includes('gradient');

@@ -253,7 +253,7 @@ export class CreatorSupportHistoryRepository {
       WHERE timestamp >= ?
     `).get(startTimestamp) as { total: number; successful: number };
 
-    if (result.total === 0) return 100;
+    if (result.total === 0) {return 100;}
     return (result.successful / result.total) * 100;
   }
 

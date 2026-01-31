@@ -139,7 +139,7 @@ export class TaskExecutor extends EventEmitter {
    */
   cancelTask(taskId: string): boolean {
     const task = this.activeTasks.get(taskId);
-    if (!task) return false;
+    if (!task) {return false;}
 
     task.status = 'cancelled';
     task.endTime = new Date();

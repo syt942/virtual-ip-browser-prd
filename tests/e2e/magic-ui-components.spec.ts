@@ -102,7 +102,7 @@ test.describe('Magic UI Components @smoke @ui', () => {
         const canvases = Array.from(document.querySelectorAll('canvas'));
         for (const canvas of canvases) {
           const ctx = canvas.getContext('2d');
-          if (ctx) return true;
+          if (ctx) {return true;}
         }
         return canvases.length === 0; // True if no canvas (particles might be disabled)
       });
@@ -188,7 +188,7 @@ test.describe('Magic UI Components @smoke @ui', () => {
       await magicUI.waitForAppReady();
       
       // Set up listener for confetti element
-      let confettiTriggered = false;
+      const confettiTriggered = false;
       
       // Monitor DOM for confetti elements
       await page.evaluate(() => {

@@ -8,7 +8,7 @@ import { BaseStrategy } from './base-strategy';
 
 export class FailureAwareStrategy extends BaseStrategy {
   selectProxy(proxies: ProxyConfig[], _context?: RotationContext): ProxyConfig | null {
-    if (proxies.length === 0) return null;
+    if (proxies.length === 0) {return null;}
     
     const sorted = [...proxies].sort((a, b) => {
       // Prefer proxies with lower failure count and higher success rate

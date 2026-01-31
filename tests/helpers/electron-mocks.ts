@@ -90,7 +90,7 @@ export function createMockWebContents(): MockWebContents {
       const handlers = eventHandlers.get(event);
       if (handlers) {
         const idx = handlers.indexOf(handler);
-        if (idx > -1) handlers.splice(idx, 1);
+        if (idx > -1) {handlers.splice(idx, 1);}
       }
       return this;
     }),
@@ -276,11 +276,11 @@ export function createMockBrowserWindow(): MockBrowserWindow {
     }),
     removeBrowserView: vi.fn((view: MockBrowserView) => {
       const idx = browserViews.indexOf(view);
-      if (idx > -1) browserViews.splice(idx, 1);
+      if (idx > -1) {browserViews.splice(idx, 1);}
     }),
     setBrowserView: vi.fn((view: MockBrowserView | null) => {
       browserViews.length = 0;
-      if (view) browserViews.push(view);
+      if (view) {browserViews.push(view);}
     }),
     getBrowserView: vi.fn(() => browserViews[0] || null),
     getBrowserViews: vi.fn(() => [...browserViews]),

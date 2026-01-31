@@ -147,7 +147,7 @@ export class SessionManager extends EventEmitter {
     }
     const row = this.db.queryOne<SessionRow>(sql, [id]);
 
-    if (!row) return null;
+    if (!row) {return null;}
 
     // Parse stored data
     let rawTabs: unknown[];
@@ -207,7 +207,7 @@ export class SessionManager extends EventEmitter {
     _operation: 'save' | 'restore',
     sessionId?: string
   ): TabState[] {
-    if (!Array.isArray(tabs)) return [];
+    if (!Array.isArray(tabs)) {return [];}
 
     const sanitized: TabState[] = [];
 
@@ -327,7 +327,7 @@ export class SessionManager extends EventEmitter {
    * Sanitize tab title
    */
   private sanitizeTitle(title: string): string {
-    if (!title) return '';
+    if (!title) {return '';}
     return title
       .replace(/[<>]/g, '')
       .replace(/[\x00-\x1f]/g, '')
@@ -443,7 +443,7 @@ export class SessionManager extends EventEmitter {
    */
   async updateSession(id: string, updates: Partial<SavedSession>): Promise<SavedSession | null> {
     const session = await this.loadSession(id);
-    if (!session) return null;
+    if (!session) {return null;}
 
     // Re-validate any URL updates
     let updatedTabs = session.tabs;

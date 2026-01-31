@@ -266,7 +266,7 @@ export class RotationConfigRepository {
    */
   update(id: string, input: UpdateRotationConfigInput): RotationConfigDTO | null {
     const existing = this.findById(id);
-    if (!existing) return null;
+    if (!existing) {return null;}
 
     const updates: string[] = [];
     const params: unknown[] = [];
@@ -304,7 +304,7 @@ export class RotationConfigRepository {
       params.push(input.enabled ? 1 : 0);
     }
 
-    if (updates.length === 0) return existing;
+    if (updates.length === 0) {return existing;}
 
     params.push(id);
     const stmt = this.db.prepare(`
@@ -320,7 +320,7 @@ export class RotationConfigRepository {
    */
   setActive(id: string): boolean {
     const config = this.findById(id);
-    if (!config) return false;
+    if (!config) {return false;}
 
     const transaction = this.db.transaction(() => {
       // Deactivate other configs in the same target group
@@ -362,7 +362,7 @@ export class RotationConfigRepository {
    */
   duplicate(id: string, newName: string): RotationConfigDTO | null {
     const original = this.findById(id);
-    if (!original) return null;
+    if (!original) {return null;}
 
     return this.create({
       name: newName,

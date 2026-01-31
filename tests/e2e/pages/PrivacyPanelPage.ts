@@ -188,26 +188,26 @@ export class PrivacyPanelPage extends BasePage {
    * Enable all privacy protections
    */
   async enableAllProtections(): Promise<void> {
-    if (!await this.isCanvasEnabled()) await this.toggleCanvas();
-    if (!await this.isWebGLEnabled()) await this.toggleWebGL();
-    if (!await this.isAudioEnabled()) await this.toggleAudio();
-    if (!await this.isNavigatorEnabled()) await this.toggleNavigator();
-    if (!await this.isWebRTCEnabled()) await this.toggleWebRTC();
-    if (!await this.isTrackerBlockingEnabled()) await this.toggleTrackerBlocking();
-    if (!await this.isTimezoneEnabled()) await this.toggleTimezone();
+    if (!await this.isCanvasEnabled()) {await this.toggleCanvas();}
+    if (!await this.isWebGLEnabled()) {await this.toggleWebGL();}
+    if (!await this.isAudioEnabled()) {await this.toggleAudio();}
+    if (!await this.isNavigatorEnabled()) {await this.toggleNavigator();}
+    if (!await this.isWebRTCEnabled()) {await this.toggleWebRTC();}
+    if (!await this.isTrackerBlockingEnabled()) {await this.toggleTrackerBlocking();}
+    if (!await this.isTimezoneEnabled()) {await this.toggleTimezone();}
   }
 
   /**
    * Disable all privacy protections
    */
   async disableAllProtections(): Promise<void> {
-    if (await this.isCanvasEnabled()) await this.toggleCanvas();
-    if (await this.isWebGLEnabled()) await this.toggleWebGL();
-    if (await this.isAudioEnabled()) await this.toggleAudio();
-    if (await this.isNavigatorEnabled()) await this.toggleNavigator();
-    if (await this.isWebRTCEnabled()) await this.toggleWebRTC();
-    if (await this.isTrackerBlockingEnabled()) await this.toggleTrackerBlocking();
-    if (await this.isTimezoneEnabled()) await this.toggleTimezone();
+    if (await this.isCanvasEnabled()) {await this.toggleCanvas();}
+    if (await this.isWebGLEnabled()) {await this.toggleWebGL();}
+    if (await this.isAudioEnabled()) {await this.toggleAudio();}
+    if (await this.isNavigatorEnabled()) {await this.toggleNavigator();}
+    if (await this.isWebRTCEnabled()) {await this.toggleWebRTC();}
+    if (await this.isTrackerBlockingEnabled()) {await this.toggleTrackerBlocking();}
+    if (await this.isTimezoneEnabled()) {await this.toggleTimezone();}
   }
 
   /**

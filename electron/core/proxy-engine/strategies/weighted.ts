@@ -8,7 +8,7 @@ import { BaseStrategy } from './base-strategy';
 
 export class WeightedStrategy extends BaseStrategy {
   selectProxy(proxies: ProxyConfig[], _context?: RotationContext): ProxyConfig | null {
-    if (proxies.length === 0) return null;
+    if (proxies.length === 0) {return null;}
     
     const weights = this.config.weights || {};
     const totalWeight = proxies.reduce((sum, p) => sum + (weights[p.id] || 1), 0);

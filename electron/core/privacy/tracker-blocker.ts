@@ -82,7 +82,7 @@ export class TrackerBlocker {
    * Enable tracker blocking for a session
    */
   enableForSession(sessionPartition: string): void {
-    if (!this.enabled) return;
+    if (!this.enabled) {return;}
     
     const webSession = session.fromPartition(sessionPartition);
     

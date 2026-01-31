@@ -77,11 +77,11 @@ export function ActivityLog({ enableRealTime: _enableRealTime = false, pageSize 
         pageSize
       };
 
-      if (filters.level !== 'all') queryParams.level = filters.level;
-      if (filters.category !== 'all') queryParams.category = filters.category;
-      if (filters.status !== 'all') queryParams.status = filters.status;
-      if (filters.startDate) queryParams.startDate = filters.startDate;
-      if (filters.endDate) queryParams.endDate = filters.endDate;
+      if (filters.level !== 'all') {queryParams.level = filters.level;}
+      if (filters.category !== 'all') {queryParams.category = filters.category;}
+      if (filters.status !== 'all') {queryParams.status = filters.status;}
+      if (filters.startDate) {queryParams.startDate = filters.startDate;}
+      if (filters.endDate) {queryParams.endDate = filters.endDate;}
 
       const result = await window.api.analytics.getActivityLogs(queryParams) as { success: boolean; data?: RawLogEntry[]; total?: number };
 

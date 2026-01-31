@@ -439,7 +439,7 @@ export class ProxyUsageStatsRepository {
    * @returns Number of records processed
    */
   recordUsageBatch(records: UsageRecord[]): number {
-    if (records.length === 0) return 0;
+    if (records.length === 0) {return 0;}
 
     const timeBucket = this.getTimeBucket();
     
@@ -579,7 +579,7 @@ export class ProxyUsageStatsRepository {
    * @returns Number of rotations recorded
    */
   recordRotationBatch(rotations: Array<{ proxyId: string; reason: string }>): number {
-    if (rotations.length === 0) return 0;
+    if (rotations.length === 0) {return 0;}
 
     const timeBucket = this.getTimeBucket();
 

@@ -115,7 +115,7 @@ export class TabManager extends EventEmitter {
     const view = this.views.get(id);
     const tab = this.tabs.get(id);
     
-    if (!view || !tab || !this.window) return;
+    if (!view || !tab || !this.window) {return;}
 
     // Remove current view
     if (this.activeTabId) {
@@ -189,7 +189,7 @@ export class TabManager extends EventEmitter {
    */
   closeTab(id: string): boolean {
     const tab = this.tabs.get(id);
-    if (!tab) return false;
+    if (!tab) {return false;}
 
     // Clean up BrowserView if exists
     const view = this.views.get(id);
@@ -223,7 +223,7 @@ export class TabManager extends EventEmitter {
    */
   updateTab(id: string, updates: Partial<TabConfig>): TabConfig | undefined {
     const tab = this.tabs.get(id);
-    if (!tab) return undefined;
+    if (!tab) {return undefined;}
 
     const updated = {
       ...tab,
@@ -252,7 +252,7 @@ export class TabManager extends EventEmitter {
     view: BrowserView,
     fingerprint: FingerprintConfig
   ): Promise<void> {
-    if (!this.privacyManager) return;
+    if (!this.privacyManager) {return;}
 
     // Generate protection script
     const protectionScript = this.privacyManager.generateProtectionScript({

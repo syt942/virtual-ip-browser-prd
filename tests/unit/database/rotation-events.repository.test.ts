@@ -299,9 +299,9 @@ describe('RotationEventsRepository', () => {
   // ============================================================
   describe('getCountByReason', () => {
     beforeEach(() => {
-      for (let i = 0; i < 5; i++) repository.record({ reason: 'scheduled' });
-      for (let i = 0; i < 3; i++) repository.record({ reason: 'failure' });
-      for (let i = 0; i < 2; i++) repository.record({ reason: 'manual' });
+      for (let i = 0; i < 5; i++) {repository.record({ reason: 'scheduled' });}
+      for (let i = 0; i < 3; i++) {repository.record({ reason: 'failure' });}
+      for (let i = 0; i < 2; i++) {repository.record({ reason: 'manual' });}
     });
 
     it('should return count by reason', () => {

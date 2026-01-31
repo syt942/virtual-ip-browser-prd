@@ -54,7 +54,7 @@ export const NeonGradientCard: React.FC<NeonGradientCardProps> = ({
 
   // Respect prefers-reduced-motion
   const prefersReducedMotion = useMemo(() => {
-    if (typeof window === 'undefined') return false
+    if (typeof window === 'undefined') {return false}
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches
   }, [])
 

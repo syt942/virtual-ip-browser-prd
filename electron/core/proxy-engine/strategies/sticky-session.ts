@@ -11,7 +11,7 @@ export class StickySessionStrategy extends BaseStrategy {
   private stickyRoundRobinIndex = 0;
 
   selectProxy(proxies: ProxyConfig[], context?: RotationContext): ProxyConfig | null {
-    if (proxies.length === 0) return null;
+    if (proxies.length === 0) {return null;}
 
     if (!context?.domain) {
       // No domain context, fallback to round-robin
@@ -52,7 +52,7 @@ export class StickySessionStrategy extends BaseStrategy {
 
     // Create new mapping
     const proxy = this.selectProxyForStickyMapping(domain, proxies);
-    if (!proxy) return null;
+    if (!proxy) {return null;}
 
     const newMapping: DomainProxyMapping = {
       domain,
@@ -79,7 +79,7 @@ export class StickySessionStrategy extends BaseStrategy {
   private findStickyMapping(domain: string): DomainProxyMapping | null {
     // Direct match
     const direct = this.stickyMappings.get(domain);
-    if (direct) return direct;
+    if (direct) {return direct;}
 
     // Wildcard matching
     const entries = Array.from(this.stickyMappings.entries());

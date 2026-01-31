@@ -47,7 +47,7 @@ export class SafeStorageService {
   private useSafeStorage = false;
   private fallbackKey: Buffer | null = null;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   private constructor(_config: SafeStorageConfig = {}) {
     // Config parameter reserved for future features (e.g., allowPlaintextFallback)
   }
@@ -167,7 +167,7 @@ export class SafeStorageService {
    * Get current encryption method
    */
   getEncryptionMethod(): 'safeStorage' | 'fallback' | 'none' {
-    if (!this.initialized) return 'none';
+    if (!this.initialized) {return 'none';}
     return this.useSafeStorage ? 'safeStorage' : 'fallback';
   }
 

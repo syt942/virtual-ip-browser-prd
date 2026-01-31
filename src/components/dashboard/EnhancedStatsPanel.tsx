@@ -62,14 +62,14 @@ export function EnhancedStatsPanel() {
   }, [fetchStats]);
 
   const getSuccessRateColor = (rate: number): string => {
-    if (rate >= 90) return 'text-green-500';
-    if (rate >= 70) return 'text-yellow-500';
+    if (rate >= 90) {return 'text-green-500';}
+    if (rate >= 70) {return 'text-yellow-500';}
     return 'text-red-500';
   };
 
   const getLatencyColor = (latency: number): string => {
-    if (latency <= 200) return 'text-green-500';
-    if (latency <= 500) return 'text-yellow-500';
+    if (latency <= 200) {return 'text-green-500';}
+    if (latency <= 500) {return 'text-yellow-500';}
     return 'text-red-500';
   };
 
@@ -263,7 +263,7 @@ export function EnhancedStatsPanel() {
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) {return '0 B';}
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
