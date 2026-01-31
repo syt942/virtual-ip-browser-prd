@@ -1,0 +1,123 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request
+        
+        Thank you for suggesting a feature! We appreciate your input in making Virtual IP Browser better.
+        
+        **Before submitting:**
+        - [ ] I have searched existing issues and discussions to make sure this hasn't been requested
+        - [ ] I have considered if this aligns with the project's goals
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What area of the application does this feature relate to?
+      options:
+        - Proxy Management
+        - Privacy Protection (Fingerprint, WebRTC, Trackers)
+        - Automation
+        - Creator Support
+        - User Interface
+        - Performance
+        - Security
+        - Scheduling
+        - Translation
+        - Settings
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: |
+        What problem does this feature solve? 
+        Is your feature request related to a problem? Please describe.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented.
+      placeholder: |
+        I would like the application to...
+        
+        **User Story:**
+        As a [type of user], I want [goal] so that [benefit].
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered.
+      placeholder: |
+        Alternative 1: ...
+        Alternative 2: ...
+        Why proposed solution is preferred: ...
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (Your Assessment)
+      description: How important is this feature to you?
+      options:
+        - Critical - Cannot use the app effectively without this
+        - High - Would significantly improve my workflow
+        - Medium - Nice to have, would use regularly
+        - Low - Minor improvement
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature would be to implement?
+      options:
+        - Simple - Minor UI change or configuration option
+        - Medium - New component or moderate changes
+        - Complex - Major new feature or architecture changes
+        - Don't know
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / Examples
+      description: |
+        If applicable, add mockups, wireframes, or examples from other applications.
+      placeholder: "Drag and drop images here or describe how you envision this feature"
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, use cases, or screenshots about the feature request.
+      placeholder: |
+        - Related features in other applications
+        - Specific use cases
+        - Links to relevant documentation or discussions
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be interested in contributing to this feature?
+      options:
+        - label: I would be willing to help implement this feature
+        - label: I would be willing to help test this feature
+        - label: I would be willing to help document this feature

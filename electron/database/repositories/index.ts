@@ -4,7 +4,7 @@
  */
 
 export { RotationConfigRepository } from './rotation-config.repository';
-export { ProxyUsageStatsRepository, type AggregatedStats, type TimeSeriesDataPoint } from './proxy-usage-stats.repository';
+export { ProxyUsageStatsRepository, type AggregatedStats, type TimeSeriesDataPoint, type UsageRecord } from './proxy-usage-stats.repository';
 export { EncryptedCredentialsRepository } from './encrypted-credentials.repository';
 export { StickySessionRepository } from './sticky-session.repository';
 export { RotationEventsRepository } from './rotation-events.repository';

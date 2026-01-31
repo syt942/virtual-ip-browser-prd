@@ -120,16 +120,18 @@ test.describe('Proxy Rotation', () => {
     await proxyPanel.screenshot('rotation-cycle-complete');
   });
 
-  test('should maintain rotation strategy after panel toggle', async () => {
+  test('should maintain rotation strategy after panel toggle', async ({ page }) => {
     await proxyPanel.openPanel();
     
     // Set a specific strategy
     await proxyPanel.setRotationStrategy('fastest');
     expect(await proxyPanel.getRotationStrategy()).toBe('fastest');
     
-    // Close and reopen panel
+    // Close and reopen panel with proper waits
     await proxyPanel.closePanel();
+    await page.waitForTimeout(200); // Wait for close animation
     await proxyPanel.openPanel();
+    await page.waitForLoadState('networkidle');
     
     // Verify strategy is maintained
     expect(await proxyPanel.getRotationStrategy()).toBe('fastest');

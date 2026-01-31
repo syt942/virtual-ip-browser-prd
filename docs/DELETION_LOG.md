@@ -5,6 +5,50 @@
 
 ---
 
+## ✅ Completed Deletions
+
+### [2025-01-31] Dead Code Cleanup Session
+
+#### Unused Hooks Removed
+| File | Lines | Reason |
+|------|-------|--------|
+| `src/hooks/useActivityLogs.ts` | 136 | Not imported anywhere - replaced by direct IPC calls |
+| `src/hooks/useDashboardData.ts` | 81 | Not imported anywhere - only used by removed AnalyticsDashboard |
+| `src/hooks/useProxyPerformance.ts` | 106 | Not imported anywhere - functionality moved to ProxyPanel |
+
+#### Duplicate Utilities Removed
+| File | Lines | Reason |
+|------|-------|--------|
+| `src/utils/sanitize.ts` | 171 | Duplicate of `sanitization.ts` - less robust implementation, no consumers |
+
+#### Unused Components Removed
+| File | Lines | Reason |
+|------|-------|--------|
+| `src/components/dashboard/AnalyticsDashboard.tsx` | 337 | Not imported in App.tsx or any other component |
+
+#### Test Code Removed
+| File | Lines Removed | Reason |
+|------|---------------|--------|
+| `tests/unit/ui-components.test.tsx` | ~250 | Tests for removed AnalyticsDashboard component |
+
+#### Updated Index Files
+- `src/components/dashboard/index.ts` - Removed AnalyticsDashboard export
+
+#### Impact Summary
+| Metric | Value |
+|--------|-------|
+| **Files deleted** | 5 |
+| **Lines of code removed** | 831 (source) + ~250 (tests) |
+| **Test file updated** | 1 |
+| **Index files updated** | 1 |
+
+#### Verification
+- ✅ `npm run typecheck` - Passes (pre-existing warnings unrelated to changes)
+- ✅ `npm run build` - Passes
+- ✅ `npm test -- tests/unit/ui-components.test.tsx` - 25 tests passing
+
+---
+
 ## Executive Summary
 
 | Category | Count | Estimated Effort |

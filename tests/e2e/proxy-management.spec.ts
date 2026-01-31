@@ -24,7 +24,7 @@ test.describe('Proxy Management', () => {
     }
   });
 
-  test('should display proxy panel', async () => {
+  test('should display proxy panel', { tag: '@smoke' }, async () => {
     await proxyPanel.openPanel();
     await expect(proxyPanel.panelTitle).toHaveText('Proxy Manager');
   });

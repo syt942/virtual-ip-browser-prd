@@ -118,45 +118,51 @@ test.describe('Scheduling System', () => {
     await automationPanel.screenshot('schedule-controls');
   });
 
-  test('should allow removal of scheduled keywords', async () => {
+  test('should allow removal of scheduled keywords', async ({ page }) => {
     await automationPanel.openPanel();
     
     // Add keywords
     await automationPanel.addKeyword('keyword1');
     await automationPanel.addKeyword('keyword2');
-    expect(await automationPanel.getKeywordCount()).toBe(2);
+    await expect(automationPanel.keywordItems).toHaveCount(2);
     
     // Remove first keyword (hover to reveal remove button)
     const firstKeyword = automationPanel.keywordItems.first();
     await firstKeyword.hover();
+    // Wait for remove button to become visible
+    await page.waitForSelector('[data-testid="remove-keyword-btn"]', { state: 'visible', timeout: 5000 });
     const removeBtn = firstKeyword.locator('[data-testid="remove-keyword-btn"]');
     await removeBtn.click();
     
-    expect(await automationPanel.getKeywordCount()).toBe(1);
+    // Wait for DOM update
+    await expect(automationPanel.keywordItems).toHaveCount(1);
     
     await automationPanel.screenshot('keyword-removed');
   });
 
-  test('should allow removal of scheduled domains', async () => {
+  test('should allow removal of scheduled domains', async ({ page }) => {
     await automationPanel.openPanel();
     
     // Add domains
     await automationPanel.addDomain('domain1.com');
     await automationPanel.addDomain('domain2.com');
-    expect(await automationPanel.getDomainCount()).toBe(2);
+    await expect(automationPanel.domainItems).toHaveCount(2);
     
     // Remove first domain
     const firstDomain = automationPanel.domainItems.first();
     await firstDomain.hover();
+    // Wait for remove button to become visible
+    await page.waitForSelector('[data-testid="remove-domain-btn"]', { state: 'visible', timeout: 5000 });
     const removeBtn = firstDomain.locator('[data-testid="remove-domain-btn"]');
     await removeBtn.click();
     
-    expect(await automationPanel.getDomainCount()).toBe(1);
+    // Wait for DOM update
+    await expect(automationPanel.domainItems).toHaveCount(1);
     
     await automationPanel.screenshot('domain-removed');
   });
 
-  test('should maintain schedule configuration across panel switches', async () => {
+  test('should maintain schedule configuration across panel switches', async ({ page }) => {
     await automationPanel.openPanel();
     
     // Configure schedule
@@ -164,17 +170,22 @@ test.describe('Scheduling System', () => {
     await automationPanel.addKeyword('persistent keyword');
     await automationPanel.addDomain('persistent.com');
     
+    // Wait for state to settle
+    await page.waitForTimeout(200);
+    
     // Switch to different panel
     const navPanel = automationPanel.page.locator('[data-testid="panel-btn-privacy"]');
     await navPanel.click();
+    await page.waitForTimeout(200);
     
     // Switch back
     await automationPanel.openPanel();
+    await page.waitForLoadState('networkidle');
     
     // Verify configuration persisted
     expect(await automationPanel.getSearchEngine()).toBe('duckduckgo');
-    expect(await automationPanel.getKeywordCount()).toBe(1);
-    expect(await automationPanel.getDomainCount()).toBe(1);
+    await expect(automationPanel.keywordItems).toHaveCount(1);
+    await expect(automationPanel.domainItems).toHaveCount(1);
     
     await automationPanel.screenshot('schedule-persisted');
   });

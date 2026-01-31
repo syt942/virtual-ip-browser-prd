@@ -14,6 +14,8 @@ tests/e2e/
 │   ├── PrivacyPanelPage.ts    # Privacy panel interactions
 │   ├── AutomationPanelPage.ts # Automation panel interactions
 │   ├── NavigationPage.ts      # Navigation and UI interactions
+│   ├── ActivityLogPage.ts     # Activity log panel interactions
+│   ├── StatsPanelPage.ts      # Stats panel interactions
 │   └── index.ts               # Page exports
 ├── proxy-management.spec.ts    # Proxy management tests
 ├── privacy-protection.spec.ts  # Privacy protection tests
@@ -26,6 +28,10 @@ tests/e2e/
 ├── scheduling-system.spec.ts   # Scheduling system (PRD EP-006)
 ├── circuit-breaker.spec.ts     # Circuit breaker resilience
 ├── captcha-detection.spec.ts   # Captcha detection & handling
+├── tab-management.spec.ts      # Tab creation/switching/closing
+├── activity-log.spec.ts        # Activity log panel tests
+├── stats-panel.spec.ts         # Statistics panel tests
+├── error-handling.spec.ts      # Error handling & validation
 └── README.md                   # This documentation
 ```
 
@@ -43,6 +49,10 @@ tests/e2e/
 | E2E-008 | Proxy rotation | proxy-rotation.spec.ts | ✅ |
 | E2E-009 | Scheduling system | scheduling-system.spec.ts | ✅ |
 | E2E-010 | Circuit breaker | circuit-breaker.spec.ts | ✅ |
+| E2E-011 | Tab management | tab-management.spec.ts | ✅ |
+| E2E-012 | Activity logging | activity-log.spec.ts | ✅ |
+| E2E-013 | Statistics display | stats-panel.spec.ts | ✅ |
+| E2E-014 | Error handling | error-handling.spec.ts | ✅ |
 
 ## Running Tests
 

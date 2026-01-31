@@ -24,7 +24,7 @@ test.describe('Navigation & UI', () => {
     }
   });
 
-  test('should display main UI elements', async () => {
+  test('should display main UI elements', { tag: '@smoke' }, async () => {
     await navPage.verifyMainUIElements();
     
     // Verify tab bar shows New Tab

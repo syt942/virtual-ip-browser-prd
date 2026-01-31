@@ -1,717 +1,571 @@
 # Security Review Report - Virtual IP Browser
 
-**Reviewed:** 2024
+**Reviewed:** 2025-01-30
 **Reviewer:** Security Reviewer Agent
-**Scope:** Credential encryption, SSRF prevention, Custom rules engine, Database security, IPC channels, Creator support module, Translation system
+**Project:** Virtual IP Browser v1.2.0+
+**Risk Level:** 🟡 MEDIUM (with specific HIGH items requiring attention)
+
+---
 
 ## Executive Summary
 
-- **Critical Issues:** 2
-- **High Issues:** 5
-- **Medium Issues:** 6
-- **Low Issues:** 4
-- **Risk Level:** 🟡 MEDIUM-HIGH
+The Virtual IP Browser project demonstrates **strong security fundamentals** with comprehensive input validation, proper Electron security configuration, and encrypted credential storage. However, several areas require attention before production deployment.
 
-The Virtual IP Browser has a solid security foundation with proper encryption implementations (AES-256-GCM), comprehensive SSRF prevention, and parameterized database queries. However, several issues require attention, particularly around IPC channel validation, regex-based denial of service (ReDoS), and JavaScript code injection in the search engine automation.
+### Summary Metrics
+
+| Severity | Count | Status |
+|----------|-------|--------|
+| **Critical** | 0 | ✅ None found in application code |
+| **High** | 4 | ⚠️ Require attention |
+| **Medium** | 5 | 📋 Should be addressed |
+| **Low** | 3 | 📝 Consider fixing |
+| **Dependency Vulnerabilities** | 11 | ⚠️ Build-time only (see details) |
 
 ---
 
-## Critical Issues (Fix Immediately)
+## OWASP Top 10 Analysis
 
-### 1. JavaScript Injection via Search Engine Selector Interpolation
+### ✅ 1. Injection (A03:2021) - WELL PROTECTED
 
-**Severity:** CRITICAL
-**Category:** Code Injection
-**Location:** `electron/core/automation/search-engine.ts:108-138`
+**Status:** Strong protection implemented
 
-**Issue:**
-The `extractResults` method directly interpolates the `selector` string into a JavaScript template that is executed via `executeJavaScript()`. While the selectors are currently hardcoded, if any user input ever flows into this path, it would enable arbitrary JavaScript execution in the browser context.
+**Findings:**
+- ✅ Zod schemas validate all IPC inputs (`electron/ipc/validation.ts`)
+- ✅ SQL queries use parameterized statements via `better-sqlite3`
+- ✅ XSS patterns detected and blocked in validation layer
+- ✅ Null byte stripping implemented
+- ✅ Input length limits enforced (URLs: 2048, keywords: 200, domains: 255)
 
+**Evidence:**
 ```typescript
-// Current vulnerable pattern
-const results = await view.webContents.executeJavaScript(`
-  (function() {
-    const elements = document.querySelectorAll('${selector}');  // Direct interpolation
-    ...
-  })();
-`);
-```
-
-**Impact:**
-- Arbitrary JavaScript execution in browsing context
-- Session hijacking
-- Data exfiltration
-- Complete browser compromise
-
-**Remediation:**
-```typescript
-// ✅ CORRECT: Use a safe selector validation approach
-private isValidSelector(selector: string): boolean {
-  // Whitelist only CSS selector characters
-  const validSelectorPattern = /^[a-zA-Z0-9\s\[\]=\"\-_\.#:(),>+~*]+$/;
-  if (!validSelectorPattern.test(selector)) {
-    throw new Error('Invalid selector format');
-  }
-  // Additional validation: ensure selector doesn't contain script-like patterns
-  if (selector.includes('<') || selector.includes('>') || 
-      selector.includes('javascript:') || selector.includes('\\')) {
-    throw new Error('Potentially malicious selector');
-  }
-  return true;
-}
-
-// Validate before use
-this.isValidSelector(selector);
+// validation.ts - XSS detection
+const XSS_PATTERNS = /<script|javascript:|on\w+\s*=|data:text\/html|vbscript:|expression\s*\(/i;
 ```
 
 ---
 
-### 2. Unrestricted IPC Channel Event Listener
+### ✅ 2. Broken Authentication (A07:2021) - WELL PROTECTED
 
-**Severity:** CRITICAL
-**Category:** IPC Security / Privilege Escalation
-**Location:** `electron/main/preload.ts:54-60`
+**Status:** Appropriate for desktop application
 
-**Issue:**
-The preload script exposes a generic `on()` and `off()` method that allows the renderer process to subscribe to ANY IPC channel without validation. This could allow a malicious webpage or XSS payload to intercept sensitive events.
+**Findings:**
+- ✅ No traditional authentication (desktop app model)
+- ✅ Proxy credentials encrypted with AES-256-GCM
+- ✅ Electron safeStorage API integration for OS-level encryption
+- ✅ Master key generated with `crypto.randomBytes(32)`
+- ✅ PBKDF2 with 100,000 iterations for key derivation
 
+---
+
+### ✅ 3. Sensitive Data Exposure (A02:2021) - WELL PROTECTED
+
+**Status:** Strong encryption and secure storage
+
+**Findings:**
+- ✅ Credentials encrypted at rest using AES-256-GCM
+- ✅ Master key stored via electron-store with encryption
+- ✅ Memory cleanup implemented (`destroy()` methods)
+- ✅ No hardcoded secrets found in codebase
+- ✅ `.env.example` contains only non-sensitive defaults
+
+**Evidence:**
 ```typescript
-// ❌ CRITICAL: Unrestricted channel subscription
-on: (channel: string, callback: Function) => {
-  ipcRenderer.on(channel, (_event, ...args) => callback(...args));
-},
+// credential-store.ts - Proper encryption
+const ALGORITHM = 'aes-256-gcm';
+const PBKDF2_ITERATIONS = 100000;
 ```
 
-**Impact:**
-- Renderer can listen to internal system events
-- Potential exposure of sensitive data through events
-- Bypass of intended security boundaries
+---
 
-**Remediation:**
+### ⚠️ 4. XML External Entities (A05:2021) - N/A
+
+**Status:** Not applicable - project doesn't process XML
+
+---
+
+### ✅ 5. Broken Access Control (A01:2021) - WELL PROTECTED
+
+**Status:** Strong IPC channel whitelisting
+
+**Findings:**
+- ✅ Strict IPC channel whitelists (`preload.ts`)
+- ✅ Context isolation enabled
+- ✅ Sandbox mode enabled for renderer
+- ✅ nodeIntegration disabled
+- ✅ webviewTag disabled
+
+**Evidence:**
 ```typescript
-// ✅ CORRECT: Whitelist allowed channels
-const ALLOWED_EVENT_CHANNELS = [
-  'event:proxy-status-change',
-  'event:tab-update',
-  'event:automation-progress',
-  'event:log'
-] as const;
-
-on: (channel: string, callback: Function) => {
-  if (!ALLOWED_EVENT_CHANNELS.includes(channel as any)) {
-    console.error(`Attempted to listen on unauthorized channel: ${channel}`);
-    return;
-  }
-  ipcRenderer.on(channel, (_event, ...args) => callback(...args));
-},
-
-off: (channel: string, callback: Function) => {
-  if (!ALLOWED_EVENT_CHANNELS.includes(channel as any)) {
-    return;
-  }
-  ipcRenderer.removeListener(channel, callback as any);
+// preload.ts - Channel whitelisting
+const IPC_INVOKE_WHITELIST = new Set([...]);
+if (!IPC_INVOKE_WHITELIST.has(channel)) {
+  return Promise.reject(new Error(`Unauthorized IPC channel: ${channel}`));
 }
 ```
 
 ---
 
-## High Issues (Fix Before Production)
+### ✅ 6. Security Misconfiguration (A05:2021) - WELL CONFIGURED
 
-### 3. ReDoS Vulnerability in Domain Targeting Regex Compilation
+**Status:** Proper Electron security settings
+
+**Findings:**
+- ✅ `contextIsolation: true`
+- ✅ `sandbox: true`
+- ✅ `nodeIntegration: false`
+- ✅ `webviewTag: false`
+- ✅ `allowRunningInsecureContent: false`
+- ✅ `experimentalFeatures: false`
+
+**Evidence:**
+```typescript
+// main/index.ts
+webPreferences: {
+  nodeIntegration: false,
+  contextIsolation: true,
+  sandbox: true,
+  webviewTag: false,
+  allowRunningInsecureContent: false,
+  experimentalFeatures: false
+}
+```
+
+---
+
+### ✅ 7. Cross-Site Scripting (A03:2021) - WELL PROTECTED
+
+**Status:** Multiple layers of protection
+
+**Findings:**
+- ✅ React JSX auto-escaping
+- ✅ HTML entity encoding in sanitization utilities
+- ✅ XSS pattern detection in Zod schemas
+- ✅ Dangerous protocol blocking (`javascript:`, `vbscript:`, `data:`)
+
+---
+
+### ⚠️ 8. Insecure Deserialization (A08:2021) - MEDIUM RISK
+
+**Status:** Requires validation improvement
+
+**Finding M1:** Session data deserialization without schema validation
+
+**Location:** `electron/core/session/manager.ts:95-98`
+
+```typescript
+// Current - No schema validation on loaded JSON
+const session: SavedSession = {
+  tabs: JSON.parse(row.tabs),  // ⚠️ Unvalidated JSON
+  windowBounds: JSON.parse(row.window_bounds),
+};
+```
+
+**Impact:** Maliciously crafted session data could inject unexpected properties.
+
+**Remediation:**
+```typescript
+// Add Zod schema validation
+const TabStateSchema = z.object({
+  url: SafeUrlSchema,
+  title: z.string().max(500),
+  proxyId: z.string().uuid().optional(),
+});
+
+const parsedTabs = TabStateSchema.array().parse(JSON.parse(row.tabs));
+```
+
+---
+
+### ✅ 9. Using Components with Known Vulnerabilities (A06:2021) - ACCEPTABLE
+
+**Status:** Build-time vulnerabilities only
+
+**npm audit Results:**
+```
+11 vulnerabilities (3 moderate, 6 high, 2 critical)
+```
+
+**Analysis:**
+| Package | Severity | Runtime Impact |
+|---------|----------|----------------|
+| tar | High | ❌ Build-time only (electron-builder) |
+| esbuild | Moderate | ❌ Dev-time only (vite) |
+| vitest | Critical | ❌ Test-time only |
+
+**Verdict:** All vulnerabilities are in build/dev/test dependencies. **No runtime impact** on production application.
+
+**Recommendation:** Update when stable versions available:
+```bash
+npm audit fix
+```
+
+---
+
+### ✅ 10. Insufficient Logging & Monitoring (A09:2021) - ADEQUATE
+
+**Status:** Logging implemented, monitoring optional for desktop app
+
+**Findings:**
+- ✅ Activity logs table in database
+- ✅ Console logging for security events
+- ✅ Rate limit violations logged
+- ⚠️ Consider structured logging for production
+
+---
+
+## Specific Vulnerabilities Found
+
+### HIGH SEVERITY
+
+#### H1: Config Manager Uses Static Encryption Key
 
 **Severity:** HIGH
-**Category:** Denial of Service (ReDoS)
-**Location:** `electron/core/automation/domain-targeting.ts:90-99`
+**Category:** Cryptographic Issues
+**Location:** `electron/main/config-manager.ts:74`
 
 **Issue:**
-User-provided regex patterns are compiled without timeout or complexity limits. Malicious or poorly-crafted regex patterns could cause exponential backtracking, freezing the application.
-
 ```typescript
-// ❌ HIGH: Unconstrained regex compilation from user input
-private compileRegexPatterns(): void {
-  this.compiledRegex = [];
-  for (const pattern of this.filters.regexPatterns) {
-    try {
-      this.compiledRegex.push(new RegExp(pattern));  // No complexity limits
-    } catch (error) {
-      console.error(`[DomainTargeting] Invalid regex pattern: ${pattern}`, error);
-    }
-  }
-}
+const {
+  storeEncryptionKey = 'vip-browser-config-encryption-key-v1',  // ⚠️ Static default
+} = options;
 ```
 
-**Impact:**
-- Application hang/freeze
-- Denial of service
-- Resource exhaustion
+**Impact:** The default encryption key for electron-store is static and predictable. An attacker with file system access could decrypt the master key store.
 
 **Remediation:**
 ```typescript
-import { RE2 } from 're2';  // Use RE2 for linear-time regex matching
+// Generate machine-specific key using hardware identifiers
+import { machineIdSync } from 'node-machine-id';
+import { createHash } from 'crypto';
 
-private compileRegexPatterns(): void {
-  this.compiledRegex = [];
-  const MAX_PATTERN_LENGTH = 500;
+const machineKey = createHash('sha256')
+  .update(machineIdSync())
+  .update('vip-browser-v1')
+  .digest('hex');
+
+this.store = new ElectronStore<ConfigSchema>({
+  name: storeName,
+  encryptionKey: machineKey,  // Machine-specific
+});
+```
+
+---
+
+#### H2: Tracker Blocker Pattern Matching May Cause ReDoS
+
+**Severity:** HIGH
+**Category:** ReDoS
+**Location:** `electron/core/privacy/tracker-blocker.ts:97-103`
+
+**Issue:**
+```typescript
+private matchesPattern(url: string, pattern: string): boolean {
+  const regexPattern = pattern
+    .replace(/\./g, '\\.')
+    .replace(/\*/g, '.*')  // ⚠️ Creates .* patterns
+    .replace(/\?/g, '.');
   
-  for (const pattern of this.filters.regexPatterns) {
-    try {
-      // Validate pattern length
-      if (pattern.length > MAX_PATTERN_LENGTH) {
-        console.error(`[DomainTargeting] Pattern too long: ${pattern.substring(0, 50)}...`);
-        continue;
-      }
-      
-      // Use RE2 for safe regex execution (no backtracking)
-      // Or implement timeout wrapper
-      this.compiledRegex.push(new RE2(pattern));
-    } catch (error) {
-      console.error(`[DomainTargeting] Invalid regex pattern: ${pattern}`, error);
-    }
+  const regex = new RegExp('^' + regexPattern + '$', 'i');
+  return regex.test(url);  // ⚠️ Tested against every URL
+}
+```
+
+**Impact:** Patterns like `*://*.example.*/*` become `.*://.*\.example\..*\/.*` which can cause exponential backtracking on malformed URLs.
+
+**Remediation:**
+```typescript
+private matchesPattern(url: string, pattern: string): boolean {
+  // Use atomic groups or possessive quantifiers
+  // Or better: use a proper URL pattern matching library
+  
+  // Timeout protection
+  const MAX_URL_LENGTH = 2000;
+  if (url.length > MAX_URL_LENGTH) return false;
+  
+  // Pre-compile and cache patterns
+  if (!this.compiledPatterns.has(pattern)) {
+    // Use non-backtracking pattern
+    const regexPattern = pattern
+      .replace(/\./g, '\\.')
+      .replace(/\*\*/g, '.*?')  // Non-greedy
+      .replace(/\*/g, '[^/]*'); // More restrictive than .*
+    this.compiledPatterns.set(pattern, new RegExp('^' + regexPattern + '$', 'i'));
   }
+  
+  return this.compiledPatterns.get(pattern)!.test(url);
 }
 ```
 
 ---
 
-### 4. Missing Input Validation on IPC Handlers
+#### H3: WebRTC Protection Can Be Bypassed
 
 **Severity:** HIGH
-**Category:** Input Validation
-**Location:** `electron/ipc/handlers/index.ts`, `electron/ipc/handlers/automation.ts`
+**Category:** Privacy Leak
+**Location:** `electron/core/privacy/webrtc.ts:43-59`
 
 **Issue:**
-IPC handlers accept `any` typed parameters without validation. The renderer process could send malformed data causing crashes or unexpected behavior.
-
 ```typescript
-// ❌ HIGH: No input validation
-ipcMain.handle(IPC_CHANNELS.PROXY_ADD, async (_event, config) => {
-  try {
-    const proxy = await proxyManager.addProxy(config);  // config is unvalidated
-    return { success: true, proxy };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
-  }
-});
+// Only overwrites window-level RTCPeerConnection
+if (window.RTCPeerConnection) {
+  window.RTCPeerConnection = function() {
+    throw new Error('WebRTC is disabled for privacy protection');
+  };
+}
 ```
+
+**Impact:** Script can access RTCPeerConnection before protection script runs, or via iframe with different window context.
 
 **Remediation:**
 ```typescript
-import { z } from 'zod';
-
-// Define schemas
-const ProxyConfigSchema = z.object({
-  name: z.string().min(1).max(255),
-  host: z.string().min(1).max(253),
-  port: z.number().int().min(1).max(65535),
-  protocol: z.enum(['http', 'https', 'socks4', 'socks5']),
-  username: z.string().max(256).optional(),
-  password: z.string().max(256).optional(),
-});
-
-ipcMain.handle(IPC_CHANNELS.PROXY_ADD, async (_event, config) => {
-  try {
-    // ✅ Validate input
-    const validatedConfig = ProxyConfigSchema.parse(config);
-    const proxy = await proxyManager.addProxy(validatedConfig);
-    return { success: true, proxy };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { success: false, error: 'Invalid proxy configuration' };
-    }
-    return { success: false, error: (error as Error).message };
+// 1. Use Electron's built-in WebRTC control
+webPreferences: {
+  webrtc: {
+    ipHandlingPolicy: 'disable_non_proxied_udp'
   }
+}
+
+// 2. Block at session level
+session.defaultSession.webRequest.onBeforeRequest(
+  { urls: ['*://*/rtc*', 'stun:*', 'turn:*'] },
+  (details, callback) => {
+    callback({ cancel: true });
+  }
+);
+
+// 3. Use Object.defineProperty for non-configurable override
+Object.defineProperty(window, 'RTCPeerConnection', {
+  value: undefined,
+  writable: false,
+  configurable: false
 });
 ```
 
 ---
 
-### 5. URL Navigation Without Validation
+#### H4: Session Manager Stores URLs Without Re-validation
 
 **Severity:** HIGH
-**Category:** SSRF / Protocol Handler Abuse
+**Category:** SSRF / Stored XSS
+**Location:** `electron/core/session/manager.ts:55-67`
+
+**Issue:**
+```typescript
+async saveSession(name: string, tabs: TabState[], windowBounds: WindowBounds) {
+  // URLs in tabs are stored directly without re-validation
+  this.db.execute(sql, [
+    session.id,
+    session.name,
+    JSON.stringify(session.tabs),  // ⚠️ tabs.url not validated
+  ]);
+}
+```
+
+**Impact:** If a malicious URL bypasses initial validation, it gets persisted and could be loaded on session restore.
+
+**Remediation:**
+```typescript
+async saveSession(name: string, tabs: TabState[], windowBounds: WindowBounds) {
+  // Re-validate all URLs before saving
+  const validatedTabs = tabs.map(tab => {
+    const urlValidation = validateInput(SafeUrlSchema, tab.url);
+    if (!urlValidation.success) {
+      throw new Error(`Invalid URL in session: ${urlValidation.error}`);
+    }
+    return { ...tab, url: urlValidation.data };
+  });
+  
+  // ... save validated tabs
+}
+```
+
+---
+
+### MEDIUM SEVERITY
+
+#### M1: Missing Rate Limiting on Tab Navigation
+
+**Severity:** MEDIUM
+**Category:** DoS
 **Location:** `electron/core/tabs/manager.ts:293-304`
 
-**Issue:**
-The `navigate()` method loads URLs without validating the protocol or destination. This could allow navigation to dangerous protocols like `file://`, `javascript:`, or internal Electron URLs.
+**Issue:** Tab navigation bypasses rate limiting when called directly.
 
-```typescript
-// ❌ HIGH: No URL validation before navigation
-async navigate(id: string, url: string): Promise<void> {
-  const view = this.views.get(id);
-  const tab = this.tabs.get(id);
-  
-  if (!view || !tab) {
-    throw new Error(`Tab ${id} not found`);
-  }
-
-  await view.webContents.loadURL(url);  // Unvalidated URL
-  tab.url = url;
-  this.tabs.set(id, tab);
-}
-```
-
-**Impact:**
-- Access to local filesystem via `file://` protocol
-- JavaScript execution via `javascript:` URLs
-- Access to internal Electron resources
-
-**Remediation:**
-```typescript
-private validateNavigationUrl(url: string): void {
-  const allowedProtocols = ['http:', 'https:'];
-  
-  try {
-    const parsed = new URL(url);
-    
-    if (!allowedProtocols.includes(parsed.protocol)) {
-      throw new Error(`Protocol ${parsed.protocol} is not allowed`);
-    }
-    
-    // Block internal URLs
-    if (parsed.hostname === 'localhost' || 
-        parsed.hostname === '127.0.0.1' ||
-        parsed.hostname.endsWith('.local')) {
-      throw new Error('Navigation to local addresses is not allowed');
-    }
-  } catch (error) {
-    if (error instanceof TypeError) {
-      throw new Error('Invalid URL format');
-    }
-    throw error;
-  }
-}
-
-async navigate(id: string, url: string): Promise<void> {
-  this.validateNavigationUrl(url);  // ✅ Validate first
-  // ... rest of method
-}
-```
+**Remediation:** Ensure all navigation goes through rate-limited IPC handlers.
 
 ---
 
-### 6. Encryption Service Master Key Handling
-
-**Severity:** HIGH
-**Category:** Cryptographic Security
-**Location:** `electron/database/services/encryption.service.ts:44-48`
-
-**Issue:**
-The encryption service's `initialize()` method accepts a master password as a string parameter, but there's no secure mechanism for obtaining or storing this password. The implementation relies on the caller to provide secure key management.
-
-```typescript
-// Current implementation - where does masterPassword come from?
-initialize(masterPassword: string, salt?: string): void {
-  const useSalt = salt || this.generateSalt();
-  this.masterKey = this.deriveKey(masterPassword, useSalt);
-  this.keyId = this.generateKeyId(this.masterKey);
-}
-```
-
-**Impact:**
-- Master password could be hardcoded
-- No integration with OS keychain
-- Key material potentially exposed in memory
-
-**Remediation:**
-```typescript
-import { safeStorage } from 'electron';
-
-// ✅ Use Electron's safeStorage for secure key management
-async initializeSecurely(): Promise<void> {
-  if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error('Secure storage is not available on this platform');
-  }
-  
-  // Store/retrieve encrypted master key using OS keychain
-  const storedKey = await this.getStoredMasterKey();
-  if (storedKey) {
-    this.masterKey = safeStorage.decryptString(storedKey);
-  } else {
-    // Generate and securely store new key
-    const newKey = crypto.randomBytes(32);
-    await this.storeMasterKey(safeStorage.encryptString(newKey.toString('hex')));
-    this.masterKey = newKey;
-  }
-  this.keyId = this.generateKeyId(this.masterKey);
-}
-```
-
----
-
-### 7. Sandbox Disabled in Main Window
-
-**Severity:** HIGH
-**Category:** Electron Security
-**Location:** `electron/main/index.ts:35`
-
-**Issue:**
-The main window is created with `sandbox: false`, which weakens the security boundary between the renderer and the system.
-
-```typescript
-// ❌ HIGH: Sandbox disabled
-webPreferences: {
-  preload: join(__dirname, '../preload/index.js'),
-  nodeIntegration: false,
-  contextIsolation: true,
-  sandbox: false  // Should be true
-}
-```
-
-**Impact:**
-- Increased attack surface if renderer is compromised
-- Potential privilege escalation
-
-**Remediation:**
-```typescript
-webPreferences: {
-  preload: join(__dirname, '../preload/index.js'),
-  nodeIntegration: false,
-  contextIsolation: true,
-  sandbox: true,  // ✅ Enable sandbox
-  webSecurity: true,
-  allowRunningInsecureContent: false
-}
-```
-
----
-
-## Medium Issues (Fix When Possible)
-
-### 8. Plaintext Credential Fallback in Proxy Validator
+#### M2: Automation Executor Lacks Input Sanitization
 
 **Severity:** MEDIUM
-**Category:** Sensitive Data Handling
-**Location:** `electron/core/proxy-engine/validator.ts:479-483`
+**Category:** Injection
+**Location:** `electron/core/automation/executor.ts:55-60`
 
 **Issue:**
-The validator falls back to plaintext credentials if encrypted credentials are not available. This deprecated path should be removed or explicitly deprecated with logging.
-
 ```typescript
-} else if (proxy.username && proxy.password) {
-  // Fallback to plain text credentials (deprecated)
-  username = proxy.username;
-  password = proxy.password;
-}
+const results = await this.searchEngine.performSearch(
+  view,
+  task.keyword,  // ⚠️ Should be re-validated
+  task.engine
+);
 ```
 
-**Remediation:**
-```typescript
-} else if (proxy.username && proxy.password) {
-  // ⚠️ DEPRECATED: Log warning and consider removing
-  console.warn('[SECURITY] Using plaintext credentials - this is deprecated and will be removed');
-  logger.securityWarning('Plaintext proxy credentials used', { proxyId: proxy.id });
-  username = proxy.username;
-  password = proxy.password;
-}
-```
+**Remediation:** Add validation before search execution.
 
 ---
 
-### 9. JSON Parse Without Try-Catch in Repository DTO Conversion
+#### M3: Translation Service Could Leak Data to External APIs
 
 **Severity:** MEDIUM
-**Category:** Error Handling / DoS
-**Location:** `electron/database/repositories/proxy.repository.ts:316`, `rotation-rules.repository.ts:27-29`
+**Category:** Data Leakage
+**Location:** `electron/core/translation/translator.ts:282-303`
 
-**Issue:**
-JSON.parse is called on database values without error handling. Corrupted data could crash the application.
+**Issue:** Comment indicates production would use external API, but no data sanitization before sending.
 
-```typescript
-// ❌ MEDIUM: No error handling for JSON.parse
-tags: row.tags ? JSON.parse(row.tags) : undefined,
-
-// In rotation-rules.repository.ts
-conditions: JSON.parse(entity.conditions),
-actions: JSON.parse(entity.actions),
-```
-
-**Remediation:**
-```typescript
-private safeJsonParse<T>(json: string | null, defaultValue: T): T {
-  if (!json) return defaultValue;
-  try {
-    return JSON.parse(json) as T;
-  } catch (error) {
-    console.error('[Repository] Failed to parse JSON:', error);
-    return defaultValue;
-  }
-}
-
-// Usage
-tags: this.safeJsonParse(row.tags, undefined),
-conditions: this.safeJsonParse(entity.conditions, []),
-```
+**Remediation:** Sanitize PII before translation requests.
 
 ---
 
-### 10. Missing Rate Limiting on IPC Handlers
-
-**Severity:** MEDIUM
-**Category:** DoS Prevention
-**Location:** `electron/ipc/handlers/*`
-
-**Issue:**
-IPC handlers have no rate limiting. A malicious or buggy renderer could flood the main process with requests.
-
-**Remediation:**
-```typescript
-import { RateLimiter } from 'limiter';
-
-const rateLimiters = new Map<string, RateLimiter>();
-
-function getRateLimiter(channel: string): RateLimiter {
-  if (!rateLimiters.has(channel)) {
-    rateLimiters.set(channel, new RateLimiter({
-      tokensPerInterval: 100,
-      interval: 'minute'
-    }));
-  }
-  return rateLimiters.get(channel)!;
-}
-
-// Wrapper for rate-limited handlers
-function rateLimitedHandler<T>(
-  channel: string, 
-  handler: (...args: any[]) => Promise<T>
-) {
-  return async (...args: any[]): Promise<T | { success: false; error: string }> => {
-    const limiter = getRateLimiter(channel);
-    if (!limiter.tryRemoveTokens(1)) {
-      return { success: false, error: 'Rate limit exceeded' };
-    }
-    return handler(...args);
-  };
-}
-```
-
----
-
-### 11. Ad Viewer HTML Content Parsing
-
-**Severity:** MEDIUM
-**Category:** XSS Risk
-**Location:** `electron/core/creator-support/ad-viewer.ts:99-147`
-
-**Issue:**
-The `detectAds` method receives HTML content and performs string matching. While not directly rendering this HTML, the pattern could lead to XSS if the HTML is ever displayed or the selectors are used unsafely.
-
-```typescript
-detectAds(pageContent: { selectors: string[]; html: string }, platform: Platform | string): AdDetectionResult {
-  // ... string matching on html content
-  if (pageContent.html.includes(selectorName)) {
-    // ...
-  }
-}
-```
-
-**Remediation:**
-- Ensure HTML content is never rendered directly
-- Add documentation noting the security implications
-- Consider using a safe HTML parser like DOMPurify for any display purposes
-
----
-
-### 12. Missing Content-Security-Policy Headers
-
-**Severity:** MEDIUM
-**Category:** XSS Prevention
-**Location:** `electron/main/index.ts`
-
-**Issue:**
-No Content-Security-Policy is configured for the Electron windows, which could allow XSS attacks if content is loaded from untrusted sources.
-
-**Remediation:**
-```typescript
-mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-  callback({
-    responseHeaders: {
-      ...details.responseHeaders,
-      'Content-Security-Policy': [
-        "default-src 'self'; " +
-        "script-src 'self'; " +
-        "style-src 'self' 'unsafe-inline'; " +
-        "img-src 'self' data: https:; " +
-        "connect-src 'self' https:;"
-      ]
-    }
-  });
-});
-```
-
----
-
-### 13. Insufficient Error Message Sanitization
+#### M4: Fingerprint Protection Scripts Log to Console
 
 **Severity:** MEDIUM
 **Category:** Information Disclosure
-**Location:** Multiple IPC handlers
+**Location:** `electron/core/privacy/fingerprint/canvas.ts:266`
 
 **Issue:**
-Error messages are passed directly to the renderer, potentially exposing sensitive system information.
-
 ```typescript
-return { success: false, error: (error as Error).message };
+console.log('[Canvas Protection] Enhanced canvas fingerprinting protection enabled...');
 ```
 
-**Remediation:**
-```typescript
-function sanitizeError(error: Error): string {
-  // Map known errors to safe messages
-  const safeMessages: Record<string, string> = {
-    'ECONNREFUSED': 'Connection refused',
-    'ENOTFOUND': 'Server not found',
-    'ETIMEDOUT': 'Connection timed out',
-  };
-  
-  for (const [key, msg] of Object.entries(safeMessages)) {
-    if (error.message.includes(key)) {
-      return msg;
-    }
-  }
-  
-  // Don't expose internal errors
-  if (error.message.includes('/') || error.message.includes('\\')) {
-    return 'An internal error occurred';
-  }
-  
-  return error.message;
-}
-```
+**Impact:** Detection scripts can identify protection is active.
+
+**Remediation:** Remove or disable console logging in production builds.
 
 ---
 
-## Low Issues (Consider Fixing)
+#### M5: AddressBar Component Lacks Input Handling
 
-### 14. Console Logging of Sensitive Operations
+**Severity:** MEDIUM
+**Category:** Incomplete Security
+**Location:** `src/components/browser/AddressBar.tsx:25-30`
+
+**Issue:** Input field has no `onSubmit` handler with URL validation visible in component.
+
+**Remediation:** Ensure URL validation is called before navigation.
+
+---
+
+### LOW SEVERITY
+
+#### L1: Secure Memory Cleanup Limited for JavaScript Strings
 
 **Severity:** LOW
-**Category:** Information Disclosure
-**Location:** Multiple files
+**Location:** `electron/main/config-manager.ts:170-178`
 
-**Issue:**
-Various debug console.log statements could leak sensitive information in production.
+**Issue:** JavaScript strings are immutable; memory overwriting is best-effort.
 
-**Remediation:**
-- Use a structured logger with log levels
-- Disable debug logging in production
-- Sanitize any logged data
+**Recommendation:** Document limitation; consider Buffer for sensitive data throughout.
 
 ---
 
-### 15. Missing Secure Context Check for Crypto Operations
+#### L2: CSP Not Applied to BrowserViews
 
 **Severity:** LOW
-**Category:** Cryptographic Security
-**Location:** `electron/core/proxy-engine/credential-store.ts`
+**Location:** `electron/core/tabs/manager.ts:61-68`
 
-**Issue:**
-No verification that the application is running in a secure context before performing cryptographic operations.
+**Issue:** Individual BrowserViews don't have CSP headers enforced.
+
+**Recommendation:** Apply CSP via session.webRequest.onHeadersReceived.
 
 ---
 
-### 16. Potential Memory Leak in Event Listeners
+#### L3: Timezone Validation Accepts All Intl Timezones
 
 **Severity:** LOW
-**Category:** Resource Management
-**Location:** `electron/core/tabs/manager.ts:150-184`
+**Location:** `electron/ipc/validation.ts:252-264`
 
-**Issue:**
-Event listeners are added to BrowserView webContents but may not be properly cleaned up in all cases.
+**Issue:** Some exotic timezone strings could be used for fingerprinting.
 
----
-
-### 17. Database Path Disclosure
-
-**Severity:** LOW
-**Category:** Information Disclosure
-**Location:** `electron/database/index.ts:74`
-
-**Issue:**
-Database path is logged on initialization, which could expose system paths.
-
-```typescript
-console.log('Database initialized at:', this.dbPath);
-```
+**Recommendation:** Whitelist common timezones.
 
 ---
 
-## Positive Security Findings ✅
+## Security Best Practices Alignment
 
-### Credential Encryption Implementation
-- **AES-256-GCM** encryption with authenticated encryption
-- Unique IV per encryption operation
-- PBKDF2 key derivation with 100,000 iterations
-- Proper memory clearing of sensitive buffers
-- Version field for future migration support
+### ✅ Implemented Correctly
 
-### SSRF Prevention
-- Comprehensive blocking of localhost, private IPs, link-local, multicast
-- DNS rebinding protection via IP validation after resolution
-- IPv4-mapped IPv6 address validation
-- URL-encoded credentials to prevent injection
+| Practice | Status | Notes |
+|----------|--------|-------|
+| Defense in Depth | ✅ | Multiple validation layers |
+| Least Privilege | ✅ | Sandbox enabled, node disabled |
+| Input Validation | ✅ | Zod schemas on all IPC |
+| Encryption at Rest | ✅ | AES-256-GCM |
+| Secure Defaults | ✅ | All protections enabled by default |
+| Fail Securely | ✅ | Errors don't expose internals |
 
-### Database Security
-- All queries use parameterized statements via `better-sqlite3`
-- No string concatenation in SQL queries
-- Foreign keys enabled
-- WAL mode for integrity
+### ⚠️ Needs Improvement
 
-### Electron Security Basics
-- `nodeIntegration: false`
-- `contextIsolation: true`
-- Preload script with contextBridge
+| Practice | Status | Recommendation |
+|----------|--------|----------------|
+| Key Management | ⚠️ | Use machine-specific encryption key |
+| Session Validation | ⚠️ | Validate restored session data |
+| Production Logging | ⚠️ | Remove debug console.log statements |
 
 ---
 
-## Security Checklist
+## Prioritized Remediation Recommendations
 
-- [x] No hardcoded secrets found
-- [ ] All inputs validated - **NEEDS WORK**
-- [x] SQL injection prevention (parameterized queries)
-- [ ] XSS prevention - **NEEDS CSP**
-- [ ] CSRF protection - N/A (desktop app)
-- [ ] Authentication required - N/A (local app)
-- [ ] Authorization verified - N/A (single user)
-- [ ] Rate limiting enabled - **MISSING**
-- [ ] HTTPS enforced - **NEEDS URL VALIDATION**
-- [ ] Security headers set - **MISSING CSP**
-- [x] Dependencies appear reasonable
-- [ ] IPC channels secured - **NEEDS WHITELIST**
-- [ ] Logging sanitized - **NEEDS WORK**
-- [ ] Error messages safe - **NEEDS WORK**
+### Immediate (Before Production)
 
----
+1. **[H1]** Replace static config encryption key with machine-specific key
+2. **[H3]** Implement Electron-level WebRTC blocking
+3. **[H4]** Add URL re-validation in session manager
 
-## Recommendations
+### Short-term (Within 2 Weeks)
 
-### Immediate Actions
-1. Fix unrestricted IPC event listener (Critical)
-2. Add input validation to IPC handlers (High)
-3. Validate navigation URLs (High)
-4. Enable sandbox mode (High)
+4. **[H2]** Fix ReDoS vulnerability in tracker blocker
+5. **[M1]** Ensure all navigation is rate-limited
+6. **[M4]** Remove/disable console logging in production
 
-### Short-term Actions
-1. Implement RE2 for safe regex matching
-2. Add rate limiting to IPC handlers
-3. Configure Content-Security-Policy
-4. Integrate with OS keychain for master key storage
+### Medium-term (Within 1 Month)
 
-### Long-term Actions
-1. Add security-focused unit tests
-2. Implement security event logging/monitoring
-3. Regular dependency auditing with `npm audit`
-4. Consider security code review automation in CI/CD
+7. **[M2]** Add validation layer in automation executor
+8. **[M3]** Implement data sanitization for translation service
+9. Update dependencies when stable versions available
 
 ---
 
-## References
+## Security Testing Recommendations
 
-- [Electron Security Best Practices](https://www.electronjs.org/docs/latest/tutorial/security)
-- [OWASP Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html)
-- [ReDoS Prevention](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS)
-- [Node.js Crypto Best Practices](https://nodejs.org/api/crypto.html)
+### Automated Testing
+- ✅ Unit tests exist for security functions
+- ✅ E2E tests cover privacy protection
+- 📋 Add fuzzing tests for input validation
+- 📋 Add ReDoS detection tests
+
+### Manual Testing
+- 📋 Penetration test IPC channel security
+- 📋 Test WebRTC leak protection with browserleaks.com
+- 📋 Verify fingerprint randomization with fingerprint.js
 
 ---
 
-> Security review performed by Claude security-reviewer agent
-> For questions, see this report or request a follow-up review
+## Conclusion
+
+The Virtual IP Browser demonstrates **mature security architecture** with proper Electron configuration, comprehensive input validation, and encrypted credential storage. The identified issues are addressable and don't represent fundamental design flaws.
+
+**Overall Security Posture:** 🟡 **MEDIUM RISK** - Ready for limited deployment after HIGH issues addressed.
+
+### Sign-off Checklist
+
+- [ ] Fix H1: Config encryption key
+- [ ] Fix H3: WebRTC blocking
+- [ ] Fix H4: Session URL validation
+- [ ] Run `npm audit fix` for dependency updates
+- [ ] Remove debug logging for production build
+- [ ] Conduct final security review after fixes
+
+---
+
+*Report generated by Security Reviewer Agent*
+*Last Updated: 2025-01-30*

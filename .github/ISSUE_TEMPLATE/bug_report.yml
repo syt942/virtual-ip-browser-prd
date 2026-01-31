@@ -1,0 +1,163 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for taking the time to report this bug!
+        
+        Please fill out the information below to help us investigate and fix the issue.
+        
+        **Before submitting:**
+        - [ ] I have searched existing issues to make sure this isn't a duplicate
+        - [ ] I am using the latest version of Virtual IP Browser
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of Virtual IP Browser are you running?
+      placeholder: "e.g., 1.3.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS Sonoma (14.x)
+        - macOS Ventura (13.x)
+        - macOS Monterey (12.x)
+        - Ubuntu 24.04 LTS
+        - Ubuntu 22.04 LTS
+        - Ubuntu 20.04 LTS
+        - Debian 12 (Bookworm)
+        - Debian 11 (Bullseye)
+        - Fedora 40
+        - Fedora 39
+        - Arch Linux
+        - Other Linux (please specify in description)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation Method
+      description: How did you install the application?
+      options:
+        - .deb package (apt)
+        - .rpm package (dnf/zypper)
+        - AppImage
+        - Windows Installer (.exe)
+        - Windows Portable
+        - macOS DMG
+        - Built from source
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I try to... the application..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: "I expected the application to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Open the application
+        2. Go to '...'
+        3. Click on '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does this happen?
+      options:
+        - Always (100%)
+        - Often (>50%)
+        - Sometimes (<50%)
+        - Rarely (<10%)
+        - Only once
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug for your usage?
+      options:
+        - Critical - Application crashes or data loss
+        - High - Major feature broken, no workaround
+        - Medium - Feature broken, but workaround exists
+        - Low - Minor inconvenience
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: |
+        Please copy and paste any relevant log output.
+        
+        **Log locations:**
+        - Linux: `~/.config/virtual-ip-browser/logs/`
+        - macOS: `~/Library/Application Support/virtual-ip-browser/logs/`
+        - Windows: `%APPDATA%\virtual-ip-browser\logs\`
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the problem.
+      placeholder: "Drag and drop images here or paste URLs"
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here.
+      placeholder: |
+        - Proxy configuration (without credentials)
+        - Network environment
+        - Related issues
+        - Workarounds attempted
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have checked that this issue hasn't already been reported
+          required: true
+        - label: I have included all requested information
+          required: true

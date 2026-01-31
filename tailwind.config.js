@@ -46,7 +46,41 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'
-      }
+      },
+      animation: {
+        // Magic UI animations
+        'gradient': 'gradient 8s linear infinite',
+        'gradient-x': 'gradient-x var(--speed, 3s) ease-in-out infinite',
+        'background-position-spin': 'background-position-spin 3s linear infinite',
+        'border-beam': 'border-beam calc(var(--duration)*1s) infinite linear',
+        'shimmer': 'shimmer 2s linear infinite',
+      },
+      keyframes: {
+        // Gradient animation for AnimatedGradientText
+        'gradient': {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        'gradient-x': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
+        // Background position spin for NeonGradientCard
+        'background-position-spin': {
+          '0%': { backgroundPosition: 'top center' },
+          '100%': { backgroundPosition: 'bottom center' },
+        },
+        // Border beam animation
+        'border-beam': {
+          '100%': { 'offset-distance': '100%' },
+        },
+        // Shimmer animation
+        'shimmer': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
     }
   },
   plugins: [require('tailwindcss-animate')]

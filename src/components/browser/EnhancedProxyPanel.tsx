@@ -8,6 +8,7 @@ import { useProxyStore } from '@stores/proxyStore';
 import { ShimmerButton } from '@components/ui/shimmer-button';
 import { NumberTicker } from '@components/ui/number-ticker';
 import { BorderBeam } from '@components/ui/border-beam';
+import { useBorderBeamEnabled } from '@stores/animationStore';
 
 export function EnhancedProxyPanel() {
   const { 
@@ -20,6 +21,8 @@ export function EnhancedProxyPanel() {
     setRotationStrategy,
     getActiveProxies
   } = useProxyStore();
+  
+  const borderBeamEnabled = useBorderBeamEnabled();
 
   useEffect(() => {
     loadProxies();
@@ -190,7 +193,7 @@ export function EnhancedProxyPanel() {
               className="text-2xl font-bold text-green-500"
             />
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Active</div>
-            {activeProxies.length > 0 && (
+            {activeProxies.length > 0 && borderBeamEnabled && (
               <BorderBeam 
                 size={40} 
                 duration={3} 

@@ -24,7 +24,7 @@ test.describe('Automation', () => {
     }
   });
 
-  test('should display automation panel', async () => {
+  test('should display automation panel', { tag: '@smoke' }, async () => {
     await automationPanel.openPanel();
     await expect(automationPanel.panelTitle).toHaveText('Automation Engine');
   });

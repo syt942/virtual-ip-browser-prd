@@ -29,6 +29,28 @@ CREATE TABLE IF NOT EXISTS creators (
   platform TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS search_tasks (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  keyword TEXT NOT NULL,
+  engine TEXT NOT NULL,
+  status TEXT NOT NULL,
+  proxy_id TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (proxy_id) REFERENCES proxies(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id TEXT PRIMARY KEY,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  level TEXT NOT NULL,
+  category TEXT NOT NULL,
+  message TEXT NOT NULL,
+  session_id TEXT,
+  tab_id TEXT,
+  proxy_id TEXT
+);
 `;
 
 describe('MigrationRunner', () => {

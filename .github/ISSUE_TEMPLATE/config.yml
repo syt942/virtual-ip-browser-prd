@@ -1,0 +1,27 @@
+# Issue template chooser configuration
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository
+
+blank_issues_enabled: false
+
+contact_links:
+  - name: 🔒 Critical Security Vulnerability
+    url: https://github.com/virtualipbrowser/virtual-ip-browser/security/advisories/new
+    about: |
+      For CRITICAL security vulnerabilities, please create a private security advisory.
+      Do NOT use public issues for security vulnerabilities.
+  
+  - name: 💬 GitHub Discussions
+    url: https://github.com/virtualipbrowser/virtual-ip-browser/discussions
+    about: |
+      For questions, ideas, or general discussion about Virtual IP Browser.
+      Use Discussions instead of Issues for non-bug topics.
+  
+  - name: 📚 Documentation
+    url: https://github.com/virtualipbrowser/virtual-ip-browser/tree/main/docs
+    about: |
+      Check the documentation for guides, API reference, and troubleshooting.
+  
+  - name: 📧 Security Email
+    url: mailto:security@virtualipbrowser.com
+    about: |
+      For confidential security reports, email security@virtualipbrowser.com

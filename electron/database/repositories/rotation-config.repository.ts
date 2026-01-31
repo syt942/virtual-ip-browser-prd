@@ -91,35 +91,119 @@ export class RotationConfigRepository {
 
   /**
    * Create a new rotation config
+   * Wrapped in transaction for atomicity
    */
   create(input: CreateRotationConfigInput): RotationConfigDTO {
     const id = randomUUID();
     const now = new Date().toISOString();
 
-    const stmt = this.db.prepare(`
-      INSERT INTO rotation_configs (
-        id, name, description, strategy, is_active,
-        common_config, strategy_config, target_group,
-        priority, enabled, created_at, updated_at, created_by
-      ) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    const createTransaction = this.db.transaction(() => {
+      const stmt = this.db.prepare(`
+        INSERT INTO rotation_configs (
+          id, name, description, strategy, is_active,
+          common_config, strategy_config, target_group,
+          priority, enabled, created_at, updated_at, created_by
+        ) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
 
-    stmt.run(
-      id,
-      input.name,
-      input.description || null,
-      input.strategy,
-      JSON.stringify(input.commonConfig || {}),
-      JSON.stringify(input.strategyConfig || {}),
-      input.targetGroup || null,
-      input.priority ?? 0,
-      input.enabled !== false ? 1 : 0,
-      now,
-      now,
-      input.createdBy || null
-    );
+      stmt.run(
+        id,
+        input.name,
+        input.description || null,
+        input.strategy,
+        JSON.stringify(input.commonConfig || {}),
+        JSON.stringify(input.strategyConfig || {}),
+        input.targetGroup || null,
+        input.priority ?? 0,
+        input.enabled !== false ? 1 : 0,
+        now,
+        now,
+        input.createdBy || null
+      );
 
+      return id;
+    });
+
+    createTransaction();
     return this.findById(id)!;
+  }
+
+  /**
+   * Create a rotation config with associated rules in a single transaction
+   * Ensures atomicity when creating config with initial rules
+   */
+  createWithRules(
+    input: CreateRotationConfigInput,
+    rules?: Array<{
+      name: string;
+      description?: string;
+      priority?: number;
+      conditions: string;
+      conditionLogic?: 'AND' | 'OR';
+      actions: string;
+      stopOnMatch?: boolean;
+      enabled?: boolean;
+    }>
+  ): RotationConfigDTO {
+    const configId = randomUUID();
+    const now = new Date().toISOString();
+
+    const createWithRulesTransaction = this.db.transaction(() => {
+      // Insert the config
+      this.db.prepare(`
+        INSERT INTO rotation_configs (
+          id, name, description, strategy, is_active,
+          common_config, strategy_config, target_group,
+          priority, enabled, created_at, updated_at, created_by
+        ) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        configId,
+        input.name,
+        input.description || null,
+        input.strategy,
+        JSON.stringify(input.commonConfig || {}),
+        JSON.stringify(input.strategyConfig || {}),
+        input.targetGroup || null,
+        input.priority ?? 0,
+        input.enabled !== false ? 1 : 0,
+        now,
+        now,
+        input.createdBy || null
+      );
+
+      // Insert associated rules if provided
+      if (rules && rules.length > 0) {
+        const insertRuleStmt = this.db.prepare(`
+          INSERT INTO proxy_rotation_rules (
+            id, config_id, name, description, priority,
+            conditions, condition_logic, actions,
+            stop_on_match, enabled, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        for (const rule of rules) {
+          insertRuleStmt.run(
+            randomUUID(),
+            configId,
+            rule.name,
+            rule.description || null,
+            rule.priority ?? 0,
+            rule.conditions,
+            rule.conditionLogic || 'AND',
+            rule.actions,
+            rule.stopOnMatch !== false ? 1 : 0,
+            rule.enabled !== false ? 1 : 0,
+            now,
+            now
+          );
+        }
+      }
+
+      return configId;
+    });
+
+    createWithRulesTransaction();
+    return this.findById(configId)!;
   }
 
   /**

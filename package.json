@@ -1,6 +1,6 @@
 {
   "name": "virtual-ip-browser",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Enhanced Privacy-Focused Browser with Proxy Management and Fingerprint Spoofing",
   "main": "out/main/index.js",
   "type": "module",
@@ -125,13 +125,15 @@
       "description": "Virtual IP Browser is an enhanced privacy-focused browser featuring advanced proxy management, fingerprint spoofing, WebRTC leak protection, and automated browsing capabilities. Perfect for privacy-conscious users, security researchers, and developers who need to test applications under different network conditions.",
       "executableName": "virtual-ip-browser",
       "desktop": {
-        "Name": "Virtual IP Browser",
-        "GenericName": "Privacy Browser",
-        "Comment": "Privacy-Focused Browser with Proxy Management and Fingerprint Spoofing",
-        "Categories": "Network;WebBrowser;Utility;Security",
-        "Keywords": "browser;privacy;proxy;vpn;fingerprint;security",
-        "StartupWMClass": "virtual-ip-browser",
-        "MimeType": "text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https"
+        "entry": {
+          "Name": "Virtual IP Browser",
+          "GenericName": "Privacy Browser",
+          "Comment": "Privacy-Focused Browser with Proxy Management and Fingerprint Spoofing",
+          "Categories": "Network;WebBrowser;Utility;Security",
+          "Keywords": "browser;privacy;proxy;vpn;fingerprint;security",
+          "StartupWMClass": "virtual-ip-browser",
+          "MimeType": "text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https"
+        }
       }
     },
     "deb": {

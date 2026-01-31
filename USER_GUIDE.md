@@ -487,9 +487,30 @@ When using geographic proxies, the system can:
 ### Getting Help
 
 - **Documentation**: [docs/](./docs/)
-- **FAQ**: [FAQ.md](./FAQ.md)
+- **Support**: See the project README for support options
 - **Issues**: GitHub Issues
 - **Email**: support@virtualipbrowser.com
+
+### Animation Settings (v1.3.0)
+
+Control the visual experience with new animation settings:
+
+| Setting | Description | Options |
+|---------|-------------|---------|
+| **Enable Animations** | Master toggle for all UI animations | On / Off |
+| **Reduced Motion** | Follow OS accessibility preference | Auto / On / Off |
+| **Particle Density** | Background particle effect intensity | Low / Medium / High / Off |
+| **Animation Speed** | Global animation speed multiplier | 0.5x / 1.0x / 1.5x / 2.0x |
+
+**To access Animation Settings:**
+1. Click the **Settings** icon in the sidebar
+2. Navigate to the **Appearance** tab
+3. Adjust animation preferences as desired
+
+**Performance Tips:**
+- Set Particle Density to "Low" or "Off" on older hardware
+- Enable "Reduced Motion" if animations cause discomfort
+- Lower Animation Speed for a more relaxed experience
 
 ---
 
@@ -520,4 +541,5 @@ When using geographic proxies, the system can:
 ---
 
 *For technical documentation, see [ARCHITECTURE.md](docs/ARCHITECTURE.md)*  
-*For API details, see [docs/CODEMAPS/api-reference.md](docs/CODEMAPS/api-reference.md)*
+*For API details, see [docs/CODEMAPS/api-reference.md](docs/CODEMAPS/api-reference.md)*  
+*Last Updated: January 2025 (v1.3.0)*

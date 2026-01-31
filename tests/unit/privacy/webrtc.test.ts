@@ -55,7 +55,8 @@ describe('WebRTCProtection', () => {
       const customProtection = new WebRTCProtection(false);
       const script = customProtection.generateInjectionScript();
       
-      expect(script).toContain('if (!blockWebRTC) return');
+      // New implementation checks config.blockAll and config.filterIPs
+      expect(script).toContain('if (!config.blockAll && !config.filterIPs) return');
     });
   });
 
@@ -64,7 +65,7 @@ describe('WebRTCProtection', () => {
       const script = protection.generateInjectionScript();
       
       expect(script).toContain('window.RTCPeerConnection');
-      expect(script).toContain('throw new Error');
+      expect(script).toContain('throw new DOMException');
     });
 
     it('should include webkitRTCPeerConnection override', () => {
@@ -83,7 +84,8 @@ describe('WebRTCProtection', () => {
       const script = protection.generateInjectionScript();
       
       expect(script).toContain('RTCDataChannel');
-      expect(script).toContain('undefined');
+      // New implementation uses Object.defineProperty
+      expect(script).toContain('configurable: false');
     });
   });
 
@@ -107,6 +109,18 @@ describe('WebRTCProtection', () => {
       
       expect(script).toContain('WebRTC is disabled for privacy protection');
     });
+
+    it('should block webkitGetUserMedia', () => {
+      const script = protection.generateInjectionScript();
+      
+      expect(script).toContain('navigator.webkitGetUserMedia');
+    });
+
+    it('should block mozGetUserMedia', () => {
+      const script = protection.generateInjectionScript();
+      
+      expect(script).toContain('navigator.mozGetUserMedia');
+    });
   });
 
   describe('enumerateDevices Blocking', () => {
@@ -125,7 +139,7 @@ describe('WebRTCProtection', () => {
       // RTCPeerConnection is the entry point for STUN/TURN
       // Blocking it prevents any ICE candidate gathering
       expect(script).toContain('RTCPeerConnection');
-      expect(script).toContain('throw new Error');
+      expect(script).toContain('throw new DOMException');
     });
 
     it('should not allow ICE candidate gathering', () => {
@@ -133,9 +147,9 @@ describe('WebRTCProtection', () => {
       const script = protection.generateInjectionScript();
       
       // The constructor throws, so createOffer/createAnswer/addIceCandidate
-      // can never be called
-      expect(script).toContain('window.RTCPeerConnection = function()');
-      expect(script).toContain('throw new Error');
+      // can never be called - new implementation uses blockPeerConnection function
+      expect(script).toContain('window.RTCPeerConnection = blockPeerConnection');
+      expect(script).toContain('throw new DOMException');
     });
   });
 
@@ -184,8 +198,8 @@ describe('WebRTCProtection', () => {
       const script = protection.generateInjectionScript();
       
       // Should check for existence before overriding
-      expect(script).toContain('if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia)');
-      expect(script).toContain('if (window.RTCPeerConnection)');
+      expect(script).toContain('if (navigator.mediaDevices)');
+      expect(script).toContain('if (window.RTCDataChannel)');
     });
   });
 
@@ -205,8 +219,9 @@ describe('WebRTCProtection', () => {
       const scriptEnabled = protectionEnabled.generateInjectionScript();
       const scriptDisabled = protectionDisabled.generateInjectionScript();
 
-      expect(scriptEnabled).toContain('const blockWebRTC = true');
-      expect(scriptDisabled).toContain('const blockWebRTC = false');
+      // New implementation uses config object instead of blockWebRTC variable
+      expect(scriptEnabled).toContain('"blockAll":true');
+      expect(scriptDisabled).toContain('"blockAll":false');
     });
   });
 
@@ -261,6 +276,157 @@ describe('WebRTC Leak Prevention Integration', () => {
       // Should appear in: getUserMedia (modern), getUserMedia (legacy), 
       // RTCPeerConnection, webkitRTCPeerConnection, mozRTCPeerConnection
       expect(occurrences).toBeGreaterThanOrEqual(5);
+    });
+  });
+});
+
+/**
+ * SECURITY FIX 3: Comprehensive WebRTC API Blocking Tests
+ */
+describe('WebRTCProtection Comprehensive Security', () => {
+  let protection: WebRTCProtection;
+
+  beforeEach(() => {
+    protection = new WebRTCProtection(true);
+  });
+
+  describe('Complete Block Mode - New APIs', () => {
+    it('should block RTCSessionDescription', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('window.RTCSessionDescription = function()');
+      expect(script).toContain('NotSupportedError');
+    });
+
+    it('should block RTCIceCandidate', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('window.RTCIceCandidate = function()');
+    });
+
+    it('should block RTCRtpReceiver', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('RTCRtpReceiver');
+      expect(script).toContain('configurable: false');
+    });
+
+    it('should block RTCRtpSender', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('RTCRtpSender');
+    });
+
+    it('should block RTCRtpTransceiver', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('RTCRtpTransceiver');
+    });
+
+    it('should block getDisplayMedia', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('getDisplayMedia');
+      expect(script).toContain('Screen sharing is disabled');
+    });
+
+    it('should block getSupportedConstraints', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('getSupportedConstraints');
+    });
+
+    it('should use DOMException with proper error types', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('DOMException');
+      expect(script).toContain('NotSupportedError');
+      expect(script).toContain('NotAllowedError');
+    });
+  });
+
+  describe('IP Filtering Mode', () => {
+    beforeEach(() => {
+      protection.configure({
+        blockAll: false,
+        filterIPs: true,
+        allowedCandidateTypes: ['relay'],
+        proxyIP: '203.0.113.1',
+      });
+    });
+
+    it('should generate script with IP filtering', () => {
+      const script = protection.generateInjectionScript();
+      
+      expect(script).toContain('filterIPs');
+      expect(script).toContain('sanitizeSDP');
+      expect(script).toContain('filterCandidate');
+    });
+
+    it('should filter STUN servers from ICE configuration', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('iceServers');
+      expect(script).toContain("url.startsWith('turn:')");
+    });
+
+    it('should wrap createOffer to sanitize SDP', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('pc.createOffer');
+      expect(script).toContain('sanitizeSDP(offer.sdp)');
+    });
+
+    it('should wrap createAnswer to sanitize SDP', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('pc.createAnswer');
+      expect(script).toContain('sanitizeSDP(answer.sdp)');
+    });
+
+    it('should wrap getStats to remove IP info', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('pc.getStats');
+      expect(script).toContain('delete filtered.ip');
+      expect(script).toContain('delete filtered.address');
+    });
+
+    it('should filter ICE candidates by type', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('allowedCandidateTypes');
+      expect(script).toContain('typ (host|srflx|prflx|relay)');
+    });
+
+    it('should replace private IPs with proxy IP', () => {
+      const script = protection.generateInjectionScript();
+      expect(script).toContain('isPrivateIP');
+      expect(script).toContain('config.proxyIP');
+    });
+  });
+
+  describe('Configuration', () => {
+    it('should return configuration', () => {
+      protection.configure({
+        blockAll: false,
+        filterIPs: true,
+        proxyIP: '1.2.3.4',
+      });
+      
+      const config = protection.getConfig();
+      expect(config.blockAll).toBe(false);
+      expect(config.filterIPs).toBe(true);
+      expect(config.proxyIP).toBe('1.2.3.4');
+    });
+
+    it('should maintain backward compatibility', () => {
+      const oldProtection = new WebRTCProtection(true);
+      expect(oldProtection.isBlocked()).toBe(true);
+      
+      oldProtection.setBlockWebRTC(false);
+      expect(oldProtection.isBlocked()).toBe(false);
+    });
+  });
+
+  describe('IP Detection', () => {
+    it('should detect all private IP ranges in script', () => {
+      protection.configure({ blockAll: false, filterIPs: true });
+      const script = protection.generateInjectionScript();
+      
+      // Check all private ranges are detected
+      expect(script).toContain('parts[0] === 10'); // 10.x.x.x
+      expect(script).toContain('parts[0] === 172'); // 172.16-31.x.x
+      expect(script).toContain('parts[0] === 192'); // 192.168.x.x
+      expect(script).toContain('parts[0] === 127'); // loopback
+      expect(script).toContain('parts[0] === 169'); // link-local
     });
   });
 });

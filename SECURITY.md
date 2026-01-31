@@ -8,25 +8,44 @@
 
 ## Quick Reference
 
-### Security Controls (v1.2.0)
+### Security Controls (v1.3.0)
 
 | Control | Status | Documentation |
 |---------|--------|---------------|
 | Input Validation (Zod) | ✅ Active | [Security Consolidated](./docs/SECURITY_CONSOLIDATED.md#security-controls) |
 | Rate Limiting | ✅ Active | [Security Consolidated](./docs/SECURITY_CONSOLIDATED.md#2-rate-limiting) |
 | SSRF Protection | ✅ Active | [Security Consolidated](./docs/SECURITY_CONSOLIDATED.md#3-ssrf-protection) |
-| ReDoS Protection | ✅ Active | [Security Consolidated](./docs/SECURITY_CONSOLIDATED.md#4-redos-protection) |
+| ReDoS Protection | ✅ **Hardened** | Bloom filter pattern matching (P0 fix) |
 | CSS Sanitization | ✅ Active | [Security Consolidated](./docs/SECURITY_CONSOLIDATED.md#5-css-sanitization) |
-| Credential Encryption | ✅ Active | [Security Consolidated](./docs/SECURITY_CONSOLIDATED.md#data-protection) |
+| OS Keychain Encryption | ✅ **Hardened** | safeStorage API integration (P0 fix) |
 | IPC Whitelisting | ✅ Active | [Security Consolidated](./docs/SECURITY_CONSOLIDATED.md#ipc-security) |
 | Context Isolation | ✅ Active | [Security Consolidated](./docs/SECURITY_CONSOLIDATED.md#electron-security-configuration) |
 | Sandbox Mode | ✅ Active | Renderer process sandboxing enabled |
-| Native Property Masking | ✅ Active | Fingerprint detection resistance |
+| WebRTC Leak Prevention | ✅ **Hardened** | Complete ICE/SDP blocking (P0 fix) |
+| Session URL Validation | ✅ **Hardened** | Re-validates on restore (P0 fix) |
 
-### Security Improvements in v1.2.0
+### 🔒 P0 Security Fixes in v1.3.0
 
-- **Sandbox Mode**: Renderer process sandboxing now enabled for enhanced isolation
-- **Native Property Masking**: Fingerprint spoofing now uses proper property descriptors to avoid detection
+This release addresses **4 critical (P0) security vulnerabilities**:
+
+| # | Vulnerability | Severity | Fix |
+|---|---------------|----------|-----|
+| 1 | Static encryption key in config-manager | **P0 Critical** | OS keychain via safeStorage API |
+| 2 | ReDoS in tracker blocker pattern matching | **P0 Critical** | Bloom filter + compiled patterns |
+| 3 | WebRTC protection bypass (IP leaks) | **P0 Critical** | Complete WebRTC/ICE blocking |
+| 4 | Session URL validation gap (stored SSRF) | **P0 Critical** | Mandatory re-validation on restore |
+
+### Security Improvements History
+
+#### v1.3.0 (Current)
+- **OS Keychain Encryption**: Master key now protected by Windows DPAPI, macOS Keychain, or Linux Secret Service
+- **ReDoS Prevention Overhaul**: Regex matching replaced with O(n) bloom filter approach
+- **Complete WebRTC Blocking**: ICE candidates, SDP, stats API all filtered
+- **Session Security**: URLs re-validated against SSRF and injection attacks on restore
+
+#### v1.2.0
+- **Sandbox Mode**: Renderer process sandboxing enabled for enhanced isolation
+- **Native Property Masking**: Fingerprint spoofing uses proper property descriptors
 - **Enhanced Canvas Protection**: Improved noise injection with better detection resistance
 - **WebGL Vendor/Renderer Hiding**: Better masking of GPU fingerprint data
 
@@ -73,4 +92,4 @@ If you discover a security vulnerability, please report it to:
 - End-user security
 - Production deployments
 
-*Last Updated: 2025-01-30*
+*Last Updated: January 2025 (v1.3.0)*

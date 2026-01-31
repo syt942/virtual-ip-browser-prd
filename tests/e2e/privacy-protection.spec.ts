@@ -24,7 +24,7 @@ test.describe('Privacy Protection', () => {
     }
   });
 
-  test('should display privacy panel', async () => {
+  test('should display privacy panel', { tag: '@smoke' }, async () => {
     await privacyPanel.openPanel();
     await expect(privacyPanel.panelTitle).toHaveText('Privacy Protection');
   });

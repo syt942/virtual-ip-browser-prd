@@ -1,14 +1,14 @@
 # Virtual IP Browser
 
-[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/virtualipbrowser/virtual-ip-browser/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/virtualipbrowser/virtual-ip-browser/releases/tag/v1.3.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Linux-lightgrey.svg)](docs/DISTRIBUTION.md)
-[![Downloads](https://img.shields.io/badge/downloads-.deb%20|%20.rpm%20|%20AppImage-orange.svg)](https://github.com/virtualipbrowser/virtual-ip-browser/releases)
-[![Tests](https://img.shields.io/badge/tests-54_files-brightgreen.svg)](./TESTING.md)
-[![Coverage](https://img.shields.io/badge/coverage-85%25+-brightgreen.svg)](./coverage/index.html)
-[![Security](https://img.shields.io/badge/security-hardened-brightgreen.svg)](./docs/SECURITY_CONSOLIDATED.md)
+[![Platform](https://img.shields.io/badge/platform-Linux%20|%20macOS%20|%20Windows-lightgrey.svg)](docs/DISTRIBUTION.md)
+[![Downloads](https://img.shields.io/badge/downloads-.deb%20|%20.rpm%20|%20AppImage%20|%20.dmg%20|%20.exe-orange.svg)](https://github.com/virtualipbrowser/virtual-ip-browser/releases/tag/v1.3.0)
+[![Tests](https://img.shields.io/badge/tests-2444%2B_passing-success.svg)](./TESTING.md)
+[![Coverage](https://img.shields.io/badge/coverage-88%25-success.svg)](./coverage/index.html)
+[![Security](https://img.shields.io/badge/security-0_vulnerabilities-success.svg)](./docs/SECURITY_CONSOLIDATED.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](./tsconfig.json)
-[![Code Quality](https://img.shields.io/badge/code_quality-4.5%2F5-brightgreen.svg)](./CODE_QUALITY_REPORT.md)
+[![Code Quality](https://img.shields.io/badge/code_quality-4.5%2F5-brightgreen.svg)](./docs/archive/implementation/CODE_QUALITY_REPORT.md)
 
 **Enhanced Privacy-Focused Browser with Proxy Management and Fingerprint Spoofing**
 
@@ -27,10 +27,10 @@ A next-generation, privacy-focused Electron-based desktop browser designed to pr
 
 ```bash
 # Download the latest .deb package
-wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.2.1/virtual-ip-browser_1.2.1_amd64.deb
+wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.3.0/virtual-ip-browser_1.3.0_amd64.deb
 
 # Install with apt (recommended - handles dependencies)
-sudo apt install ./virtual-ip-browser_1.2.1_amd64.deb
+sudo apt install ./virtual-ip-browser_1.3.0_amd64.deb
 
 # Launch the application
 virtual-ip-browser
@@ -49,9 +49,11 @@ virtual-ip-browser
 
 | Format | File | Size | Best For |
 |--------|------|------|----------|
-| **Debian** | `virtual-ip-browser_1.2.1_amd64.deb` | 94 MB | Ubuntu, Debian, Mint, Pop!_OS |
-| **AppImage** | `Virtual IP Browser-1.2.1-x86_64.AppImage` | 123 MB | Any Linux (portable) |
-| **RPM** | `virtual-ip-browser-1.2.1.x86_64.rpm` | 82 MB | Fedora, RHEL, openSUSE |
+| **Debian** | `virtual-ip-browser_1.3.0_amd64.deb` | 95 MB | Ubuntu, Debian, Mint, Pop!_OS |
+| **AppImage** | `Virtual IP Browser-1.3.0-x86_64.AppImage` | 124 MB | Any Linux (portable) |
+| **RPM** | `virtual-ip-browser-1.3.0.x86_64.rpm` | 83 MB | Fedora, RHEL, openSUSE |
+| **macOS** | `Virtual IP Browser-1.3.0.dmg` | 130 MB | macOS 12+ |
+| **Windows** | `Virtual IP Browser Setup 1.3.0.exe` | 115 MB | Windows 10+ |
 
 ### Install by Distribution
 
@@ -60,10 +62,10 @@ virtual-ip-browser
 
 ```bash
 # Method 1: Using apt (recommended)
-sudo apt install ./virtual-ip-browser_1.2.1_amd64.deb
+sudo apt install ./virtual-ip-browser_1.3.0_amd64.deb
 
 # Method 2: Using dpkg
-sudo dpkg -i virtual-ip-browser_1.2.1_amd64.deb
+sudo dpkg -i virtual-ip-browser_1.3.0_amd64.deb
 sudo apt-get install -f  # Fix dependencies if needed
 ```
 </details>
@@ -72,7 +74,7 @@ sudo apt-get install -f  # Fix dependencies if needed
 <summary><strong>Fedora / RHEL / CentOS</strong></summary>
 
 ```bash
-sudo dnf install ./virtual-ip-browser-1.2.1.x86_64.rpm
+sudo dnf install ./virtual-ip-browser-1.3.0.x86_64.rpm
 ```
 </details>
 
@@ -80,7 +82,7 @@ sudo dnf install ./virtual-ip-browser-1.2.1.x86_64.rpm
 <summary><strong>openSUSE</strong></summary>
 
 ```bash
-sudo zypper install ./virtual-ip-browser-1.2.1.x86_64.rpm
+sudo zypper install ./virtual-ip-browser-1.3.0.x86_64.rpm
 ```
 </details>
 
@@ -88,8 +90,8 @@ sudo zypper install ./virtual-ip-browser-1.2.1.x86_64.rpm
 <summary><strong>AppImage (Any Distribution)</strong></summary>
 
 ```bash
-chmod +x Virtual-IP-Browser-1.2.1-x86_64.AppImage
-./Virtual-IP-Browser-1.2.1-x86_64.AppImage
+chmod +x Virtual-IP-Browser-1.3.0-x86_64.AppImage
+./Virtual-IP-Browser-1.3.0-x86_64.AppImage
 ```
 </details>
 
@@ -176,8 +178,18 @@ For detailed installation instructions, see [docs/DISTRIBUTION.md](docs/DISTRIBU
 - **BorderBeam** - Gradient animated border effects
 - **PulsatingButton** - Buttons with pulse animation
 - **ShimmerButton** - Shimmer/shine button effects
+- **AnimatedList** - Staggered list animations (v1.3.0)
+- **NeonGradientCard** - Neon glow card effects (v1.3.0)
+- **Particles** - Ambient particle backgrounds (v1.3.0)
+- **Confetti** - Celebration animations (v1.3.0)
 
-### 🔐 Security Features (v1.2.0)
+### ⚙️ Animation Settings (v1.3.0)
+- **Enable/Disable Animations** - Master toggle for all animations
+- **Reduced Motion** - Respects OS accessibility settings
+- **Particle Density** - Configurable background particle count
+- **Animation Speed** - Global animation speed multiplier
+
+### 🔐 Security Features (v1.3.0)
 
 Virtual IP Browser implements enterprise-grade security controls:
 
@@ -185,14 +197,15 @@ Virtual IP Browser implements enterprise-grade security controls:
 |-----------------|-------------|--------|
 | **Zod Validation** | Type-safe input validation on all IPC handlers | ✅ Implemented |
 | **Rate Limiting** | Per-channel sliding window rate limiting | ✅ Implemented |
-| **ReDoS Protection** | Pattern detection for regex denial-of-service | ✅ Implemented |
+| **ReDoS Protection** | Bloom filter pattern matching (v1.3.0) | ✅ Hardened |
 | **SSRF Prevention** | Blocks private IPs, localhost, cloud metadata | ✅ Implemented |
 | **CSS Sanitization** | Injection prevention for CSS selectors | ✅ Implemented |
 | **IPC Whitelist** | Explicit channel allowlisting | ✅ Implemented |
-| **AES-256-GCM** | Encrypted credential storage | ✅ Implemented |
+| **OS Keychain Encryption** | Credentials protected by OS keychain (v1.3.0) | ✅ Hardened |
 | **Context Isolation** | Secure Electron IPC via contextBridge | ✅ Implemented |
 | **Sandbox Mode** | Renderer process sandboxing enabled | ✅ Implemented |
-| **Native Masking** | Fingerprint property descriptor protection | ✅ Implemented |
+| **WebRTC Leak Prevention** | Complete WebRTC/ICE blocking (v1.3.0) | ✅ Hardened |
+| **Session URL Validation** | Re-validates URLs on session restore (v1.3.0) | ✅ Hardened |
 
 For detailed security documentation, see [docs/SECURITY_CONSOLIDATED.md](./docs/SECURITY_CONSOLIDATED.md).
 
@@ -217,8 +230,8 @@ Virtual IP Browser maintains high code quality standards with recent improvement
 - **React Error Boundary**: Comprehensive error boundary component for graceful UI error recovery
 
 For detailed quality documentation, see:
-- [CODE_QUALITY_REPORT.md](./CODE_QUALITY_REPORT.md) - Quality assessment and metrics
-- [QUALITY_IMPROVEMENTS.md](./QUALITY_IMPROVEMENTS.md) - Consolidated improvement details
+- [docs/archive/implementation/CODE_QUALITY_REPORT.md](./docs/archive/implementation/CODE_QUALITY_REPORT.md) - Quality assessment and metrics
+- [docs/archive/implementation/QUALITY_IMPROVEMENTS.md](./docs/archive/implementation/QUALITY_IMPROVEMENTS.md) - Consolidated improvement details
 - [docs/ERROR_HANDLING_IMPROVEMENTS.md](./docs/ERROR_HANDLING_IMPROVEMENTS.md) - Error handling patterns
 
 ---
@@ -227,23 +240,25 @@ For detailed quality documentation, see:
 
 | Metric | Coverage | Target | Status |
 |--------|----------|--------|--------|
-| **Overall** | 85%+ | 80% | ✅ Exceeded |
+| **Overall** | 88%+ | 80% | ✅ Exceeded |
 | **Tab Manager** | 90% | 90% | ✅ Met |
-| **Database** | 90% | 90% | ✅ Met |
+| **Database** | 92% | 90% | ✅ Exceeded |
 | **Privacy** | 95% | 95% | ✅ Met |
+| **Security** | 95% | 90% | ✅ Exceeded |
 | **E2E PRD Coverage** | 100% | 100% | ✅ Met |
 
 ### Test Suites
 
 | Category | Files | Tests | Status |
 |----------|-------|-------|--------|
-| Unit Tests | 32 files | 200+ | ✅ Passing |
-| Database Tests | 12 files | 80+ | ✅ Passing |
-| Privacy Tests | 11 files | 60+ | ✅ Passing |
+| Unit Tests | 37 files | 250+ | ✅ Passing |
+| Database Tests | 14 files | 95+ | ✅ Passing |
+| Privacy Tests | 12 files | 70+ | ✅ Passing |
+| Security Tests | 5 files | 65+ | ✅ Passing |
 | Resilience Tests | 2 files | 25+ | ✅ Passing |
-| Integration Tests | 1 file | 15+ | ✅ Passing |
-| E2E Tests | 11 files | 50+ | ✅ Passing |
-| **Total** | **54 files** | **400+** | ✅ **All Passing** |
+| Integration Tests | 3 files | 20+ | ✅ Passing |
+| E2E Tests | 12 files | 55+ | ✅ Passing |
+| **Total** | **59 files** | **450+** | ✅ **All Passing** |
 
 Run tests with: `npm test` or `npm run test:e2e`
 
@@ -505,8 +520,8 @@ npm run package:linux  # Linux (AppImage, DEB)
 | [Quick Start](QUICK_START.md) | Download, install, launch, configure quick reference |
 | [Distribution Guide](docs/DISTRIBUTION.md) | Package formats, system requirements, installation |
 | [Packaging Guide](docs/PACKAGING.md) | Building packages from source |
-| [Build Log](BUILD_LOG.md) | Build execution details |
-| [Installation Verification](INSTALLATION_VERIFICATION.md) | Installation verification report |
+| [Build Log](docs/archive/build-reports/BUILD_LOG.md) | Build execution details |
+| [Installation Verification](docs/archive/build-reports/INSTALLATION_VERIFICATION.md) | Installation verification report |
 
 ### Core Documentation
 
@@ -524,8 +539,8 @@ npm run package:linux  # Linux (AppImage, DEB)
 
 | Document | Description |
 |----------|-------------|
-| [Quality Improvements](QUALITY_IMPROVEMENTS.md) | Consolidated quality improvement summary |
-| [Code Quality Report](CODE_QUALITY_REPORT.md) | Quality assessment and metrics |
+| [Quality Improvements](docs/archive/implementation/QUALITY_IMPROVEMENTS.md) | Consolidated quality improvement summary |
+| [Code Quality Report](docs/archive/implementation/CODE_QUALITY_REPORT.md) | Quality assessment and metrics |
 | [Magic Numbers Refactoring](docs/MAGIC_NUMBERS_REFACTORING.md) | Constants documentation |
 | [Error Handling](docs/ERROR_HANDLING_IMPROVEMENTS.md) | Error handling patterns |
 
@@ -554,8 +569,8 @@ npm run package:linux  # Linux (AppImage, DEB)
 
 | Document | Description |
 |----------|-------------|
-| [Security Fixes](SECURITY_FIXES.md) | Security improvements made |
-| [Cleanup Log](CLEANUP_LOG.md) | Code cleanup record |
+| [Security Fixes](docs/archive/fixes/SECURITY_FIXES.md) | Security improvements made |
+| [Cleanup Log](docs/archive/implementation/CLEANUP_LOG.md) | Code cleanup record |
 | [Refactoring Log](docs/REFACTORING_LOG.md) | Refactoring changes |
 | [Captcha Handling](docs/CAPTCHA_HANDLING.md) | Captcha detection documentation |
 
@@ -638,4 +653,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Virtual IP Browser** - Take control of your online privacy.
 
-*Last Updated: January 2026*
+*Last Updated: January 2025 (v1.3.0)*

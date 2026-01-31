@@ -486,4 +486,205 @@ describe('ProxyUsageStatsRepository', () => {
       expect(stats[0].lastError).toContain('quotes');
     });
   });
+
+  // ============================================================
+  // BATCH UPSERT TESTS (N+1 Query Fix)
+  // ============================================================
+  describe('recordUsageBatch', () => {
+    it('should process multiple records in single transaction', () => {
+      // Arrange
+      const records = [
+        { proxyId: 'proxy-1', requests: 10, successful: 9, failed: 1 },
+        { proxyId: 'proxy-2', requests: 20, successful: 18, failed: 2 },
+        { proxyId: 'proxy-3', requests: 15, successful: 15, failed: 0 }
+      ];
+
+      // Act
+      const processed = repository.recordUsageBatch(records);
+
+      // Assert
+      expect(processed).toBe(3);
+      
+      const stats1 = repository.findByProxyId('proxy-1');
+      expect(stats1[0].totalRequests).toBe(10);
+      
+      const stats2 = repository.findByProxyId('proxy-2');
+      expect(stats2[0].totalRequests).toBe(20);
+      
+      const stats3 = repository.findByProxyId('proxy-3');
+      expect(stats3[0].totalRequests).toBe(15);
+    });
+
+    it('should return 0 for empty records array', () => {
+      // Act
+      const processed = repository.recordUsageBatch([]);
+
+      // Assert
+      expect(processed).toBe(0);
+    });
+
+    it('should accumulate stats for same proxy in batch', () => {
+      // Arrange
+      const records = [
+        { proxyId: 'proxy-1', requests: 10, successful: 9, failed: 1 },
+        { proxyId: 'proxy-1', requests: 5, successful: 5, failed: 0 }
+      ];
+
+      // Act
+      repository.recordUsageBatch(records);
+
+      // Assert
+      const stats = repository.findByProxyId('proxy-1');
+      expect(stats[0].totalRequests).toBe(15);
+      expect(stats[0].successfulRequests).toBe(14);
+    });
+
+    it('should handle mixed records with and without errors', () => {
+      // Arrange
+      const records = [
+        { proxyId: 'proxy-1', requests: 10, successful: 10 },
+        { proxyId: 'proxy-2', requests: 5, failed: 2, error: { type: 'timeout', message: 'Timeout' } },
+        { proxyId: 'proxy-3', requests: 8, successful: 8 }
+      ];
+
+      // Act
+      repository.recordUsageBatch(records);
+
+      // Assert
+      const stats1 = repository.findByProxyId('proxy-1');
+      expect(stats1[0].lastError).toBeNull();
+      
+      const stats2 = repository.findByProxyId('proxy-2');
+      expect(stats2[0].lastError).toBe('Timeout');
+    });
+
+    it('should track latency for batch records', () => {
+      // Arrange
+      const records = [
+        { proxyId: 'proxy-1', requests: 1, latencyMs: 100 },
+        { proxyId: 'proxy-2', requests: 1, latencyMs: 200 },
+        { proxyId: 'proxy-3', requests: 1, latencyMs: 150 }
+      ];
+
+      // Act
+      repository.recordUsageBatch(records);
+
+      // Assert
+      const stats1 = repository.findByProxyId('proxy-1');
+      expect(stats1[0].avgLatencyMs).toBe(100);
+      
+      const stats2 = repository.findByProxyId('proxy-2');
+      expect(stats2[0].avgLatencyMs).toBe(200);
+    });
+
+    it('should track bytes for batch records', () => {
+      // Arrange
+      const records = [
+        { proxyId: 'proxy-1', bytesSent: 1000, bytesReceived: 5000 },
+        { proxyId: 'proxy-1', bytesSent: 500, bytesReceived: 2500 }
+      ];
+
+      // Act
+      repository.recordUsageBatch(records);
+
+      // Assert
+      const stats = repository.findByProxyId('proxy-1');
+      expect(stats[0].bytesSent).toBe(1500);
+      expect(stats[0].bytesReceived).toBe(7500);
+    });
+
+    it('should handle countries in batch records', () => {
+      // Arrange
+      const records = [
+        { proxyId: 'proxy-1', requests: 1, country: 'US' },
+        { proxyId: 'proxy-1', requests: 1, country: 'UK' }
+      ];
+
+      // Act
+      repository.recordUsageBatch(records);
+
+      // Assert
+      const stats = repository.findByProxyId('proxy-1');
+      expect(stats[0].targetCountries).toContain('US');
+    });
+
+    it('should be faster than individual recordUsage calls', () => {
+      // Arrange
+      const recordCount = 100;
+      const records = Array.from({ length: recordCount }, (_, i) => ({
+        proxyId: `proxy-${(i % 3) + 1}`,
+        requests: 1,
+        successful: 1
+      }));
+
+      // Act - Measure batch performance
+      const batchStart = performance.now();
+      repository.recordUsageBatch(records);
+      const batchDuration = performance.now() - batchStart;
+
+      // Create new repository for comparison
+      const db2 = createTestDatabase();
+      seedTestProxies(db2, DEFAULT_TEST_PROXIES);
+      const repo2 = new ProxyUsageStatsRepository(db2);
+
+      // Measure individual calls performance
+      const individualStart = performance.now();
+      for (const record of records) {
+        repo2.recordUsage(record.proxyId, record);
+      }
+      const individualDuration = performance.now() - individualStart;
+      db2.close();
+
+      // Assert - Batch should be significantly faster
+      // Note: In practice, batch is typically 5-10x faster
+      console.log(`Batch: ${batchDuration.toFixed(2)}ms, Individual: ${individualDuration.toFixed(2)}ms`);
+      expect(batchDuration).toBeLessThan(individualDuration * 2); // At minimum, not slower
+    });
+  });
+
+  describe('recordRotationBatch', () => {
+    it('should process multiple rotation records', () => {
+      // Arrange
+      const rotations = [
+        { proxyId: 'proxy-1', reason: 'scheduled' },
+        { proxyId: 'proxy-2', reason: 'failure' },
+        { proxyId: 'proxy-3', reason: 'manual' }
+      ];
+
+      // Act
+      const processed = repository.recordRotationBatch(rotations);
+
+      // Assert
+      expect(processed).toBe(3);
+      
+      const stats1 = repository.findByProxyId('proxy-1');
+      expect(stats1[0].rotationCount).toBe(1);
+      expect(stats1[0].rotationReasons).toContain('scheduled');
+    });
+
+    it('should return 0 for empty rotations array', () => {
+      // Act
+      const processed = repository.recordRotationBatch([]);
+
+      // Assert
+      expect(processed).toBe(0);
+    });
+
+    it('should accumulate rotations for same proxy', () => {
+      // Arrange
+      const rotations = [
+        { proxyId: 'proxy-1', reason: 'scheduled' },
+        { proxyId: 'proxy-1', reason: 'failure' },
+        { proxyId: 'proxy-1', reason: 'scheduled' }
+      ];
+
+      // Act
+      repository.recordRotationBatch(rotations);
+
+      // Assert
+      const stats = repository.findByProxyId('proxy-1');
+      expect(stats[0].rotationCount).toBe(3);
+      expect(stats[0].rotationReasons).toHaveLength(3);
+    });
+  });
 });

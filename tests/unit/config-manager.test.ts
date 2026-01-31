@@ -27,6 +27,36 @@ vi.mock('electron-store', () => {
   };
 });
 
+// Mock Electron app and safeStorage for new implementation
+vi.mock('electron', () => ({
+  app: {
+    isReady: vi.fn(() => true),
+    whenReady: vi.fn(() => Promise.resolve()),
+    getPath: vi.fn(() => '/tmp/test'),
+  },
+  safeStorage: {
+    isEncryptionAvailable: vi.fn(() => false),
+    encryptString: vi.fn((str: string) => Buffer.from(`encrypted:${str}`)),
+    decryptString: vi.fn((buf: Buffer) => buf.toString().replace('encrypted:', '')),
+    getSelectedStorageBackend: vi.fn(() => 'basic_text'),
+  },
+}));
+
+// Mock safe-storage service to use legacy mode in tests
+vi.mock('../../electron/database/services/safe-storage.service', () => ({
+  getSafeStorageService: vi.fn(() => ({
+    initialize: vi.fn(() => Promise.resolve()),
+    encrypt: vi.fn((str: string) => ({ data: str, method: 'fallback', version: 1 })),
+    decrypt: vi.fn((enc: { data: string }) => enc.data),
+    getEncryptionMethod: vi.fn(() => 'none'),
+    isUsingSafeStorage: vi.fn(() => false),
+  })),
+  SafeStorageService: {
+    reset: vi.fn(),
+    getInstance: vi.fn(),
+  },
+}));
+
 // Import after mocks are set up
 import { ConfigManager, type ConfigManagerOptions, type RandomBytesFunction } from '../../electron/main/config-manager';
 
@@ -126,17 +156,23 @@ describe('ConfigManager', () => {
       expect(mockStore.set).toHaveBeenCalledWith('masterKey', expect.any(String));
     });
 
-    it('should use secure store name', async () => {
+    it('should use secure store name without hardcoded encryption key', async () => {
       const ElectronStoreMock = (await import('electron-store')).default as unknown as ReturnType<typeof vi.fn>;
       
       configManager = new ConfigManager({ randomBytes: mockRandomBytes.fn });
 
+      // SECURITY FIX: Store should NOT have hardcoded encryptionKey anymore
+      // Encryption is now handled by Electron safeStorage API
       expect(ElectronStoreMock).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'secure-config',
-          encryptionKey: expect.any(String),
+          clearInvalidConfig: false,
         })
       );
+      
+      // Verify no encryptionKey is passed (security improvement)
+      const callArgs = ElectronStoreMock.mock.calls[0][0];
+      expect(callArgs).not.toHaveProperty('encryptionKey');
     });
 
     it('should use custom store name when provided', async () => {

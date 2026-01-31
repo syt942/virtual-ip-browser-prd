@@ -8,3 +8,5 @@ export { ProxyPanelPage } from './ProxyPanelPage';
 export { PrivacyPanelPage } from './PrivacyPanelPage';
 export { AutomationPanelPage } from './AutomationPanelPage';
 export { NavigationPage } from './NavigationPage';
+export { ActivityLogPage } from './ActivityLogPage';
+export { StatsPanelPage } from './StatsPanelPage';

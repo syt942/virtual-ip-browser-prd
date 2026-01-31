@@ -30,6 +30,20 @@ export interface TimeSeriesDataPoint {
   avgLatency: number;
 }
 
+export interface UsageRecord {
+  proxyId: string;
+  requests?: number;
+  successful?: number;
+  failed?: number;
+  latencyMs?: number;
+  bytesSent?: number;
+  bytesReceived?: number;
+  error?: { type: string; message: string };
+  domain?: string;
+  country?: string;
+  sessionId?: string;
+}
+
 export class ProxyUsageStatsRepository {
   constructor(private db: Database.Database) {}
 
@@ -415,5 +429,193 @@ export class ProxyUsageStatsRepository {
       'DELETE FROM proxy_usage_stats WHERE time_bucket < ?'
     ).run(cutoff);
     return result.changes;
+  }
+
+  /**
+   * Batch record usage stats (optimized UPSERT pattern)
+   * Fixes N+1 query issue by processing multiple records in a single transaction
+   * 
+   * @param records - Array of usage records to insert/update
+   * @returns Number of records processed
+   */
+  recordUsageBatch(records: UsageRecord[]): number {
+    if (records.length === 0) return 0;
+
+    const timeBucket = this.getTimeBucket();
+    
+    // Use transaction for atomicity and performance
+    const batchInsert = this.db.transaction((usageRecords: UsageRecord[]) => {
+      let processed = 0;
+
+      // Prepare statements once, reuse for all records
+      const selectStmt = this.db.prepare(
+        'SELECT * FROM proxy_usage_stats WHERE proxy_id = ? AND time_bucket = ?'
+      );
+
+      const insertStmt = this.db.prepare(`
+        INSERT INTO proxy_usage_stats (
+          id, proxy_id, time_bucket,
+          total_requests, successful_requests, failed_requests,
+          avg_latency_ms, min_latency_ms, max_latency_ms,
+          bytes_sent, bytes_received,
+          error_counts, last_error, last_error_at,
+          target_countries, unique_domains, unique_sessions
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(proxy_id, time_bucket) DO UPDATE SET
+          total_requests = total_requests + excluded.total_requests,
+          successful_requests = successful_requests + excluded.successful_requests,
+          failed_requests = failed_requests + excluded.failed_requests,
+          bytes_sent = bytes_sent + excluded.bytes_sent,
+          bytes_received = bytes_received + excluded.bytes_received,
+          avg_latency_ms = CASE 
+            WHEN excluded.avg_latency_ms IS NOT NULL 
+            THEN (COALESCE(avg_latency_ms, 0) * total_requests + excluded.avg_latency_ms) / (total_requests + 1)
+            ELSE avg_latency_ms 
+          END,
+          min_latency_ms = CASE 
+            WHEN excluded.min_latency_ms IS NOT NULL 
+            THEN MIN(COALESCE(min_latency_ms, excluded.min_latency_ms), excluded.min_latency_ms)
+            ELSE min_latency_ms 
+          END,
+          max_latency_ms = CASE 
+            WHEN excluded.max_latency_ms IS NOT NULL 
+            THEN MAX(COALESCE(max_latency_ms, 0), excluded.max_latency_ms)
+            ELSE max_latency_ms 
+          END,
+          unique_domains = unique_domains + excluded.unique_domains,
+          unique_sessions = unique_sessions + excluded.unique_sessions,
+          updated_at = CURRENT_TIMESTAMP
+      `);
+
+      // Process error counts separately (requires JSON merge)
+      const updateErrorStmt = this.db.prepare(`
+        UPDATE proxy_usage_stats 
+        SET error_counts = ?, last_error = ?, last_error_at = CURRENT_TIMESTAMP
+        WHERE proxy_id = ? AND time_bucket = ?
+      `);
+
+      const updateCountriesStmt = this.db.prepare(`
+        UPDATE proxy_usage_stats 
+        SET target_countries = ?
+        WHERE proxy_id = ? AND time_bucket = ?
+      `);
+
+      for (const record of usageRecords) {
+        const id = `${record.proxyId}_${timeBucket}`;
+        
+        // Prepare error counts JSON
+        const errorCounts: ErrorCounts = {};
+        if (record.error) {
+          const errorType = record.error.type as keyof ErrorCounts;
+          errorCounts[errorType] = 1;
+        }
+
+        // Execute UPSERT
+        insertStmt.run(
+          id,
+          record.proxyId,
+          timeBucket,
+          record.requests || 0,
+          record.successful || 0,
+          record.failed || 0,
+          record.latencyMs || null,
+          record.latencyMs || null,
+          record.latencyMs || null,
+          record.bytesSent || 0,
+          record.bytesReceived || 0,
+          Object.keys(errorCounts).length > 0 ? JSON.stringify(errorCounts) : null,
+          record.error?.message || null,
+          record.error ? new Date().toISOString() : null,
+          record.country ? JSON.stringify([record.country]) : null,
+          record.domain ? 1 : 0,
+          record.sessionId ? 1 : 0
+        );
+
+        // Handle error count merging for existing records
+        if (record.error) {
+          const existing = selectStmt.get(record.proxyId, timeBucket) as ProxyUsageStatsEntity | undefined;
+          if (existing?.error_counts) {
+            const existingErrors: ErrorCounts = JSON.parse(existing.error_counts);
+            const errorType = record.error.type as keyof ErrorCounts;
+            existingErrors[errorType] = (existingErrors[errorType] || 0) + 1;
+            updateErrorStmt.run(
+              JSON.stringify(existingErrors),
+              record.error.message,
+              record.proxyId,
+              timeBucket
+            );
+          }
+        }
+
+        // Handle country array merging for existing records
+        if (record.country) {
+          const existing = selectStmt.get(record.proxyId, timeBucket) as ProxyUsageStatsEntity | undefined;
+          if (existing?.target_countries) {
+            const countries: string[] = JSON.parse(existing.target_countries);
+            if (!countries.includes(record.country)) {
+              countries.push(record.country);
+              updateCountriesStmt.run(
+                JSON.stringify(countries),
+                record.proxyId,
+                timeBucket
+              );
+            }
+          }
+        }
+
+        processed++;
+      }
+
+      return processed;
+    });
+
+    return batchInsert(records);
+  }
+
+  /**
+   * Batch record rotation events (optimized for multiple proxies)
+   * 
+   * @param rotations - Array of { proxyId, reason } objects
+   * @returns Number of rotations recorded
+   */
+  recordRotationBatch(rotations: Array<{ proxyId: string; reason: string }>): number {
+    if (rotations.length === 0) return 0;
+
+    const timeBucket = this.getTimeBucket();
+
+    const batchRotation = this.db.transaction((rotationRecords: Array<{ proxyId: string; reason: string }>) => {
+      let processed = 0;
+
+      const selectStmt = this.db.prepare(
+        'SELECT rotation_reasons FROM proxy_usage_stats WHERE proxy_id = ? AND time_bucket = ?'
+      );
+
+      const upsertStmt = this.db.prepare(`
+        INSERT INTO proxy_usage_stats (id, proxy_id, time_bucket, rotation_count, rotation_reasons)
+        VALUES (?, ?, ?, 1, ?)
+        ON CONFLICT(proxy_id, time_bucket) DO UPDATE SET
+          rotation_count = rotation_count + 1,
+          rotation_reasons = ?,
+          updated_at = CURRENT_TIMESTAMP
+      `);
+
+      for (const { proxyId, reason } of rotationRecords) {
+        const id = `${proxyId}_${timeBucket}`;
+        const existing = selectStmt.get(proxyId, timeBucket) as { rotation_reasons: string | null } | undefined;
+        
+        const reasons: string[] = existing?.rotation_reasons 
+          ? JSON.parse(existing.rotation_reasons) 
+          : [];
+        reasons.push(reason);
+        const reasonsJson = JSON.stringify(reasons);
+
+        upsertStmt.run(id, proxyId, timeBucket, reasonsJson, reasonsJson);
+        processed++;
+      }
+
+      return processed;
+    });
+
+    return batchRotation(rotations);
   }
 }

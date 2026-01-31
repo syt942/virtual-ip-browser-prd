@@ -3,15 +3,17 @@
  * Secure masterKey initialization and persistence for Virtual IP Browser
  * 
  * Security features:
+ * - Uses Electron safeStorage API for OS-level encryption (SECURITY FIX)
  * - Generates 32-byte cryptographically random master key on first launch
- * - Persists key securely using electron-store with encryption
- * - Retrieves existing key on subsequent launches
+ * - Automatic migration from legacy hardcoded encryption key
  * - Validates key format (64 hex characters = 32 bytes)
  * - Secure memory cleanup on destroy
  */
 
 import { randomBytes as cryptoRandomBytes } from 'crypto';
+import { app } from 'electron';
 import ElectronStore from 'electron-store';
+import { getSafeStorageService, SafeStorageService, EncryptedValue } from '../database/services/safe-storage.service';
 
 /**
  * Function type for generating random bytes
@@ -24,16 +26,32 @@ export type RandomBytesFunction = (size: number) => Buffer;
 export interface ConfigManagerOptions {
   /** Custom store name (default: 'secure-config') */
   storeName?: string;
-  /** Custom encryption key for electron-store (auto-generated if not provided) */
-  storeEncryptionKey?: string;
   /** Custom random bytes function (for testing) */
   randomBytes?: RandomBytesFunction;
+  /** Allow plaintext fallback on Linux without keyring */
+  allowPlaintextFallback?: boolean;
+  /** Skip safeStorage initialization (for testing) */
+  skipSafeStorage?: boolean;
 }
 
 /**
  * Schema for the secure configuration store
  */
 interface ConfigSchema {
+  /** Master key encrypted with safeStorage */
+  masterKey: EncryptedValue;
+  /** Legacy key format for migration (will be removed after migration) */
+  masterKeyLegacy?: string;
+  /** Migration status */
+  migrated?: boolean;
+  /** Migration timestamp */
+  migratedAt?: string;
+}
+
+/**
+ * Legacy store schema (for migration only)
+ */
+interface LegacyConfigSchema {
   masterKey: string;
 }
 
@@ -48,20 +66,29 @@ const MASTER_KEY_PATTERN = /^[a-f0-9]{64}$/i;
 const MASTER_KEY_LENGTH = 32;
 
 /**
+ * Legacy encryption key (kept for migration only - DO NOT USE FOR NEW ENCRYPTION)
+ * @deprecated Will be removed in v1.4.0
+ */
+const LEGACY_ENCRYPTION_KEY = 'vip-browser-config-encryption-key-v1';
+
+/**
  * ConfigManager - Manages secure master key generation and persistence
+ * Now uses Electron safeStorage API for OS-level encryption
  * 
  * Usage:
  * ```typescript
  * const configManager = new ConfigManager();
- * configManager.initialize();
+ * await configManager.initialize();
  * const masterKey = configManager.getMasterKey();
  * ```
  */
 export class ConfigManager {
   private store: ElectronStore<ConfigSchema>;
+  private safeStorage: SafeStorageService;
   private masterKey: string | null = null;
   private initialized = false;
   private randomBytes: RandomBytesFunction;
+  private skipSafeStorage: boolean;
 
   /**
    * Create a new ConfigManager instance
@@ -72,17 +99,20 @@ export class ConfigManager {
   constructor(options: ConfigManagerOptions = {}) {
     const {
       storeName = 'secure-config',
-      storeEncryptionKey = 'vip-browser-config-encryption-key-v1',
       randomBytes = cryptoRandomBytes,
+      allowPlaintextFallback = false,
+      skipSafeStorage = false,
     } = options;
 
     this.randomBytes = randomBytes;
+    this.skipSafeStorage = skipSafeStorage;
+    this.safeStorage = getSafeStorageService({ allowPlaintextFallback });
 
     try {
+      // Store WITHOUT hardcoded encryption key (SECURITY FIX)
       this.store = new ElectronStore<ConfigSchema>({
         name: storeName,
-        encryptionKey: storeEncryptionKey,
-        clearInvalidConfig: false, // Don't clear on invalid - we want to throw
+        clearInvalidConfig: false,
       });
     } catch (error) {
       throw new Error(
@@ -92,7 +122,8 @@ export class ConfigManager {
   }
 
   /**
-   * Initialize the ConfigManager
+   * Initialize the ConfigManager asynchronously with safeStorage
+   * - Migrates legacy encrypted data if present
    * - Generates a new master key on first launch
    * - Retrieves existing key on subsequent launches
    * 
@@ -100,9 +131,24 @@ export class ConfigManager {
    * @throws Error if existing key is invalid
    * @throws Error if key generation/persistence fails
    */
-  initialize(): void {
+  async initializeAsync(): Promise<void> {
     if (this.initialized) {
       throw new Error('ConfigManager already initialized');
+    }
+
+    // Wait for app ready if needed
+    if (!app.isReady()) {
+      await app.whenReady();
+    }
+
+    // Initialize safeStorage service
+    if (!this.skipSafeStorage) {
+      await this.safeStorage.initialize();
+    }
+
+    // Check for legacy key migration
+    if (this.needsMigration()) {
+      await this.migrateLegacyKey();
     }
 
     if (this.store.has('masterKey')) {
@@ -114,6 +160,160 @@ export class ConfigManager {
     }
 
     this.initialized = true;
+  }
+
+  /**
+   * Synchronous initialize for backward compatibility (legacy mode)
+   * Uses masterKey field directly without safeStorage encryption
+   */
+  initialize(): void {
+    if (this.initialized) {
+      throw new Error('ConfigManager already initialized');
+    }
+
+    // Synchronous legacy mode: use masterKey field directly
+    if (this.store.has('masterKey')) {
+      // Try to read the stored value
+      let storedValue: unknown;
+      try {
+        storedValue = this.store.get('masterKey');
+      } catch (error) {
+        throw new Error(
+          `Failed to read master key: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+      
+      if (typeof storedValue === 'string') {
+        // Plain string format - validate it
+        if (!this.isValidMasterKey(storedValue)) {
+          throw new Error('Invalid master key format: must be 64 hex characters (32 bytes)');
+        }
+        this.masterKey = storedValue;
+      } else if (storedValue && typeof storedValue === 'object') {
+        // New encrypted format - try to decrypt
+        try {
+          if (!this.skipSafeStorage) {
+            const decrypted = this.safeStorage.decrypt(storedValue as EncryptedValue);
+            if (!this.isValidMasterKey(decrypted)) {
+              throw new Error('Invalid master key format: must be 64 hex characters (32 bytes)');
+            }
+            this.masterKey = decrypted;
+          }
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('Invalid master key')) {
+            throw error;
+          }
+          // Other decryption errors - fall through to generate new key
+        }
+      } else if (storedValue !== undefined && storedValue !== null) {
+        // Invalid type stored
+        throw new Error('Invalid master key format: must be 64 hex characters (32 bytes)');
+      }
+    }
+    
+    if (!this.masterKey && this.store.has('masterKeyLegacy')) {
+      // Try legacy key field
+      const legacyKey = this.store.get('masterKeyLegacy');
+      if (legacyKey && typeof legacyKey === 'string') {
+        if (!this.isValidMasterKey(legacyKey)) {
+          throw new Error('Invalid master key format: must be 64 hex characters (32 bytes)');
+        }
+        this.masterKey = legacyKey;
+      }
+    }
+    
+    if (!this.masterKey) {
+      // Generate new key only if store doesn't have masterKey
+      if (!this.store.has('masterKey')) {
+        this.masterKey = this.generateAndPersistMasterKeySync();
+      } else {
+        throw new Error('Invalid master key format: must be 64 hex characters (32 bytes)');
+      }
+    }
+
+    this.initialized = true;
+  }
+  
+  /**
+   * Generate and persist master key synchronously (for legacy mode)
+   */
+  private generateAndPersistMasterKeySync(): string {
+    const keyBuffer = this.randomBytes(MASTER_KEY_LENGTH);
+    const hexKey = keyBuffer.toString('hex');
+
+    // Store directly without safeStorage encryption
+    try {
+      this.store.set('masterKey', hexKey);
+    } catch (error) {
+      throw new Error(
+        `Failed to persist master key: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+
+    keyBuffer.fill(0);
+    return hexKey;
+  }
+
+  /**
+   * Check if migration from legacy format is needed
+   */
+  private needsMigration(): boolean {
+    // Check if we have data in the old encrypted format
+    try {
+      const legacyStore = new ElectronStore<LegacyConfigSchema>({
+        name: 'secure-config',
+        encryptionKey: LEGACY_ENCRYPTION_KEY,
+      });
+      
+      const hasLegacyKey = legacyStore.has('masterKey');
+      const notMigrated = !this.store.get('migrated');
+      
+      return hasLegacyKey && notMigrated;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Migrate from legacy hardcoded encryption to safeStorage
+   */
+  private async migrateLegacyKey(): Promise<void> {
+    console.log('[ConfigManager] Migrating legacy encryption key...');
+    
+    try {
+      // Read from legacy encrypted store
+      const legacyStore = new ElectronStore<LegacyConfigSchema>({
+        name: 'secure-config',
+        encryptionKey: LEGACY_ENCRYPTION_KEY,
+      });
+      
+      const legacyKey = legacyStore.get('masterKey');
+      
+      if (!legacyKey || !this.isValidMasterKey(legacyKey)) {
+        console.warn('[ConfigManager] Invalid legacy key, will generate new one');
+        this.store.set('migrated', true);
+        this.store.set('migratedAt', new Date().toISOString());
+        return;
+      }
+
+      // Re-encrypt with safeStorage
+      if (!this.skipSafeStorage) {
+        const encrypted = this.safeStorage.encrypt(legacyKey);
+        this.store.set('masterKey', encrypted);
+      } else {
+        // For testing without safeStorage, store as plain string
+        this.store.set('masterKey', legacyKey);
+      }
+      
+      this.store.set('migrated', true);
+      this.store.set('migratedAt', new Date().toISOString());
+      
+      console.log('[ConfigManager] Migration complete');
+    } catch (error) {
+      console.error('[ConfigManager] Migration failed:', error);
+      // Don't throw - allow fresh key generation
+      this.store.set('migrated', true);
+    }
   }
 
   /**
@@ -179,7 +379,7 @@ export class ConfigManager {
   }
 
   /**
-   * Generate a new master key and persist it
+   * Generate a new master key and persist it (async version with safeStorage)
    * 
    * @returns The generated master key as hex string
    * @throws Error if persistence fails
@@ -189,9 +389,15 @@ export class ConfigManager {
     const keyBuffer = this.randomBytes(MASTER_KEY_LENGTH);
     const hexKey = keyBuffer.toString('hex');
 
-    // Persist to store
+    // Persist to store with safeStorage encryption
     try {
-      this.store.set('masterKey', hexKey);
+      if (!this.skipSafeStorage && this.safeStorage.getEncryptionMethod() !== 'none') {
+        const encrypted = this.safeStorage.encrypt(hexKey);
+        this.store.set('masterKey', encrypted);
+      } else {
+        // Fallback for testing or when safeStorage unavailable - store as plain string
+        this.store.set('masterKey', hexKey);
+      }
     } catch (error) {
       throw new Error(
         `Failed to persist master key: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -212,10 +418,26 @@ export class ConfigManager {
    * @throws Error if key format is invalid
    */
   private retrieveMasterKey(): string {
-    let storedKey: string | undefined;
+    let decryptedKey: string | undefined;
 
     try {
-      storedKey = this.store.get('masterKey');
+      // Try new safeStorage format first
+      const encryptedValue = this.store.get('masterKey');
+      
+      if (encryptedValue && typeof encryptedValue === 'object' && 'data' in encryptedValue) {
+        // New format: decrypt with safeStorage
+        if (!this.skipSafeStorage) {
+          decryptedKey = this.safeStorage.decrypt(encryptedValue as EncryptedValue);
+        }
+      }
+      
+      // Fallback to legacy format
+      if (!decryptedKey) {
+        const legacyKey = this.store.get('masterKeyLegacy');
+        if (legacyKey && typeof legacyKey === 'string') {
+          decryptedKey = legacyKey;
+        }
+      }
     } catch (error) {
       throw new Error(
         `Failed to read master key: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -223,11 +445,11 @@ export class ConfigManager {
     }
 
     // Validate the retrieved key
-    if (!this.isValidMasterKey(storedKey)) {
+    if (!this.isValidMasterKey(decryptedKey)) {
       throw new Error('Invalid master key format: must be 64 hex characters (32 bytes)');
     }
 
-    return storedKey;
+    return decryptedKey;
   }
 
   /**

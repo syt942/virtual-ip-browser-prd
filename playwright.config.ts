@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 2 : undefined, // Increased from 1 for faster CI runs
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
     ['junit', { outputFile: 'test-results/junit.xml' }],
@@ -18,6 +18,10 @@ export default defineConfig({
   expect: {
     timeout: 10000, // 10 seconds for expect assertions
   },
+  
+  // Test filtering by tags
+  grep: process.env.TEST_GREP ? new RegExp(process.env.TEST_GREP) : undefined,
+  grepInvert: process.env.TEST_GREP_INVERT ? new RegExp(process.env.TEST_GREP_INVERT) : undefined,
   
   use: {
     baseURL: 'http://localhost:5173',
@@ -40,6 +44,7 @@ export default defineConfig({
   },
   
   projects: [
+    // Main browser projects
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
@@ -51,6 +56,17 @@ export default defineConfig({
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+    },
+    // Smoke test project - runs subset of critical tests
+    {
+      name: 'smoke',
+      use: { ...devices['Desktop Chrome'] },
+      grep: /@smoke/,
+    },
+    // Mobile viewport testing
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'] },
     },
   ],
   

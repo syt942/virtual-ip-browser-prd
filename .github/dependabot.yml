@@ -1,0 +1,96 @@
+# Dependabot configuration for Virtual IP Browser
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # NPM dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    
+    # Labels for dependency PRs
+    labels:
+      - "dependencies"
+      - "automated"
+    
+    # Commit message format
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    
+    # Group related updates
+    groups:
+      # Development dependencies - less critical, batch together
+      development:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "@typescript-eslint/*"
+          - "vitest*"
+          - "@vitest/*"
+          - "playwright*"
+          - "@playwright/*"
+          - "typescript"
+          - "vite"
+          - "@vitejs/*"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      # Testing dependencies
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "jsdom"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      # Build tools
+      build:
+        patterns:
+          - "electron-builder"
+          - "electron-vite"
+          - "postcss"
+          - "autoprefixer"
+          - "tailwindcss"
+        update-types:
+          - "patch"
+    
+    # Ignore major version updates for critical packages
+    # These require manual review and testing
+    ignore:
+      # Electron major updates require extensive testing
+      - dependency-name: "electron"
+        update-types: ["version-update:semver-major"]
+      
+      # React major updates may have breaking changes
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      
+      # Database driver major updates need migration testing
+      - dependency-name: "better-sqlite3"
+        update-types: ["version-update:semver-major"]
+      
+      # Validation library major updates may break schemas
+      - dependency-name: "zod"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"

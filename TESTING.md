@@ -536,7 +536,7 @@ Before committing code:
 - [README.md](./README.md) - Project overview
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture
-- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Legacy testing guide
+- [TESTING_GUIDE.md](./docs/archive/test-reports/TESTING_GUIDE.md) - Legacy testing guide
 
 ---
 

@@ -496,14 +496,189 @@ npm run dev
 
 ---
 
+## 🔒 Security Best Practices (v1.3.0)
+
+### Encryption Key Handling
+
+```typescript
+// ✅ CORRECT: Use SafeStorageService for sensitive data
+import { getSafeStorageService } from '../database/services/safe-storage.service';
+
+const safeStorage = getSafeStorageService();
+await safeStorage.initialize();
+const encrypted = safeStorage.encrypt(sensitiveData);
+
+// ❌ WRONG: Never use hardcoded keys
+const BAD_KEY = 'my-secret-key'; // DO NOT DO THIS
+```
+
+### Pattern Matching (ReDoS Prevention)
+
+```typescript
+// ✅ CORRECT: Use PatternMatcher for URL matching
+import { PatternMatcher } from '../privacy/pattern-matcher';
+
+const matcher = new PatternMatcher();
+matcher.initialize(patterns);
+const matches = matcher.matches(url); // O(n), safe
+
+// ❌ WRONG: Never use user input in regex directly
+const regex = new RegExp(userInput); // ReDoS vulnerability!
+```
+
+### URL Validation
+
+```typescript
+// ✅ CORRECT: Always validate URLs
+import { SafeUrlSchema } from '../ipc/validation';
+
+const result = SafeUrlSchema.safeParse(url);
+if (!result.success) {
+  throw new Error('Invalid URL');
+}
+
+// ❌ WRONG: Never trust stored URLs without validation
+const session = loadSession(id);
+navigate(session.tabs[0].url); // Could be javascript: or SSRF!
+```
+
+### IPC Handler Security
+
+```typescript
+// ✅ CORRECT: Validate all IPC inputs
+ipcMain.handle('my:channel', async (_, data) => {
+  const validated = MySchema.parse(data); // Zod validation
+  return processData(validated);
+});
+
+// ❌ WRONG: Never trust renderer input
+ipcMain.handle('my:channel', async (_, data) => {
+  return processData(data); // Unvalidated input!
+});
+```
+
+---
+
+## 🔄 Database Migrations
+
+### Creating a New Migration
+
+1. Create migration file in `electron/database/migrations/`:
+```sql
+-- Migration: 00X_description
+-- Description: What this migration does
+-- Created: YYYY-MM-DD
+-- Backwards Compatible: Yes/No
+
+-- Your SQL here
+CREATE INDEX IF NOT EXISTS idx_new_index ON table_name(column);
+
+-- Record migration
+INSERT OR IGNORE INTO schema_migrations (version, name, checksum)
+VALUES ('00X', 'description', 'checksum');
+```
+
+2. Create embedded SQL in `electron/database/migrations/embedded-sql/`:
+```typescript
+// 00X-description.sql.ts
+export const migration00X = `
+-- Migration SQL here
+`;
+```
+
+3. Register in `electron/database/migrations/index.ts`
+
+4. Create rollback script:
+```sql
+-- 00X_rollback.sql
+DROP INDEX IF EXISTS idx_new_index;
+DELETE FROM schema_migrations WHERE version = '00X';
+```
+
+### Testing Migrations
+
+```bash
+# Run migration tests
+npm test -- tests/unit/database/migration-00X.test.ts
+
+# Verify migration in development
+npm run dev
+# Check logs for migration output
+```
+
+---
+
+## 🎨 Magic UI Component Integration
+
+### Adding New Components
+
+1. Create component in `src/components/ui/`:
+```tsx
+// my-component.tsx
+'use client';
+
+import { motion } from 'framer-motion';
+import { cn } from '@/utils/cn';
+
+interface MyComponentProps {
+  className?: string;
+  // ... props
+}
+
+export function MyComponent({ className, ...props }: MyComponentProps) {
+  return (
+    <motion.div
+      className={cn('base-styles', className)}
+      // ... animation props
+    >
+      {/* Component content */}
+    </motion.div>
+  );
+}
+```
+
+2. Export from `src/components/ui/index.ts`
+
+3. Add tests in `tests/unit/ui/`
+
+### Animation Performance
+
+- Use `will-change: transform` for animated elements
+- Implement `IntersectionObserver` for off-screen optimization
+- Always support `prefers-reduced-motion`:
+
+```tsx
+const prefersReducedMotion = window.matchMedia(
+  '(prefers-reduced-motion: reduce)'
+).matches;
+
+const variants = prefersReducedMotion
+  ? { initial: {}, animate: {} }
+  : { initial: { opacity: 0 }, animate: { opacity: 1 } };
+```
+
+---
+
 ## 🤝 Contributing
 
 1. Create feature branch
 2. Write tests for new features
 3. Ensure all tests pass
 4. Update documentation
-5. Submit pull request
+5. Follow security best practices
+6. Submit pull request
+
+### Security Review Required
+
+The following changes require security review before merging:
+- Any changes to `electron/ipc/` handlers
+- Changes to encryption or key handling
+- URL validation or navigation logic
+- Pattern matching or regex usage
+- Database schema changes
 
 ---
 
 *Happy coding! 🚀*
+
+*Last Updated: January 2025 (v1.3.0)*
