@@ -1,6 +1,6 @@
 # Virtual IP Browser - Architecture Codemaps
 
-**Last Updated:** January 2026  
+**Last Updated:** January 2025  
 **Version:** 1.2.1
 
 ## Overview

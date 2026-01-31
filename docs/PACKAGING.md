@@ -633,5 +633,5 @@ virtual-ip-browser/
 
 ---
 
-**Last Updated**: January 2026  
+**Last Updated**: January 2025  
 **Version**: 1.2.1

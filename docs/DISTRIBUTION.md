@@ -1,7 +1,7 @@
 # Virtual IP Browser - Distribution Guide
 
 **Version:** 1.2.1  
-**Last Updated:** January 2026
+**Last Updated:** January 2025
 
 This document provides comprehensive information about downloading, installing, and distributing Virtual IP Browser across different platforms and package formats.
 

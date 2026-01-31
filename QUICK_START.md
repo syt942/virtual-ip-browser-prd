@@ -1,6 +1,6 @@
 # Virtual IP Browser - Quick Start Guide
 
-**Version:** 1.2.1 | **Last Updated:** January 2026
+**Version:** 1.3.0 | **Last Updated:** January 2025
 
 A quick reference card for downloading, installing, launching, and configuring Virtual IP Browser.
 
@@ -12,9 +12,9 @@ A quick reference card for downloading, installing, launching, and configuring V
 
 | Your System | Download Command |
 |-------------|------------------|
-| **Ubuntu/Debian** | `wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.2.1/virtual-ip-browser_1.2.1_amd64.deb` |
-| **Fedora/RHEL** | `wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.2.1/virtual-ip-browser-1.2.1.x86_64.rpm` |
-| **Any Linux** | `wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.2.1/Virtual-IP-Browser-1.2.1-x86_64.AppImage` |
+| **Ubuntu/Debian** | `wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.3.0/virtual-ip-browser_1.3.0_amd64.deb` |
+| **Fedora/RHEL** | `wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.3.0/virtual-ip-browser-1.3.0.x86_64.rpm` |
+| **Any Linux** | `wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.3.0/Virtual-IP-Browser-1.3.0-x86_64.AppImage` |
 
 Or download directly from: **https://github.com/virtualipbrowser/virtual-ip-browser/releases**
 
@@ -26,29 +26,29 @@ Or download directly from: **https://github.com/virtualipbrowser/virtual-ip-brow
 
 ```bash
 # Install with apt (recommended)
-sudo apt install ./virtual-ip-browser_1.2.1_amd64.deb
+sudo apt install ./virtual-ip-browser_1.3.0_amd64.deb
 ```
 
 ### Fedora / RHEL / CentOS
 
 ```bash
 # Install with dnf
-sudo dnf install ./virtual-ip-browser-1.2.1.x86_64.rpm
+sudo dnf install ./virtual-ip-browser-1.3.0.x86_64.rpm
 ```
 
 ### openSUSE
 
 ```bash
 # Install with zypper
-sudo zypper install ./virtual-ip-browser-1.2.1.x86_64.rpm
+sudo zypper install ./virtual-ip-browser-1.3.0.x86_64.rpm
 ```
 
 ### AppImage (No Installation Required)
 
 ```bash
 # Make executable and run
-chmod +x Virtual-IP-Browser-1.2.1-x86_64.AppImage
-./Virtual-IP-Browser-1.2.1-x86_64.AppImage
+chmod +x Virtual-IP-Browser-1.3.0-x86_64.AppImage
+./Virtual-IP-Browser-1.3.0-x86_64.AppImage
 ```
 
 ---
@@ -70,7 +70,7 @@ virtual-ip-browser
 ### Method 3: AppImage
 
 ```bash
-./Virtual-IP-Browser-1.2.1-x86_64.AppImage
+./Virtual-IP-Browser-1.3.0-x86_64.AppImage
 ```
 
 > ⚠️ **Important**: Always run as a **regular user**, not as root.
@@ -226,7 +226,7 @@ sudo dnf remove virtual-ip-browser
 
 ```bash
 # Just delete the file
-rm Virtual-IP-Browser-1.2.1-x86_64.AppImage
+rm Virtual-IP-Browser-1.3.0-x86_64.AppImage
 ```
 
 ---
