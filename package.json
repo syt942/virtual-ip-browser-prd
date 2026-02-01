@@ -24,7 +24,20 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "lint:ci": "eslint . --ext .ts,.tsx --max-warnings 500",
     "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:report": "vitest run --coverage && open test-reports/coverage/index.html",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "test:all": "npm run test:run && npm run test:e2e",
+    "test:ci": "vitest run --coverage --reporter=junit --outputFile=test-reports/junit.xml && playwright test --reporter=junit",
     "package": "electron-builder",
     "package:win": "electron-builder --win",
     "package:mac": "electron-builder --mac",
@@ -39,12 +52,12 @@
     "lucide-react": "^0.453.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "recharts": "^2.15.2",
     "tailwind-merge": "^2.6.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@emotion/is-prop-valid": "^1.4.0",
     "@playwright/test": "^1.57.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -89,7 +102,10 @@
       {
         "from": "resources/",
         "to": "resources/",
-        "filter": ["**/*", "!icons/source/**"]
+        "filter": [
+          "**/*",
+          "!icons/source/**"
+        ]
       }
     ],
     "asar": true,

@@ -1,379 +1,204 @@
 # Virtual IP Browser - Testing Documentation
 
-**Last Updated:** 2025-01-30  
-**Test Coverage Target:** 80%+ (✅ Achieved: 85%+)
+**Last Updated:** 2025-02-01  
+**Version:** 1.3.0  
+**Total Tests:** 2,850+
 
----
+## Overview
 
-## 📊 Test Coverage Summary
+The Virtual IP Browser uses a comprehensive testing strategy with three testing tiers:
+- **Unit Tests**: Fast, isolated tests for individual functions and classes
+- **Integration Tests**: Tests for module interactions and IPC communication
+- **E2E Tests**: Full application tests using Playwright
 
-### Overall Coverage
+## Test Statistics
 
-| Metric | Coverage | Target | Status |
-|--------|----------|--------|--------|
-| **Overall Project** | 85%+ | 80% | ✅ Exceeded |
-| **Statements** | 85% | 80% | ✅ |
-| **Branches** | 82% | 75% | ✅ |
-| **Functions** | 88% | 80% | ✅ |
-| **Lines** | 85% | 80% | ✅ |
+| Category | Test Files | Test Cases | Coverage Target |
+|----------|------------|------------|-----------------|
+| Unit Tests | 50+ | ~2,000 | 80%+ |
+| Integration Tests | 10+ | ~300 | Core flows |
+| E2E Tests | 24 | ~550 | Critical paths |
+| **Total** | **92** | **2,850+** | - |
 
-### Coverage by Module
+### Test Count Breakdown
 
-| Module | Coverage | Target | Status | Test Files |
-|--------|----------|--------|--------|------------|
-| **Tab Manager** | 90% | 90% | ✅ Met | `tab-manager.test.ts` |
-| **Database Layer** | 90% | 90% | ✅ Met | 12 files in `tests/unit/database/` |
-| **Privacy Protection** | 95% | 95% | ✅ Met | 11 files in `tests/unit/privacy/` |
-| **E2E PRD Coverage** | 100% | 100% | ✅ Met | 11 files in `tests/e2e/` |
-| **Proxy Engine** | 85% | 80% | ✅ Met | `proxy-manager.test.ts`, `rotation-*.test.ts` |
-| **Automation** | 85% | 80% | ✅ Met | `automation-manager.test.ts`, `domain-targeting.test.ts` |
-| **Resilience** | 90% | 85% | ✅ Met | 2 files in `tests/unit/resilience/` |
-| **Security** | 88% | 85% | ✅ Met | `security-*.test.ts` |
+```
+Unit Tests:
+├── stores/           ~200 tests (4 store files)
+├── privacy/          ~400 tests (11 test files)
+├── resilience/       ~150 tests (2 test files)
+├── automation/       ~300 tests (domain, search, scheduling)
+├── proxy/            ~250 tests (rotation strategies)
+├── security/         ~200 tests (validation, sanitization)
+└── other/            ~500 tests (session, tabs, etc.)
 
----
+Integration Tests:
+├── ipc-communication.test.ts    ~100 tests
+├── ipc-handlers.test.ts         ~150 tests
+└── ipc/missing-handlers.test.ts ~50 tests
 
-## 🧪 Test Suite Structure
+E2E Tests:
+├── navigation.spec.ts           ~30 tests
+├── proxy-management.spec.ts     ~40 tests
+├── proxy-rotation.spec.ts       ~35 tests
+├── privacy-protection.spec.ts   ~40 tests
+├── privacy-verification.spec.ts ~25 tests
+├── automation.spec.ts           ~35 tests
+├── scheduling-system.spec.ts    ~30 tests
+├── creator-support.spec.ts      ~25 tests
+├── error-handling.spec.ts       ~40 tests
+├── magic-ui-components.spec.ts  ~45 tests
+├── magic-ui-ux.spec.ts          ~35 tests
+├── performance-benchmarks.spec.ts ~30 tests
+├── circuit-breaker.spec.ts      ~25 tests
+├── activity-log.spec.ts         ~30 tests
+├── database-migration-004.spec.ts ~25 tests
+├── encryption-migration.spec.ts ~30 tests
+└── others                       ~80 tests
+```
 
-### Test File Organization
+## Test Organization
 
 ```
 tests/
-├── setup.ts                    # Global test setup
-├── unit/                       # Unit tests (32 files)
-│   ├── automation-manager.test.ts
-│   ├── captcha-detector.test.ts
-│   ├── comprehensive-security.test.ts
-│   ├── config-manager.test.ts
-│   ├── creator-support.test.ts
-│   ├── cron-parser.test.ts
-│   ├── cron-scheduler.test.ts
-│   ├── domain-targeting.test.ts
-│   ├── ipc-handlers.test.ts
-│   ├── privacy-manager.test.ts
-│   ├── proxy-manager.test.ts
-│   ├── rotation-strategies.test.ts
-│   ├── rotation-strategy.test.ts
-│   ├── security-fixes.test.ts
-│   ├── security-vulnerabilities.test.ts
-│   ├── session-manager.test.ts
-│   ├── tab-manager.test.ts
-│   ├── translation.test.ts
-│   ├── ui-components.test.tsx
-│   ├── database/               # Database repository tests (12 files)
-│   │   ├── circuit-breaker.repository.test.ts
-│   │   ├── creator-support-history.repository.test.ts
-│   │   ├── database-manager.test.ts
-│   │   ├── execution-logs.repository.test.ts
-│   │   ├── index.test.ts
-│   │   ├── migration-runner.test.ts
-│   │   ├── proxy-usage-stats.repository.test.ts
-│   │   ├── proxy.repository.test.ts
-│   │   ├── rotation-config.repository.test.ts
-│   │   ├── rotation-events.repository.test.ts
-│   │   ├── sticky-session.repository.test.ts
-│   │   └── test-helpers.ts
-│   ├── privacy/                # Privacy module tests (11 files)
-│   │   ├── audio.test.ts
+├── unit/                           # Unit tests (Vitest)
+│   ├── stores/                     # Zustand store tests
+│   │   ├── proxyStore.test.ts
+│   │   ├── privacyStore.test.ts
+│   │   ├── automationStore.test.ts
+│   │   └── animationStore.test.ts
+│   ├── privacy/                    # Privacy module tests
 │   │   ├── canvas.test.ts
-│   │   ├── detection-vectors.test.ts
-│   │   ├── index.test.ts
-│   │   ├── navigator.test.ts
-│   │   ├── privacy-manager-integration.test.ts
-│   │   ├── timezone.test.ts
-│   │   ├── tracker-blocker.test.ts
 │   │   ├── webgl.test.ts
-│   │   └── webrtc.test.ts
-│   ├── resilience/             # Circuit breaker tests (2 files)
+│   │   ├── audio.test.ts
+│   │   ├── navigator.test.ts
+│   │   ├── timezone.test.ts
+│   │   ├── webrtc.test.ts
+│   │   ├── tracker-blocker.test.ts
+│   │   ├── pattern-matcher.test.ts
+│   │   ├── detection-vectors.test.ts
+│   │   ├── privacy-manager-integration.test.ts
+│   │   └── index.test.ts
+│   ├── resilience/                 # Circuit breaker tests
 │   │   ├── circuit-breaker.test.ts
 │   │   └── circuit-breaker-registry.test.ts
-│   └── factories/              # Test data factories
-│       └── index.ts
-├── integration/                # Integration tests (1 file)
-│   └── ipc-communication.test.ts
-└── e2e/                        # End-to-end tests (11 files)
-    ├── automation.spec.ts
-    ├── captcha-detection.spec.ts
-    ├── circuit-breaker.spec.ts
-    ├── creator-support.spec.ts
-    ├── navigation.spec.ts
-    ├── privacy-protection.spec.ts
-    ├── privacy-verification.spec.ts
-    ├── proxy-management.spec.ts
-    ├── proxy-rotation.spec.ts
-    ├── scheduling-system.spec.ts
-    ├── session-isolation.spec.ts
-    └── pages/                  # Page Object Models
-        ├── AutomationPanelPage.ts
-        ├── BasePage.ts
-        ├── index.ts
-        ├── NavigationPage.ts
-        ├── PrivacyPanelPage.ts
-        └── ProxyPanelPage.ts
+│   ├── rotation-strategies.test.ts # Proxy rotation tests
+│   ├── domain-targeting.test.ts    # Domain targeting tests
+│   ├── cron-parser.test.ts         # Scheduler tests
+│   ├── self-healing-engine.test.ts # Self-healing tests
+│   ├── resource-monitor.test.ts    # Resource monitoring
+│   ├── session-manager.test.ts     # Session management
+│   ├── tab-manager.test.ts         # Tab management
+│   ├── comprehensive-security.test.ts # Security tests
+│   └── code-review-fixes.test.ts   # Regression tests
+├── integration/                    # Integration tests (Vitest)
+│   ├── ipc-communication.test.ts   # IPC message flow
+│   ├── ipc-handlers.test.ts        # Handler validation
+│   └── ipc/
+│       └── missing-handlers.test.ts
+├── e2e/                            # E2E tests (Playwright)
+│   ├── navigation.spec.ts
+│   ├── proxy-management.spec.ts
+│   ├── proxy-rotation.spec.ts
+│   ├── privacy-protection.spec.ts
+│   ├── privacy-verification.spec.ts
+│   ├── automation.spec.ts
+│   ├── scheduling-system.spec.ts
+│   ├── creator-support.spec.ts
+│   ├── error-handling.spec.ts
+│   ├── magic-ui-components.spec.ts
+│   ├── magic-ui-ux.spec.ts
+│   ├── performance-benchmarks.spec.ts
+│   ├── circuit-breaker.spec.ts
+│   ├── activity-log.spec.ts
+│   ├── stats-panel.spec.ts
+│   ├── tab-management.spec.ts
+│   ├── session-isolation.spec.ts
+│   ├── database-migration-004.spec.ts
+│   ├── encryption-migration.spec.ts
+│   ├── captcha-detection.spec.ts
+│   └── security-fixes-validation.spec.ts
+├── fixtures/                       # Test fixtures
+├── helpers/                        # Test utilities
+├── mocks/                          # Mock implementations
+├── templates/                      # Test templates
+└── setup.ts                        # Test setup
 ```
 
-### Test Count Summary
+## Running Tests
 
-| Category | Files | Test Cases | Status |
-|----------|-------|------------|--------|
-| **Unit Tests** | 32 | 200+ | ✅ All Passing |
-| **Database Tests** | 12 | 80+ | ✅ All Passing |
-| **Privacy Tests** | 11 | 60+ | ✅ All Passing |
-| **Resilience Tests** | 2 | 25+ | ✅ All Passing |
-| **Integration Tests** | 1 | 15+ | ✅ All Passing |
-| **E2E Tests** | 11 | 50+ | ✅ All Passing |
-| **Total** | **54** | **400+** | ✅ **All Passing** |
-
----
-
-## 🚀 Running Tests
-
-### Quick Start
+### All Tests
 
 ```bash
-# Install dependencies
-npm install
+# Run all unit and integration tests
+npm run test:run
 
-# Run all unit tests
-npm test
+# Run all tests including E2E
+npm run test:all
 
-# Run tests with coverage
-npm test -- --coverage
+# Run tests in watch mode
+npm run test:watch
 
-# Run E2E tests
-npm run test:e2e
-
-# Run specific test file
-npm test -- proxy-manager.test.ts
-
-# Watch mode for development
-npm test -- --watch
+# Run tests with UI
+npm run test:ui
 ```
 
-### Unit Tests (Vitest)
+### Unit Tests
 
 ```bash
 # Run all unit tests
-npm test
-
-# Run with coverage report
-npm test -- --coverage
+npm run test:unit
 
 # Run specific test file
-npm test -- tab-manager.test.ts
+npx vitest run tests/unit/privacy/canvas.test.ts
 
 # Run tests matching pattern
-npm test -- --grep "proxy"
-
-# Watch mode
-npm test -- --watch
-
-# Run only database tests
-npm test -- tests/unit/database
-
-# Run only privacy tests
-npm test -- tests/unit/privacy
-
-# Run only resilience tests
-npm test -- tests/unit/resilience
+npx vitest run -t "canvas spoofing"
 ```
 
-### E2E Tests (Playwright)
+### Integration Tests
 
 ```bash
-# Install Playwright browsers (first time)
-npx playwright install
+# Run all integration tests
+npm run test:integration
 
+# Run specific integration test
+npx vitest run tests/integration/ipc-handlers.test.ts
+```
+
+### E2E Tests
+
+```bash
 # Run all E2E tests
 npm run test:e2e
 
-# Run with UI mode
-npx playwright test --ui
+# Run with browser UI
+npm run test:e2e:headed
+
+# Run with Playwright UI
+npm run test:e2e:ui
+
+# Run in debug mode
+npm run test:e2e:debug
 
 # Run specific test file
-npx playwright test proxy-management.spec.ts
+npx playwright test tests/e2e/proxy-management.spec.ts
 
-# Run in headed mode (see browser)
-npx playwright test --headed
-
-# Debug mode
-npx playwright test --debug
-
-# Generate HTML report
-npx playwright show-report
-
-# Run on specific browser
-npx playwright test --project=chromium
+# View test report
+npm run test:e2e:report
 ```
 
-### Coverage Report
+### Coverage
 
 ```bash
 # Generate coverage report
-npm test -- --coverage
+npm run test:coverage
 
-# Open coverage report in browser
-open coverage/index.html
-
-# Coverage thresholds (configured in vitest.config.ts)
-# statements: 80%
-# branches: 75%
-# functions: 80%
-# lines: 80%
+# View coverage report in browser
+npm run test:coverage:report
 ```
 
----
-
-## 📋 Test Strategy
-
-### Unit Testing Strategy
-
-1. **Isolation**: Each unit test focuses on a single module/function
-2. **Mocking**: External dependencies are mocked (database, IPC, Electron APIs)
-3. **Edge Cases**: Tests cover normal, boundary, and error conditions
-4. **Deterministic**: Tests produce consistent results regardless of order
-
-### Integration Testing Strategy
-
-1. **IPC Communication**: Tests verify main-renderer communication
-2. **Module Interaction**: Tests verify modules work together correctly
-3. **Data Flow**: Tests verify data passes correctly between layers
-
-### E2E Testing Strategy
-
-1. **User Journeys**: Tests simulate real user workflows
-2. **PRD Coverage**: Every PRD requirement has E2E test coverage
-3. **Page Objects**: Uses Page Object Model for maintainability
-4. **Cross-Browser**: Tests run on Chromium, Firefox, WebKit
-
----
-
-## 🎯 PRD Test Coverage
-
-### PRD Requirements Coverage
-
-| PRD Section | Requirement | Test Coverage | Status |
-|-------------|-------------|---------------|--------|
-| **4.1** | Proxy Management | `proxy-management.spec.ts` | ✅ 100% |
-| **4.2** | Rotation Strategies | `proxy-rotation.spec.ts` | ✅ 100% |
-| **4.3** | Privacy Protection | `privacy-protection.spec.ts`, `privacy-verification.spec.ts` | ✅ 100% |
-| **4.4** | Session Isolation | `session-isolation.spec.ts` | ✅ 100% |
-| **5.1** | Automation | `automation.spec.ts` | ✅ 100% |
-| **5.2** | Creator Support | `creator-support.spec.ts` | ✅ 100% |
-| **6.1** | Scheduling | `scheduling-system.spec.ts` | ✅ 100% |
-| **6.2** | Circuit Breaker | `circuit-breaker.spec.ts` | ✅ 100% |
-| **6.3** | Captcha Detection | `captcha-detection.spec.ts` | ✅ 100% |
-| **7.1** | Navigation | `navigation.spec.ts` | ✅ 100% |
-
----
-
-## 🔬 Test Patterns & Best Practices
-
-### Unit Test Template
-
-```typescript
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-
-describe('ModuleName', () => {
-  let module: ModuleType;
-
-  beforeEach(() => {
-    // Setup
-    module = new ModuleType();
-  });
-
-  afterEach(() => {
-    // Cleanup
-    vi.clearAllMocks();
-  });
-
-  describe('methodName', () => {
-    it('should handle normal case', () => {
-      const result = module.methodName('input');
-      expect(result).toBe('expected');
-    });
-
-    it('should handle edge case', () => {
-      const result = module.methodName('');
-      expect(result).toBeNull();
-    });
-
-    it('should throw on invalid input', () => {
-      expect(() => module.methodName(null)).toThrow('Invalid input');
-    });
-  });
-});
-```
-
-### E2E Test Template
-
-```typescript
-import { test, expect } from '@playwright/test';
-import { ProxyPanelPage } from './pages';
-
-test.describe('Feature Name', () => {
-  let proxyPage: ProxyPanelPage;
-
-  test.beforeEach(async ({ page }) => {
-    proxyPage = new ProxyPanelPage(page);
-    await proxyPage.goto();
-  });
-
-  test('should complete user journey', async ({ page }) => {
-    // Arrange
-    await proxyPage.openPanel();
-    
-    // Act
-    await proxyPage.addProxy({ host: 'proxy.example.com', port: 8080 });
-    
-    // Assert
-    await expect(proxyPage.proxyList).toContainText('proxy.example.com');
-  });
-});
-```
-
-### Mocking Patterns
-
-```typescript
-// Mock Electron IPC
-vi.mock('electron', () => ({
-  ipcMain: {
-    handle: vi.fn(),
-    on: vi.fn(),
-  },
-  ipcRenderer: {
-    invoke: vi.fn(),
-    on: vi.fn(),
-  },
-}));
-
-// Mock Database
-vi.mock('better-sqlite3', () => ({
-  default: vi.fn(() => ({
-    prepare: vi.fn(() => ({
-      run: vi.fn(),
-      get: vi.fn(),
-      all: vi.fn(),
-    })),
-    exec: vi.fn(),
-    close: vi.fn(),
-  })),
-}));
-
-// Mock BrowserWindow
-vi.mock('electron', () => ({
-  BrowserWindow: vi.fn(() => ({
-    loadURL: vi.fn(),
-    webContents: {
-      executeJavaScript: vi.fn(),
-      on: vi.fn(),
-    },
-  })),
-}));
-```
-
----
-
-## 🔧 Test Configuration
+## Test Configuration
 
 ### Vitest Configuration (`vitest.config.ts`)
 
@@ -383,25 +208,16 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./tests/setup.ts'],
-    include: ['tests/**/*.test.{ts,tsx}'],
+    environment: 'node',
+    include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'tests/',
-        '**/*.d.ts',
-        'coverage/',
-      ],
-      thresholds: {
-        statements: 80,
-        branches: 75,
-        functions: 80,
-        lines: 80,
-      },
+      reportsDirectory: './test-reports/coverage',
+      exclude: ['node_modules', 'tests', '**/*.d.ts'],
     },
+    setupFiles: ['tests/setup.ts'],
+    testTimeout: 10000,
   },
 });
 ```
@@ -413,72 +229,167 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [['html'], ['json', { outputFile: 'test-results/results.json' }]],
-  use: {
-    baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-  },
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-  },
-  projects: [
-    { name: 'chromium', use: { browserName: 'chromium' } },
-    { name: 'firefox', use: { browserName: 'firefox' } },
-    { name: 'webkit', use: { browserName: 'webkit' } },
+  timeout: 30000,
+  retries: 2,
+  workers: 1,
+  reporter: [
+    ['html', { outputFolder: 'playwright-report' }],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
+  use: {
+    headless: true,
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
+  },
 });
 ```
 
----
+## Writing Tests
 
-## 🐛 Debugging Tests
+### Unit Test Template
 
-### Unit Test Debugging
+```typescript
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-```bash
-# Run with Node debugger
-node --inspect-brk node_modules/.bin/vitest
+describe('ModuleName', () => {
+  let instance: ModuleClass;
 
-# Add console.log debugging
-console.log('Debug:', JSON.stringify(data, null, 2));
+  beforeEach(() => {
+    instance = new ModuleClass();
+  });
 
-# Use Vitest UI
-npx vitest --ui
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('methodName', () => {
+    it('should handle valid input correctly', () => {
+      const result = instance.methodName('valid-input');
+      expect(result).toBe('expected-output');
+    });
+
+    it('should throw error for invalid input', () => {
+      expect(() => instance.methodName(null)).toThrow('Invalid input');
+    });
+
+    it('should call dependency with correct arguments', () => {
+      const spy = vi.spyOn(dependency, 'method');
+      instance.methodName('input');
+      expect(spy).toHaveBeenCalledWith('expected-arg');
+    });
+  });
+});
 ```
 
-### E2E Test Debugging
+### Integration Test Template
 
-```bash
-# Debug mode (step through)
-npx playwright test --debug
+```typescript
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
-# Headed mode (see browser)
-npx playwright test --headed
+describe('Integration: ModuleA + ModuleB', () => {
+  let moduleA: ModuleA;
+  let moduleB: ModuleB;
 
-# Slow motion
-npx playwright test --headed --slow-mo=500
+  beforeAll(async () => {
+    moduleA = new ModuleA();
+    moduleB = new ModuleB(moduleA);
+    await moduleA.initialize();
+  });
 
-# Trace viewer
-npx playwright show-trace trace.zip
+  afterAll(async () => {
+    await moduleA.cleanup();
+  });
 
-# Generate trace
-npx playwright test --trace on
+  it('should integrate correctly when condition X', async () => {
+    const result = await moduleB.operationThatUsesA();
+    expect(result).toMatchObject({
+      status: 'success',
+      data: expect.any(Object),
+    });
+  });
+});
 ```
 
----
+### E2E Test Template
 
-## 📈 CI/CD Integration
+```typescript
+import { test, expect } from '@playwright/test';
 
-### GitHub Actions Example
+test.describe('Feature Name', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('should display correct UI elements', async ({ page }) => {
+    await expect(page.locator('[data-testid="element"]')).toBeVisible();
+  });
+
+  test('should handle user interaction', async ({ page }) => {
+    await page.click('[data-testid="button"]');
+    await expect(page.locator('[data-testid="result"]')).toHaveText('Expected');
+  });
+
+  test('should persist state after action', async ({ page }) => {
+    await page.fill('[data-testid="input"]', 'test-value');
+    await page.click('[data-testid="save"]');
+    await page.reload();
+    await expect(page.locator('[data-testid="input"]')).toHaveValue('test-value');
+  });
+});
+```
+
+## Test Categories
+
+### Security Tests
+
+Located in `tests/unit/comprehensive-security.test.ts` and `tests/e2e/security-fixes-validation.spec.ts`:
+
+- Input validation (XSS, SSRF, injection)
+- Rate limiting enforcement
+- Credential encryption
+- CSP header validation
+- Channel whitelist verification
+
+### Privacy Tests
+
+Located in `tests/unit/privacy/`:
+
+- Canvas fingerprint spoofing
+- WebGL fingerprint spoofing
+- Audio context spoofing
+- Navigator property spoofing
+- Timezone spoofing
+- WebRTC leak prevention
+- Tracker blocking effectiveness
+
+### Automation Tests
+
+Located in `tests/unit/` and `tests/e2e/automation.spec.ts`:
+
+- Search engine execution
+- Domain targeting accuracy
+- Human-like behavior simulation
+- Scheduling (cron parsing)
+- Self-healing recovery
+- Circuit breaker behavior
+
+### Performance Tests
+
+Located in `tests/e2e/performance-benchmarks.spec.ts`:
+
+- Application launch time (<3s)
+- Tab creation time (<500ms)
+- Memory usage per tab (<200MB)
+- UI responsiveness (<100ms)
+- Animation frame rate (>30 FPS)
+
+## CI/CD Integration
+
+### GitHub Actions
 
 ```yaml
+# .github/workflows/test.yml
 name: Tests
 
 on: [push, pull_request]
@@ -490,54 +401,93 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
       - run: npm ci
-      - run: npm test -- --coverage
+      - run: npm run test:unit -- --coverage
       - uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/coverage-final.json
 
   e2e-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
       - run: npm ci
       - run: npx playwright install --with-deps
-      - run: xvfb-run npm run test:e2e
-      - uses: actions/upload-artifact@v3
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-report
           path: playwright-report/
 ```
 
+### Test Reports
+
+```bash
+# Unit test coverage report
+test-reports/coverage/index.html
+
+# E2E test report  
+playwright-report/index.html
+
+# JUnit XML (for CI)
+test-results/junit.xml
+```
+
+## Best Practices
+
+### Do's
+
+- ✅ Write tests before or alongside code (TDD)
+- ✅ Use descriptive test names that explain expected behavior
+- ✅ Mock external dependencies
+- ✅ Test edge cases and error conditions
+- ✅ Keep tests independent and isolated
+- ✅ Use data-testid attributes for E2E selectors
+- ✅ Clean up resources in afterEach/afterAll
+
+### Don'ts
+
+- ❌ Don't test implementation details
+- ❌ Don't share state between tests
+- ❌ Don't use hardcoded timeouts (use waitFor)
+- ❌ Don't ignore flaky tests (fix root cause)
+- ❌ Don't test external services directly
+
+## Debugging Tests
+
+### Vitest
+
+```bash
+# Run with verbose output
+npx vitest run --reporter=verbose
+
+# Run single test in isolation
+npx vitest run -t "specific test name"
+
+# Debug with Node inspector
+node --inspect-brk node_modules/.bin/vitest run
+```
+
+### Playwright
+
+```bash
+# Run with debug mode
+npx playwright test --debug
+
+# Generate trace
+npx playwright test --trace on
+
+# View trace
+npx playwright show-trace trace.zip
+
+# Run headed with slow motion
+npx playwright test --headed --slow-mo=1000
+```
+
 ---
 
-## ✅ Test Checklist
-
-Before committing code:
-
-- [ ] All unit tests pass (`npm test`)
-- [ ] All E2E tests pass (`npm run test:e2e`)
-- [ ] Coverage meets thresholds (80%+)
-- [ ] New features have corresponding tests
-- [ ] Edge cases are covered
-- [ ] Error conditions are tested
-- [ ] No console errors in tests
-- [ ] Tests are documented
-
----
-
-## 📚 Related Documentation
-
-- [README.md](./README.md) - Project overview
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture
-- [TESTING_GUIDE.md](./docs/archive/test-reports/TESTING_GUIDE.md) - Legacy testing guide
-
----
-
-*Last Updated: 2025-01-30*
+**Related Documentation:**
+- [Development Guide](./DEVELOPMENT_GUIDE.md) - Developer workflow
+- [Architecture](./docs/ARCHITECTURE.md) - System architecture
+- [Security](./docs/SECURITY.md) - Security testing

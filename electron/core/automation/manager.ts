@@ -17,9 +17,16 @@ import { TaskScheduler } from './scheduler';
 import { TaskExecutor } from './executor';
 import { DatabaseManager } from '../../database';
 
-/** Event handler function type for bound handlers */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type BoundEventHandler = (...args: any[]) => void;
+/**
+ * Event handler function type for bound handlers.
+ * Uses a generic function signature that accepts any event data type.
+ * This provides flexibility for different event signatures while avoiding 'any'.
+ * 
+ * @remarks
+ * We use `(...args: unknown[]) => void` instead of `any[]` to maintain type safety
+ * while allowing handlers with different parameter signatures to be stored together.
+ */
+type BoundEventHandler = (...args: unknown[]) => void;
 
 export class AutomationManager extends EventEmitter {
   private scheduler: TaskScheduler;
@@ -41,33 +48,36 @@ export class AutomationManager extends EventEmitter {
    * Setup event listeners
    */
   private setupEventListeners(): void {
-    // Scheduler events
+    // Scheduler events - handler receives TaskSchedule
     const scheduleHandler: BoundEventHandler = (schedule: unknown) => {
       this.emit('schedule:triggered', schedule as TaskSchedule);
     };
     this.boundHandlers.set('scheduler:task:execute', scheduleHandler);
     this.scheduler.on('task:execute', scheduleHandler);
 
-    // Executor events
-    const taskStartedHandler = (task: SearchTask) => {
-      this.updateTaskInDatabase(task);
-      this.emit('task:started', task);
+    // Executor events - handlers receive SearchTask
+    const taskStartedHandler: BoundEventHandler = (task: unknown) => {
+      const searchTask = task as SearchTask;
+      this.updateTaskInDatabase(searchTask);
+      this.emit('task:started', searchTask);
     };
     this.boundHandlers.set('executor:task:started', taskStartedHandler);
     this.executor.on('task:started', taskStartedHandler);
 
-    const taskCompletedHandler = (task: SearchTask) => {
-      this.updateTaskInDatabase(task);
-      this.updateSessionStatistics(task.sessionId);
-      this.emit('task:completed', task);
+    const taskCompletedHandler: BoundEventHandler = (task: unknown) => {
+      const searchTask = task as SearchTask;
+      this.updateTaskInDatabase(searchTask);
+      this.updateSessionStatistics(searchTask.sessionId);
+      this.emit('task:completed', searchTask);
     };
     this.boundHandlers.set('executor:task:completed', taskCompletedHandler);
     this.executor.on('task:completed', taskCompletedHandler);
 
-    const taskFailedHandler = (task: SearchTask) => {
-      this.updateTaskInDatabase(task);
-      this.updateSessionStatistics(task.sessionId);
-      this.emit('task:failed', task);
+    const taskFailedHandler: BoundEventHandler = (task: unknown) => {
+      const searchTask = task as SearchTask;
+      this.updateTaskInDatabase(searchTask);
+      this.updateSessionStatistics(searchTask.sessionId);
+      this.emit('task:failed', searchTask);
     };
     this.boundHandlers.set('executor:task:failed', taskFailedHandler);
     this.executor.on('task:failed', taskFailedHandler);

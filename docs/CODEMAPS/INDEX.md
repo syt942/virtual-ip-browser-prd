@@ -1,319 +1,260 @@
 # Virtual IP Browser - Architecture Codemaps
 
-**Last Updated:** January 2025  
-**Version:** 1.2.1
+**Last Updated:** 2025-02-01  
+**Version:** 1.3.0  
+**Total Test Count:** 2,850+ tests (2,823 it blocks + 298 test blocks across 92 test files)
 
 ## Overview
 
-This directory contains detailed architectural codemaps for the Virtual IP Browser project. Each codemap documents a specific subsystem, its components, data flows, and integration points.
+This directory contains architectural codemaps for the Virtual IP Browser project. Each codemap documents a specific module or subsystem, providing:
 
-## Architecture at a Glance
+- File structure and organization
+- Key classes and their responsibilities
+- Data flow diagrams
+- Integration points
+- API specifications
+
+## Architecture Summary
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           VIRTUAL IP BROWSER v1.2.1                         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                         MAIN PROCESS (Electron)                      │   │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │   │
-│  │  │ Proxy Engine │ │  Automation  │ │   Privacy    │ │Translation │  │   │
-│  │  │  - Manager   │ │  - Domain    │ │  - Fingerprint│ │  - 30+ Lang│  │   │
-│  │  │  - Rotation  │ │    Targeting │ │  - WebRTC    │ │  - Caching │  │   │
-│  │  │  - 10 Strats │ │  - Scheduler │ │  - Trackers  │ │  - Detect  │  │   │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │   │
-│  │  │Creator Support│ │Tab Manager  │ │  Resilience  │ │  Database  │  │   │
-│  │  │  - YouTube   │ │  - Isolation │ │  - Circuit   │ │  - SQLite  │  │   │
-│  │  │  - Twitch    │ │  - Lifecycle │ │    Breaker   │ │  - Encrypt │  │   │
-│  │  │  - Medium    │ │  - BrowserView│ │  - Registry │ │  - Migrate │  │   │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
-│  │  ┌──────────────────────────────────────────────────────────────┐   │   │
-│  │  │                    SECURITY LAYER (v1.2.0)                    │   │   │
-│  │  │  Zod │ Rate Limit │ SSRF │ ReDoS │ Sandbox │ Native Masking  │   │   │
-│  │  └──────────────────────────────────────────────────────────────┘   │   │
-│  │  ┌──────────────────────────────────────────────────────────────┐   │   │
-│  │  │                    QUALITY LAYER (v1.2.1)                     │   │   │
-│  │  │  Named Constants │ Custom Errors │ Type Safety │ ErrorBoundary │   │   │
-│  │  └──────────────────────────────────────────────────────────────┘   │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                    ▲                                        │
-│                                    │ IPC (contextBridge + Whitelist)        │
-│                                    ▼                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                       RENDERER PROCESS (React)                       │   │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │   │
-│  │  │   Magic UI   │ │   Panels     │ │   Browser    │ │   Stores   │  │   │
-│  │  │ - NumberTick │ │ - Proxy      │ │ - TabBar     │ │ - Zustand  │  │   │
-│  │  │ - BorderBeam │ │ - Privacy    │ │ - AddressBar │ │ - Tab/Proxy│  │   │
-│  │  │ - PulseBtn   │ │ - Automation │ │ - Enhanced   │ │ - Privacy  │  │   │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
+│                              MAIN PROCESS                                    │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                         Core Modules                                 │    │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐ │    │
+│  │  │ ProxyEngine  │ │   Privacy    │ │  Automation  │ │ Resilience │ │    │
+│  │  │  - Manager   │ │  - Manager   │ │  - Manager   │ │ - Circuit  │ │    │
+│  │  │  - Rotation  │ │  - Fingerprint│ │  - Scheduler │ │   Breaker  │ │    │
+│  │  │  - Validator │ │  - WebRTC    │ │  - Executor  │ │ - Registry │ │    │
+│  │  │  - Strategies│ │  - Tracker   │ │  - Search    │ │            │ │    │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘ │    │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐ │    │
+│  │  │    Tabs      │ │  Translation │ │   Creator    │ │  Session   │ │    │
+│  │  │  - Manager   │ │  - Translator│ │   Support    │ │  - Manager │ │    │
+│  │  │  - Types     │ │  - Detector  │ │  - Tracker   │ │            │ │    │
+│  │  │              │ │  - Cache     │ │  - AdViewer  │ │            │ │    │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘ │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                      IPC Layer (Secure)                              │    │
+│  │  - Zod Validation  - Rate Limiting  - Channel Whitelist             │    │
+│  │  - SSRF Protection - XSS Prevention - ReDoS Protection              │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                      Database Layer                                  │    │
+│  │  - SQLite (better-sqlite3)  - Migrations  - Repositories            │    │
+│  │  - Encryption Service       - Safe Storage                          │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    ↕ IPC Bridge (contextBridge)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           RENDERER PROCESS                                   │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                      React Application                               │    │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐ │    │
+│  │  │   Browser    │ │   Dashboard  │ │    Panels    │ │  Magic UI  │ │    │
+│  │  │  - TabBar    │ │ - ActivityLog│ │  - Privacy   │ │ - Particles│ │    │
+│  │  │  - AddressBar│ │ - StatsPanel │ │  - Settings  │ │ - Confetti │ │    │
+│  │  │  - Automation│ │              │ │  - Creator   │ │ - Shimmer  │ │    │
+│  │  │  - Proxy     │ │              │ │  - Activity  │ │ - Neon     │ │    │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘ │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                      Zustand Stores                                  │    │
+│  │  proxyStore | privacyStore | automationStore | animationStore       │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Codemap Index
 
-| Codemap | Description | Key Components | Lines of Code |
-|---------|-------------|----------------|---------------|
-| [proxy-engine.md](./proxy-engine.md) | Proxy management & 10 rotation strategies | Manager, Rotation, Validator, Credentials | ~1200 |
-| [automation.md](./automation.md) | Web automation, scheduling, captcha detection | Domain Targeting, Scheduler, Captcha Detector | ~1800 |
-| [creator-support.md](./creator-support.md) | Creator monetization support (EP-007) | Platform Detection, Ad Viewer, Support Tracker | ~800 |
-| [translation.md](./translation.md) | Multi-language translation (EP-008) | Translator, Language Detector, Cache | ~500 |
-| [frontend.md](./frontend.md) | React UI & Magic UI components | Components, Stores, Hooks | ~1500 |
-| [database.md](./database.md) | Data persistence layer | 11 Repositories, Migrations, Encryption | ~1200 |
-| [security.md](./security.md) | Security layer (v1.2.0) | Validation, Rate Limiting, SSRF/ReDoS, Sandbox | ~600 |
-| [api-reference.md](./api-reference.md) | Complete API documentation | IPC Channels, Schemas, Events | N/A |
-
-### New in v1.2.0
-
-| Module | Description | Key Components |
-|--------|-------------|----------------|
-| **Resilience Layer** | Fault tolerance patterns | Circuit Breaker, Registry, State Persistence |
-| **Cron Scheduler** | Task scheduling system | Cron Parser, Scheduler, Timezone Support |
-| **Captcha Detection** | Multi-provider detection | reCAPTCHA, hCaptcha, Cloudflare, Arkose |
-
-### New in v1.2.1 (Quality Release)
-
-| Module | Description | Key Components |
-|--------|-------------|----------------|
-| **Named Constants** | Magic numbers → constants | `constants.ts` files in fingerprint, resilience, automation |
-| **Custom Error Classes** | Structured error handling | `AppError`, `ProxyConnectionError`, `DatabaseError`, etc. |
-| **Error Boundary** | React error handling | `ErrorBoundary`, `withErrorBoundary` HOC |
-| **Type Safety** | 99.3% `any` reduction | Proper TypeScript interfaces throughout |
-
-**Quality Documentation:**
-- [QUALITY_IMPROVEMENTS.md](../../QUALITY_IMPROVEMENTS.md) - Consolidated summary
-- [MAGIC_NUMBERS_REFACTORING.md](../MAGIC_NUMBERS_REFACTORING.md) - Constants documentation
-- [ERROR_HANDLING_IMPROVEMENTS.md](../ERROR_HANDLING_IMPROVEMENTS.md) - Error patterns
-
-### Distribution & Packaging (v1.2.1)
-
-| Document | Description |
-|----------|-------------|
-| [QUICK_START.md](../../QUICK_START.md) | Download, install, launch quick reference |
-| [DISTRIBUTION.md](../DISTRIBUTION.md) | Package formats, system requirements, installation |
-| [PACKAGING.md](../PACKAGING.md) | Building packages from source |
-| [BUILD_LOG.md](../../BUILD_LOG.md) | Build execution details |
-| [INSTALLATION_VERIFICATION.md](../../INSTALLATION_VERIFICATION.md) | Installation verification report |
-
-**Available Packages:**
-- `.deb` - Debian/Ubuntu (94 MB)
-- `.rpm` - Fedora/RHEL (82 MB)  
-- `.AppImage` - Universal Linux (123 MB)
+| Codemap | Description | Key Files | Lines |
+|---------|-------------|-----------|-------|
+| [proxy-engine.md](./proxy-engine.md) | Proxy management, rotation strategies, validation | `electron/core/proxy-engine/` | ~1,500 |
+| [frontend.md](./frontend.md) | React components, UI, stores | `src/components/`, `src/stores/` | ~3,000 |
+| [automation.md](./automation.md) | Search automation, domain targeting, scheduling | `electron/core/automation/` | ~2,500 |
+| [security.md](./security.md) | Security utilities, CSP, validation, rate limiting | `electron/utils/`, `electron/ipc/` | ~1,200 |
+| [database.md](./database.md) | SQLite schema, migrations, repositories | `electron/database/` | ~2,000 |
+| [translation.md](./translation.md) | Translation service, language detection | `electron/core/translation/` | ~800 |
+| [creator-support.md](./creator-support.md) | Creator support, ad viewing, platform detection | `electron/core/creator-support/` | ~1,000 |
+| [api-reference.md](./api-reference.md) | Complete IPC API documentation | `electron/ipc/` | ~900 |
 
 ## Module Dependencies
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          MODULE DEPENDENCY GRAPH                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-                         ┌─────────────────┐
-                         │  Main Process   │
-                         │   Entry Point   │
-                         └────────┬────────┘
-                                  │
-            ┌─────────────────────┼─────────────────────┐
-            │                     │                     │
-            ▼                     ▼                     ▼
-    ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-    │ Proxy Engine  │    │  Tab Manager  │    │Privacy Manager│
-    │               │◄───│               │───►│               │
-    └───────┬───────┘    └───────┬───────┘    └───────┬───────┘
-            │                    │                    │
-            └────────────────────┼────────────────────┘
-                                 │
-                         ┌───────┴───────┐
-                         │    Session    │
-                         │    Manager    │
-                         └───────┬───────┘
-                                 │
-            ┌────────────────────┼────────────────────┐
-            │                    │                    │
-            ▼                    ▼                    ▼
-    ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-    │  Automation   │    │Creator Support│    │  Translation  │
-    │   (EP-005)    │───►│   (EP-007)    │◄───│   (EP-008)    │
-    └───────┬───────┘    └───────┬───────┘    └───────┬───────┘
-            │                    │                    │
-            └────────────────────┼────────────────────┘
-                                 │
-                         ┌───────┴───────┐
-                         │   Database    │
-                         │    Layer      │
-                         └───────────────┘
-
-Legend:
-  ───► Direct dependency
-  ◄─── Reverse dependency (event-based)
-```
-
-## Data Flow Overview
-
-### 1. Proxy Selection Flow
-```
-Request → Rotation Strategy → Proxy Selection → Validation → Connection
-               │
-               ├── Geographic (region-based)
-               ├── Sticky-Session (domain mapping)
-               ├── Time-Based (scheduled rotation)
-               └── Custom Rules (conditional logic)
-```
-
-### 2. Automation Flow
-```
-Task → Domain Targeting → Search Engine → Page Interaction → Behavior Simulation
-           │                    │                │
-           ├── Filters          ├── Results      └── Human-like actions
-           └── Bounce Rate      └── Click        
-```
-
-### 3. Creator Support Flow
-```
-URL → Platform Detection → Ad Detection → Watch Simulation → Metrics Tracking
-        │                      │               │
-        ├── YouTube            ├── Video       └── Engagement Actions
-        ├── Twitch             ├── Banner
-        └── Medium             └── Overlay
-```
-
-### 4. Translation Flow
-```
-Text → Language Detection → Cache Check → Translation API → Result
-           │                    │              │
-           └── 30+ languages    └── LRU Cache  └── Fallback Dictionary
-```
-
-### 5. Security Flow (v1.1.0)
-```
-IPC Request → Whitelist Check → Rate Limit → Zod Validation → Handler
-                  │                 │              │
-                  └── Reject        └── Throttle   └── Type-safe processing
+┌─────────────────────────────────────────────────────────────────┐
+│                    Dependency Graph                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ProxyEngine ◄───────────── TabManager                          │
+│       │                          │                               │
+│       ▼                          ▼                               │
+│  RotationStrategies        PrivacyManager                       │
+│       │                          │                               │
+│       └──────────┬───────────────┘                               │
+│                  ▼                                               │
+│           AutomationManager                                      │
+│                  │                                               │
+│       ┌──────────┼──────────┐                                   │
+│       ▼          ▼          ▼                                   │
+│  SearchEngine  Scheduler  DomainTargeting                       │
+│       │          │          │                                   │
+│       └──────────┴──────────┘                                   │
+│                  │                                               │
+│                  ▼                                               │
+│           SelfHealingEngine ◄──── CircuitBreaker                │
+│                  │                                               │
+│                  ▼                                               │
+│            DatabaseManager                                       │
+│                  │                                               │
+│       ┌──────────┼──────────┐                                   │
+│       ▼          ▼          ▼                                   │
+│  Repositories  Migrations  EncryptionService                    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## File Organization
 
 ```
-electron/
-├── main/
-│   ├── index.ts              # Entry point
-│   ├── preload.ts            # IPC bridge + whitelist
-│   └── config-manager.ts     # Configuration
-├── core/
-│   ├── proxy-engine/         # [proxy-engine.md]
-│   │   ├── manager.ts        # Proxy lifecycle
-│   │   ├── rotation.ts       # 10 strategies
-│   │   ├── validator.ts      # Health checking
-│   │   └── credential-store.ts
-│   ├── automation/           # [automation.md]
-│   │   ├── manager.ts        # Orchestration
-│   │   ├── domain-targeting.ts
-│   │   ├── behavior-simulator.ts
-│   │   ├── page-interaction.ts
-│   │   └── search-engine.ts
-│   ├── creator-support/      # [creator-support.md]
-│   │   ├── platform-detection.ts
-│   │   ├── ad-viewer.ts
-│   │   └── support-tracker.ts
-│   ├── translation/          # [translation.md]
-│   │   ├── translator.ts
-│   │   ├── language-detector.ts
-│   │   └── translation-cache.ts
-│   ├── privacy/
-│   │   ├── manager.ts
-│   │   ├── fingerprint/      # Canvas, WebGL, Audio, Navigator, Timezone
-│   │   ├── webrtc.ts
-│   │   └── tracker-blocker.ts
-│   ├── session/
-│   │   └── manager.ts
-│   └── tabs/
-│       └── manager.ts
-├── database/                 # [database.md]
-│   ├── index.ts
-│   ├── migrations/
-│   ├── repositories/         # 8 repositories
-│   └── services/
-│       └── encryption.service.ts
-├── ipc/                      # [security.md]
-│   ├── channels.ts
-│   ├── handlers/
-│   ├── rate-limiter.ts
-│   ├── validation.ts
-│   └── schemas/
-│       └── index.ts
-└── utils/
-    ├── logger.ts
-    └── security.ts           # SSRF, ReDoS, CSS protection
-
-src/                          # [frontend.md]
-├── components/
-│   ├── browser/              # TabBar, AddressBar
-│   ├── panels/               # Config panels
-│   ├── dashboard/            # Analytics
-│   └── ui/                   # Magic UI components
-├── stores/                   # Zustand stores
-├── hooks/                    # Custom hooks
-└── utils/
-    ├── sanitization.ts
-    └── cn.ts
+virtual-ip-browser/
+├── electron/                      # Main process code
+│   ├── main/                      # Application entry point
+│   │   ├── index.ts              # Main entry, window creation, security headers
+│   │   ├── preload.ts            # Preload script for IPC
+│   │   └── config-manager.ts     # Configuration and master key management
+│   ├── core/                      # Core business logic
+│   │   ├── proxy-engine/         # Proxy management (11 strategies)
+│   │   │   ├── manager.ts        # ProxyManager class
+│   │   │   ├── rotation.ts       # Rotation coordinator
+│   │   │   ├── validator.ts      # Proxy health validation
+│   │   │   ├── credential-store.ts # Encrypted credential storage
+│   │   │   └── strategies/       # 11 rotation strategy implementations
+│   │   ├── privacy/              # Privacy protection suite
+│   │   │   ├── manager.ts        # PrivacyManager class
+│   │   │   ├── webrtc.ts         # WebRTC leak prevention
+│   │   │   ├── tracker-blocker.ts # Tracker/ad blocking
+│   │   │   ├── pattern-matcher.ts # URL pattern matching
+│   │   │   └── fingerprint/      # Fingerprint spoofing (6 vectors)
+│   │   ├── automation/           # Automation engine
+│   │   │   ├── manager.ts        # AutomationManager class
+│   │   │   ├── scheduler.ts      # Task scheduling (cron support)
+│   │   │   ├── executor.ts       # Task execution
+│   │   │   ├── search-engine.ts  # Search automation
+│   │   │   ├── domain-targeting.ts # Domain click simulation
+│   │   │   ├── self-healing-engine.ts # Error recovery
+│   │   │   ├── behavior-simulator.ts # Human-like behavior
+│   │   │   ├── captcha-detector.ts # Captcha detection
+│   │   │   └── search/           # Search-specific modules
+│   │   ├── resilience/           # Fault tolerance
+│   │   │   ├── circuit-breaker.ts # Circuit breaker pattern
+│   │   │   └── circuit-breaker-registry.ts # Registry management
+│   │   ├── tabs/                 # Tab management
+│   │   │   └── manager.ts        # TabManager class
+│   │   ├── session/              # Session management
+│   │   │   └── manager.ts        # SessionManager class
+│   │   ├── translation/          # Translation service
+│   │   │   ├── translator.ts     # Translation engine
+│   │   │   ├── language-detector.ts # Language detection
+│   │   │   └── translation-cache.ts # Caching layer
+│   │   └── creator-support/      # Creator support module
+│   │       ├── ad-viewer.ts      # Ad viewing automation
+│   │       ├── platform-detection.ts # Platform detection
+│   │       └── support-tracker.ts # Support statistics
+│   ├── ipc/                       # IPC communication
+│   │   ├── channels.ts           # Channel definitions
+│   │   ├── validation.ts         # Zod validation schemas
+│   │   ├── rate-limiter.ts       # Rate limiting
+│   │   └── handlers/             # IPC handlers
+│   │       ├── index.ts          # Handler setup
+│   │       ├── automation.ts     # Automation handlers
+│   │       ├── privacy.ts        # Privacy handlers
+│   │       ├── navigation.ts     # Navigation handlers
+│   │       └── tabs.ts           # Tab handlers
+│   ├── database/                  # Database layer
+│   │   ├── index.ts              # DatabaseManager
+│   │   ├── schema.sql            # Base schema
+│   │   ├── migrations/           # Database migrations
+│   │   ├── repositories/         # Data access layer (12 repos)
+│   │   └── services/             # Database services
+│   │       ├── encryption.service.ts # AES-256-GCM encryption
+│   │       └── safe-storage.service.ts # OS keychain integration
+│   ├── utils/                     # Utilities
+│   │   ├── security.ts           # Security utilities (CSP, sanitization)
+│   │   ├── validation.ts         # Input validation
+│   │   ├── logger.ts             # Logging
+│   │   └── error-sanitization.ts # Error sanitization
+│   └── types/                     # TypeScript types
+├── src/                           # Renderer process code
+│   ├── components/                # React components
+│   │   ├── browser/              # Browser UI components
+│   │   │   ├── TabBar.tsx        # Tab management UI
+│   │   │   ├── AddressBar.tsx    # URL bar
+│   │   │   ├── EnhancedProxyPanel.tsx # Proxy management UI
+│   │   │   └── EnhancedAutomationPanel.tsx # Automation UI
+│   │   ├── dashboard/            # Dashboard components
+│   │   │   ├── ActivityLog.tsx   # Activity logging
+│   │   │   └── EnhancedStatsPanel.tsx # Statistics display
+│   │   ├── panels/               # Side panels
+│   │   │   ├── PrivacyPanel.tsx  # Privacy settings
+│   │   │   ├── SettingsPanel.tsx # App settings
+│   │   │   ├── CreatorSupportPanel.tsx # Creator support
+│   │   │   └── ActivityLogPanel.tsx # Activity logs
+│   │   └── ui/                   # Magic UI components
+│   │       ├── particles.tsx     # Particle effects
+│   │       ├── confetti.tsx      # Confetti animations
+│   │       ├── shimmer-button.tsx # Shimmer effects
+│   │       ├── border-beam.tsx   # Border animations
+│   │       └── neon-gradient-card.tsx # Neon effects
+│   ├── stores/                    # Zustand state stores
+│   │   ├── proxyStore.ts         # Proxy state
+│   │   ├── privacyStore.ts       # Privacy state
+│   │   ├── automationStore.ts    # Automation state
+│   │   └── animationStore.ts     # Animation preferences
+│   └── utils/                     # Frontend utilities
+└── tests/                         # Test suites
+    ├── unit/                      # Unit tests (~2,000 tests)
+    ├── integration/               # Integration tests (~300 tests)
+    └── e2e/                       # E2E tests (~550 tests)
 ```
 
-## Technology Stack
+## Security Architecture
 
-| Layer | Technology | Version | Purpose |
-|-------|------------|---------|---------|
-| Desktop Framework | Electron | 34.x | Cross-platform desktop app |
-| Frontend | React | 19.x | User interface |
-| Language | TypeScript | 5.6.x | Type safety |
-| State Management | Zustand | 5.x | Client-side state |
-| Styling | Tailwind CSS | 3.4.x | Utility-first CSS |
-| Animation | Framer Motion | 12.x | UI animations |
-| Database | better-sqlite3 | 11.x | Local data persistence |
-| Validation | Zod | 4.x | Schema validation |
-| Testing | Vitest | 1.x | Unit testing |
-| E2E Testing | Playwright | 1.x | End-to-end testing |
-| Build | electron-vite | 2.x | Development & bundling |
+The application implements defense-in-depth security:
 
-## Test Coverage by Module
+| Layer | Implementation | Location |
+|-------|----------------|----------|
+| IPC Validation | Zod schemas with SSRF/XSS protection | `electron/ipc/validation.ts` |
+| Rate Limiting | Per-channel sliding window | `electron/ipc/rate-limiter.ts` |
+| CSP Headers | Strict Content Security Policy | `electron/main/index.ts` |
+| TLS Validation | Certificate pinning, HSTS | `electron/main/index.ts` |
+| Credential Encryption | AES-256-GCM + OS keychain | `electron/database/services/` |
+| Input Sanitization | URL, domain, selector sanitization | `electron/utils/security.ts` |
+| ReDoS Protection | Safe regex compilation | `electron/utils/security.ts` |
+| Process Isolation | Sandbox, context isolation | `electron/main/index.ts` |
 
-| Module | Statements | Branches | Functions | Test Files |
-|--------|------------|----------|-----------|------------|
-| Proxy Engine | 59% | 41% | 59% | proxy-manager.test.ts, rotation-*.test.ts |
-| Automation | 50% | - | - | automation-manager.test.ts, domain-targeting.test.ts |
-| Creator Support | ~60% | - | - | creator-support.test.ts |
-| Translation | ~70% | - | - | translation.test.ts |
-| Privacy | ~55% | - | - | privacy-manager.test.ts |
-| Security | 100% | - | - | security-*.test.ts (3 files) |
-| Database | ~45% | - | - | - |
+## Recent Changes (v1.3.0)
 
-## Quick Links
+- **Security Headers**: CSP and HSTS headers applied via `webRequest.onHeadersReceived`
+- **TLS Validation**: Certificate validation and insecure content blocking
+- **IPC Rate Limiting**: Per-channel rate limits with configurable thresholds
+- **Dead Code Removal**: Cleaned up 15+ unused files and functions
+- **Test Coverage**: Expanded to 2,850+ tests across all modules
+- **Circuit Breaker**: Enhanced resilience with registry pattern
+- **Encryption Service**: AES-256-GCM with OS keychain integration
 
-### Documentation
-- [Architecture Overview](../ARCHITECTURE.md)
-- [Security Documentation](../SECURITY_CONSOLIDATED.md)
-- [Contributing Guidelines](../../CONTRIBUTING.md)
-- [Changelog](../../CHANGELOG.md)
+## Cross-References
 
-### Guides
-- [Getting Started](../GETTING_STARTED.md)
-- [User Guide](../../USER_GUIDE.md)
-- [Testing Guide](../../TESTING_GUIDE.md)
-
-### Development
-- [README](../../README.md)
-- [Setup Instructions](../../SETUP_INSTRUCTIONS.md)
+- **PRD Compliance**: See `FINAL_PROJECT_STATUS.md` for PRD alignment
+- **Security Audit**: See `SECURITY_AUDIT_REPORT_COMPREHENSIVE_2025.md`
+- **Testing Strategy**: See `TESTING.md` for test organization
+- **API Documentation**: See [api-reference.md](./api-reference.md) for IPC APIs
 
 ---
 
-## Change Log
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2025-01-30 | 1.1.0 | Added security layer codemap, updated architecture |
-| 2025-01-28 | 1.0.0 | Initial codemaps for all modules |
-
----
-
-*For detailed implementation of each module, see the individual codemap files.*
+**Navigation:**
+- [Proxy Engine →](./proxy-engine.md)
+- [Frontend →](./frontend.md)
+- [Automation →](./automation.md)
+- [Security →](./security.md)
+- [Database →](./database.md)

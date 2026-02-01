@@ -120,22 +120,31 @@ export class IPCRateLimiter {
       ['proxy:remove', { windowMs: 60000, maxRequests: 20 }],
       ['proxy:validate', { windowMs: 60000, maxRequests: 20 }],
       ['proxy:set-rotation', { windowMs: 60000, maxRequests: 10 }],
+      ['proxy:list', { windowMs: 60000, maxRequests: 100 }],
       
       // Tab operations - higher limits
       ['tab:create', { windowMs: 60000, maxRequests: 50 }],
       ['tab:close', { windowMs: 60000, maxRequests: 50 }],
       ['tab:navigate', { windowMs: 60000, maxRequests: 100 }],
+      ['tab:assign-proxy', { windowMs: 60000, maxRequests: 50 }],
+      ['tab:list', { windowMs: 60000, maxRequests: 100 }],
+      ['tab:update', { windowMs: 60000, maxRequests: 50 }],
       
       // Automation - strict limits to prevent abuse
       ['automation:start-search', { windowMs: 60000, maxRequests: 5 }],
       ['automation:stop-search', { windowMs: 60000, maxRequests: 10 }],
       ['automation:add-keyword', { windowMs: 60000, maxRequests: 50 }],
       ['automation:add-domain', { windowMs: 60000, maxRequests: 30 }],
+      ['automation:get-tasks', { windowMs: 60000, maxRequests: 60 }],
+      ['automation:schedule', { windowMs: 60000, maxRequests: 10 }],
+      ['automation:pause', { windowMs: 60000, maxRequests: 20 }],
+      ['automation:resume', { windowMs: 60000, maxRequests: 20 }],
       
       // Privacy - moderate limits
       ['privacy:set-fingerprint', { windowMs: 60000, maxRequests: 20 }],
       ['privacy:toggle-webrtc', { windowMs: 60000, maxRequests: 30 }],
       ['privacy:toggle-tracker-blocking', { windowMs: 60000, maxRequests: 30 }],
+      ['privacy:get-stats', { windowMs: 60000, maxRequests: 120 }],
       
       // Session - strict limits
       ['session:save', { windowMs: 60000, maxRequests: 10 }],

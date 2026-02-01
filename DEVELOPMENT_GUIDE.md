@@ -682,3 +682,243 @@ The following changes require security review before merging:
 *Happy coding! 🚀*
 
 *Last Updated: January 2025 (v1.3.0)*
+
+---
+
+## 🤖 AI-Assisted Development (Subagent Workflow)
+
+This project supports AI-assisted development using specialized subagents. Each subagent has a specific focus area and follows defined workflows.
+
+### Available Subagents
+
+| Subagent | Focus Area | Key Responsibilities |
+|----------|------------|---------------------|
+| **Documentation Specialist** | Codemaps & docs | Generate/update codemaps, maintain README, API docs |
+| **Security Engineer** | Security hardening | CSP, validation, encryption, audit fixes |
+| **Test Engineer** | Test coverage | Unit tests, integration tests, E2E tests |
+| **Feature Developer** | New features | Implement PRD features, follow TDD |
+
+### Subagent Workflow
+
+1. **Task Assignment**: Receive specific task with clear acceptance criteria
+2. **Context Gathering**: Read relevant source files and existing documentation
+3. **Planning**: Outline approach before implementation
+4. **Implementation**: Make changes following project conventions
+5. **Verification**: Run tests, verify changes work correctly
+6. **Documentation**: Update relevant documentation
+7. **Cleanup**: Remove temporary files, format code
+
+### Working with Subagents
+
+```bash
+# Example: Documentation update task
+# 1. Subagent reads current codebase structure
+# 2. Identifies outdated documentation
+# 3. Updates docs from source of truth (code)
+# 4. Cross-references related sections
+# 5. Generates change log
+
+# Example: Feature implementation task
+# 1. Subagent reads PRD requirements
+# 2. Writes failing tests first (TDD)
+# 3. Implements feature to pass tests
+# 4. Refactors for code quality
+# 5. Updates documentation
+```
+
+---
+
+## 🧪 Test-Driven Development (TDD) Process
+
+### TDD Cycle
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        TDD Cycle                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│     ┌─────────┐                                                 │
+│     │  RED    │  Write a failing test                           │
+│     │         │  • Define expected behavior                     │
+│     │         │  • Test should fail initially                   │
+│     └────┬────┘                                                 │
+│          │                                                       │
+│          ▼                                                       │
+│     ┌─────────┐                                                 │
+│     │  GREEN  │  Make the test pass                             │
+│     │         │  • Write minimal code                           │
+│     │         │  • Focus on functionality                       │
+│     └────┬────┘                                                 │
+│          │                                                       │
+│          ▼                                                       │
+│     ┌─────────┐                                                 │
+│     │REFACTOR │  Improve the code                               │
+│     │         │  • Clean up duplication                         │
+│     │         │  • Improve readability                          │
+│     └────┬────┘                                                 │
+│          │                                                       │
+│          └──────────────────────────────────────┐               │
+│                                                  │               │
+│                         Repeat ◄─────────────────┘               │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### TDD Example: Adding a New Feature
+
+#### Step 1: Write Failing Test (RED)
+
+```typescript
+// tests/unit/my-feature.test.ts
+import { describe, it, expect } from 'vitest';
+import { MyFeature } from '../../electron/core/my-feature';
+
+describe('MyFeature', () => {
+  describe('process', () => {
+    it('should transform input correctly', () => {
+      const feature = new MyFeature();
+      const result = feature.process('input');
+      expect(result).toBe('expected-output');
+    });
+
+    it('should throw on invalid input', () => {
+      const feature = new MyFeature();
+      expect(() => feature.process(null)).toThrow('Invalid input');
+    });
+
+    it('should handle edge cases', () => {
+      const feature = new MyFeature();
+      expect(feature.process('')).toBe('');
+      expect(feature.process('  ')).toBe('');
+    });
+  });
+});
+```
+
+#### Step 2: Implement Feature (GREEN)
+
+```typescript
+// electron/core/my-feature.ts
+export class MyFeature {
+  process(input: string | null): string {
+    if (input === null || input === undefined) {
+      throw new Error('Invalid input');
+    }
+    
+    const trimmed = input.trim();
+    if (!trimmed) {
+      return '';
+    }
+    
+    // Minimal implementation to pass tests
+    return 'expected-output';
+  }
+}
+```
+
+#### Step 3: Refactor (REFACTOR)
+
+```typescript
+// electron/core/my-feature.ts
+export class MyFeature {
+  private readonly transformer: Transformer;
+
+  constructor(transformer?: Transformer) {
+    this.transformer = transformer ?? new DefaultTransformer();
+  }
+
+  process(input: string | null): string {
+    this.validateInput(input);
+    return this.transformer.transform(input!.trim());
+  }
+
+  private validateInput(input: string | null): asserts input is string {
+    if (input === null || input === undefined) {
+      throw new Error('Invalid input');
+    }
+  }
+}
+```
+
+### TDD Best Practices
+
+| Practice | Description |
+|----------|-------------|
+| **Test First** | Always write tests before implementation |
+| **Small Steps** | Write one test at a time |
+| **Minimal Code** | Write just enough code to pass |
+| **Frequent Commits** | Commit after each green phase |
+| **Descriptive Names** | Test names should explain behavior |
+| **Independent Tests** | Tests should not depend on each other |
+| **Fast Feedback** | Tests should run quickly |
+
+### When to Use TDD
+
+| Use TDD | Skip TDD |
+|---------|----------|
+| ✅ Business logic | ❌ UI layout/styling |
+| ✅ Validation rules | ❌ Third-party integrations |
+| ✅ Data transformations | ❌ Prototyping/exploration |
+| ✅ State management | ❌ Configuration files |
+| ✅ IPC handlers | ❌ Simple getters/setters |
+
+### Running Tests During TDD
+
+```bash
+# Watch mode for instant feedback
+npm run test:watch
+
+# Run specific test file
+npx vitest run tests/unit/my-feature.test.ts
+
+# Run tests matching pattern
+npx vitest run -t "should transform"
+
+# With coverage to track progress
+npx vitest run --coverage
+```
+
+---
+
+## 📋 Code Review Checklist
+
+### Before Submitting PR
+
+- [ ] All tests pass (`npm run test:all`)
+- [ ] No TypeScript errors (`npm run typecheck`)
+- [ ] No lint errors (`npm run lint`)
+- [ ] New code has tests
+- [ ] Documentation updated
+- [ ] No console.log statements (use logger)
+- [ ] Error handling implemented
+- [ ] Security considerations addressed
+
+### Security Review
+
+- [ ] Input validation with Zod schemas
+- [ ] No hardcoded secrets
+- [ ] SSRF protection for URLs
+- [ ] XSS prevention for user input
+- [ ] Rate limiting for sensitive operations
+- [ ] Proper error messages (no info leakage)
+
+### Performance Review
+
+- [ ] No N+1 queries
+- [ ] Proper async/await usage
+- [ ] Memory cleanup in lifecycle hooks
+- [ ] Lazy loading where appropriate
+
+---
+
+## 🔗 Related Documentation
+
+- [Architecture](./docs/ARCHITECTURE.md) - System design
+- [Testing](./TESTING.md) - Test strategy
+- [Security](./docs/SECURITY.md) - Security practices
+- [Codemaps](./docs/CODEMAPS/INDEX.md) - Module maps
+- [API Reference](./docs/CODEMAPS/api-reference.md) - IPC APIs
+
+---
+
+**Last Updated:** 2025-02-01 | **Version:** 1.3.0

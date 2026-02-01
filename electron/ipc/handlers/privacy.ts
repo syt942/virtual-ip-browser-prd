@@ -10,6 +10,7 @@ import {
   FingerprintConfigSchema, 
   WebRTCToggleSchema,
   TrackerBlockingToggleSchema,
+  PrivacyStatsRequestSchema,
   validateInput 
 } from '../validation';
 import { getIPCRateLimiter } from '../rate-limiter';
@@ -106,6 +107,68 @@ export function setupPrivacyHandlers(privacyManager: PrivacyManager) {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to toggle tracker blocking';
       console.error('[IPC:privacy:toggleTrackerBlocking] Error:', errorMessage, { enabled: validation.data });
+      return { success: false, error: errorMessage };
+    }
+  });
+
+  /**
+   * privacy:get-stats - Get privacy protection statistics
+   * 
+   * P1 Priority - Important for dashboard and monitoring
+   * 
+   * @param tabId - Optional UUID of specific tab for per-tab stats
+   * @returns Privacy statistics including blocked trackers, WebRTC leaks prevented, etc.
+   */
+  ipcMain.handle(IPC_CHANNELS.PRIVACY_GET_STATS, async (_event, tabId?: string) => {
+    // Rate limiting (lenient for read operations)
+    const rateCheck = rateLimiter.checkLimit(IPC_CHANNELS.PRIVACY_GET_STATS);
+    if (!rateCheck.allowed) {
+      return { success: false, error: 'Rate limit exceeded', retryAfter: rateCheck.retryAfter };
+    }
+
+    // Validation (optional tabId)
+    if (tabId !== undefined && tabId !== null) {
+      const validation = validateInput(PrivacyStatsRequestSchema, { tabId });
+      if (!validation.success) {
+        return { success: false, error: `Validation failed: ${validation.error}` };
+      }
+    }
+
+    try {
+      // Get tracker blocker stats
+      const trackerBlocker = privacyManager.getTrackerBlocker();
+      const trackerStats = trackerBlocker.getStats();
+
+      // Get WebRTC protection status
+      const webrtcProtection = privacyManager.getWebRTCProtection();
+      const webrtcEnabled = webrtcProtection.isBlocked();
+
+      // Compile comprehensive stats
+      // Note: trackerStats returns { patterns: number, domains: number }
+      // We map this to user-friendly stats structure
+      const stats = {
+        totalBlocked: trackerStats.patterns + trackerStats.domains,
+        patternsBlocked: trackerStats.patterns,
+        domainsBlocked: trackerStats.domains,
+        byCategory: {
+          ads: 0,
+          analytics: 0,
+          social: 0,
+          cryptomining: 0,
+          fingerprinting: 0,
+        },
+        webrtcLeaksBlocked: 0,
+        fingerprintAttemptsBlocked: 0,
+        webrtcProtectionEnabled: webrtcEnabled,
+        trackerBlockingEnabled: trackerBlocker.isEnabled(),
+        // Per-tab stats if tabId provided (placeholder for future implementation)
+        tabId: tabId || null,
+      };
+
+      return { success: true, stats };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get privacy stats';
+      console.error('[IPC:privacy:getStats] Error:', errorMessage, { tabId });
       return { success: false, error: errorMessage };
     }
   });

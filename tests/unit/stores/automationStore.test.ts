@@ -30,11 +30,11 @@ describe('useAutomationStore', () => {
     
     // Reset store state
     useAutomationStore.setState({
-      sessions: [],
-      activeSessionId: null,
-      keywords: [],
-      targetDomains: [],
-      selectedEngine: 'google',
+      sessionList: [],
+      currentActiveSessionId: null,
+      keywordQueue: [],
+      targetDomainList: [],
+      selectedSearchEngine: 'google',
     });
   });
 
@@ -49,29 +49,29 @@ describe('useAutomationStore', () => {
   describe('state initialization', () => {
     it('initializes with empty sessions array', () => {
       const state = useAutomationStore.getState();
-      expect(state.sessions).toEqual([]);
+      expect(state.sessionList).toEqual([]);
     });
 
     it('initializes with null activeSessionId', () => {
       const state = useAutomationStore.getState();
-      expect(state.activeSessionId).toBeNull();
+      expect(state.currentActiveSessionId).toBeNull();
     });
 
     it('initializes with empty keywords array', () => {
       const state = useAutomationStore.getState();
-      expect(state.keywords).toEqual([]);
+      expect(state.keywordQueue).toEqual([]);
     });
 
     it('initializes with google as default engine', () => {
       const state = useAutomationStore.getState();
-      expect(state.selectedEngine).toBe('google');
+      expect(state.selectedSearchEngine).toBe('google');
     });
   });
 
   // ============================================================
   // SESSION MANAGEMENT TESTS
   // ============================================================
-  describe('startSession', () => {
+  describe('startNewSession', () => {
     it('calls API and adds session to state', async () => {
       // Arrange
       const mockSession = {
@@ -98,7 +98,7 @@ describe('useAutomationStore', () => {
 
       // Act
       await act(async () => {
-        await useAutomationStore.getState().startSession({
+        await useAutomationStore.getState().startNewSession({
           engine: 'google',
           keywords: ['test'],
           targetDomains: ['example.com'],
@@ -107,9 +107,9 @@ describe('useAutomationStore', () => {
 
       // Assert
       const state = useAutomationStore.getState();
-      expect(state.sessions).toHaveLength(1);
-      expect(state.sessions[0].id).toBe(mockSession.id);
-      expect(state.activeSessionId).toBe(mockSession.id);
+      expect(state.sessionList).toHaveLength(1);
+      expect(state.sessionList[0].id).toBe(mockSession.id);
+      expect(state.currentActiveSessionId).toBe(mockSession.id);
     });
 
     it('calls window.api.automation.startSearch with config', async () => {
@@ -122,7 +122,7 @@ describe('useAutomationStore', () => {
 
       // Act
       await act(async () => {
-        await useAutomationStore.getState().startSession(config);
+        await useAutomationStore.getState().startNewSession(config);
       });
 
       // Assert
@@ -136,7 +136,7 @@ describe('useAutomationStore', () => {
 
       // Act
       await act(async () => {
-        await useAutomationStore.getState().startSession({
+        await useAutomationStore.getState().startNewSession({
           engine: 'google',
           keywords: ['test'],
           targetDomains: [],
@@ -145,7 +145,7 @@ describe('useAutomationStore', () => {
 
       // Assert
       const state = useAutomationStore.getState();
-      expect(state.sessions).toHaveLength(0);
+      expect(state.sessionList).toHaveLength(0);
       expect(consoleSpy).toHaveBeenCalled();
       
       consoleSpy.mockRestore();

@@ -3,6 +3,12 @@
  * Orchestrates automated searches across multiple search engines
  * Includes translation integration (EP-008)
  * 
+ * SECURITY FEATURES:
+ * - Per-engine rate limiting (P2)
+ * - Global rate limiting
+ * - Circuit breaker protection
+ * - Input validation
+ * 
  * Implementation details are in separate modules under ./search/
  */
 
@@ -22,6 +28,12 @@ import {
   type CircuitBreakerCallbacks,
   type CircuitBreakerMetrics
 } from '../resilience';
+import { 
+  SearchRateLimiter, 
+  getSearchRateLimiter,
+  type EngineRateLimitConfig 
+} from './search-rate-limiter';
+import { sanitizeErrorMessage } from '../../utils/error-sanitization';
 
 // Re-export types for backwards compatibility
 export type { TranslationConfig, TranslatedSearchResult };
@@ -31,6 +43,10 @@ export interface SearchEngineAutomationOptions {
   enableCircuitBreaker?: boolean;
   /** Circuit breaker callbacks for monitoring */
   circuitBreakerCallbacks?: CircuitBreakerCallbacks;
+  /** Enable rate limiting (default: true) */
+  enableRateLimiting?: boolean;
+  /** Custom rate limit configuration per engine */
+  rateLimitConfig?: Partial<Record<SearchEngine, Partial<EngineRateLimitConfig>>>;
 }
 
 export class SearchEngineAutomation {
@@ -42,12 +58,26 @@ export class SearchEngineAutomation {
   private circuitBreakers: Map<SearchEngine, CircuitBreaker> = new Map();
   private circuitBreakerEnabled: boolean;
 
+  // Rate limiter (P2 Security)
+  private rateLimiter: SearchRateLimiter;
+  private rateLimitingEnabled: boolean;
+
   constructor(options?: SearchEngineAutomationOptions) {
     this.executor = new SearchExecutor();
     this.extractor = this.executor.getExtractor();
     this.translationHandler = new SearchTranslationHandler();
     
     this.circuitBreakerEnabled = options?.enableCircuitBreaker ?? true;
+    this.rateLimitingEnabled = options?.enableRateLimiting ?? true;
+    
+    // Initialize rate limiter
+    if (this.rateLimitingEnabled) {
+      this.rateLimiter = options?.rateLimitConfig 
+        ? new SearchRateLimiter(options.rateLimitConfig)
+        : getSearchRateLimiter();
+    } else {
+      this.rateLimiter = getSearchRateLimiter(); // Still create but won't enforce
+    }
     
     // Initialize circuit breakers for each search engine
     if (this.circuitBreakerEnabled) {
@@ -73,32 +103,59 @@ export class SearchEngineAutomation {
   }
 
   /**
-   * Perform a search with circuit breaker protection
+   * Perform a search with rate limiting and circuit breaker protection
+   * SECURITY: Enforces per-engine and global rate limits
    */
   async performSearch(
     view: AutomationViewLike,
     keyword: string,
     engine: SearchEngine
   ): Promise<SearchResult[]> {
-    const cb = this.circuitBreakers.get(engine);
-    
-    // If circuit breaker is disabled or not found, execute directly
-    if (!this.circuitBreakerEnabled || !cb) {
-      return this.executor.performSearch(view, keyword, engine);
-    }
-    
-    // Performance tracking done internally by circuit breaker
-    try {
-      const results = await cb.execute(
-        () => this.executor.performSearch(view, keyword, engine),
-        { throwOnReject: true }
-      );
-      return results;
-    } catch (error) {
-      if (error instanceof CircuitBreakerOpenError) {
-        console.warn(`[Search Engine] Circuit breaker OPEN for ${engine}, search rejected`);
+    // Check and wait for rate limit (P2 Security)
+    if (this.rateLimitingEnabled) {
+      const rateLimitResult = this.rateLimiter.checkLimit(engine);
+      
+      if (!rateLimitResult.allowed) {
+        console.log(`[Search Engine] Rate limited for ${engine}, waiting ${rateLimitResult.waitTimeMs}ms (reason: ${rateLimitResult.reason})`);
+        
+        // Wait for rate limit (with 30 second timeout)
+        try {
+          await this.rateLimiter.waitForLimit(engine, 30000);
+        } catch (error) {
+          throw new Error(`Rate limit timeout for ${engine}: ${sanitizeErrorMessage(error)}`);
+        }
       }
-      throw error;
+      
+      // Record request start
+      this.rateLimiter.startRequest(engine);
+    }
+
+    try {
+      const cb = this.circuitBreakers.get(engine);
+      
+      // If circuit breaker is disabled or not found, execute directly
+      if (!this.circuitBreakerEnabled || !cb) {
+        return await this.executor.performSearch(view, keyword, engine);
+      }
+      
+      // Performance tracking done internally by circuit breaker
+      try {
+        const results = await cb.execute(
+          () => this.executor.performSearch(view, keyword, engine),
+          { throwOnReject: true }
+        );
+        return results;
+      } catch (error) {
+        if (error instanceof CircuitBreakerOpenError) {
+          console.warn(`[Search Engine] Circuit breaker OPEN for ${engine}, search rejected`);
+        }
+        throw error;
+      }
+    } finally {
+      // Always record request end for rate limiting
+      if (this.rateLimitingEnabled) {
+        this.rateLimiter.endRequest(engine);
+      }
     }
   }
 
@@ -342,5 +399,68 @@ export class SearchEngineAutomation {
       cb.destroy();
     }
     this.circuitBreakers.clear();
+  }
+
+  // ============================================================================
+  // RATE LIMITER INTEGRATION (P2 Security)
+  // ============================================================================
+
+  /**
+   * Check if rate limiting is enabled
+   */
+  isRateLimitingEnabled(): boolean {
+    return this.rateLimitingEnabled;
+  }
+
+  /**
+   * Get rate limit status for all engines
+   */
+  getRateLimitStatus(): Record<SearchEngine, {
+    activeRequests: number;
+    tokensAvailable: number;
+    lastRequestTime: number;
+  }> {
+    return this.rateLimiter.getStatus();
+  }
+
+  /**
+   * Get global rate limit status
+   */
+  getGlobalRateLimitStatus(): {
+    activeRequests: number;
+    tokensAvailable: number;
+  } {
+    return this.rateLimiter.getGlobalStatus();
+  }
+
+  /**
+   * Check if a search engine is currently rate limited
+   */
+  isRateLimited(engine: SearchEngine): boolean {
+    if (!this.rateLimitingEnabled) return false;
+    const result = this.rateLimiter.checkLimit(engine);
+    return !result.allowed;
+  }
+
+  /**
+   * Get estimated wait time for an engine (in ms)
+   */
+  getWaitTime(engine: SearchEngine): number {
+    const result = this.rateLimiter.checkLimit(engine);
+    return result.waitTimeMs;
+  }
+
+  /**
+   * Reset rate limits (use with caution)
+   */
+  resetRateLimits(): void {
+    this.rateLimiter.reset();
+  }
+
+  /**
+   * Update rate limit configuration for an engine
+   */
+  updateRateLimitConfig(engine: SearchEngine, config: Partial<EngineRateLimitConfig>): void {
+    this.rateLimiter.updateEngineConfig(engine, config);
   }
 }

@@ -9,6 +9,7 @@
 
 export type CredentialType = 
   | 'proxy_auth' 
+  | 'proxy_password'  // REC-001: Migrated proxy passwords
   | 'api_key' 
   | 'oauth_token' 
   | 'certificate' 

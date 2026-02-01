@@ -13,6 +13,7 @@ import type { DatabaseManager } from '../../database';
 import { setupPrivacyHandlers } from './privacy';
 import { setupAutomationHandlers } from './automation';
 import { setupNavigationHandlers } from './navigation';
+import { setupTabHandlers } from './tabs';
 import { 
   ProxyConfigSchema, 
   ProxyIdSchema, 
@@ -40,6 +41,7 @@ export function setupIpcHandlers(context: HandlerContext) {
   setupPrivacyHandlers(privacyManager);
   setupAutomationHandlers(automationManager);
   setupNavigationHandlers(tabManager);
+  setupTabHandlers(tabManager, proxyManager);
 
   // Proxy Management Handlers
   ipcMain.handle(IPC_CHANNELS.PROXY_ADD, async (_event, config) => {

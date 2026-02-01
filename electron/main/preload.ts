@@ -27,17 +27,22 @@ const IPC_INVOKE_WHITELIST = new Set([
   IPC_CHANNELS.TAB_UPDATE,
   IPC_CHANNELS.TAB_LIST,
   IPC_CHANNELS.TAB_NAVIGATE,
+  IPC_CHANNELS.TAB_ASSIGN_PROXY,
   'tab:go-back',
   'tab:go-forward',
   'tab:reload',
   IPC_CHANNELS.PRIVACY_SET_FINGERPRINT,
   IPC_CHANNELS.PRIVACY_TOGGLE_WEBRTC,
   IPC_CHANNELS.PRIVACY_TOGGLE_TRACKER_BLOCKING,
+  IPC_CHANNELS.PRIVACY_GET_STATS,
   IPC_CHANNELS.AUTOMATION_START_SEARCH,
   IPC_CHANNELS.AUTOMATION_STOP_SEARCH,
   IPC_CHANNELS.AUTOMATION_ADD_KEYWORD,
   IPC_CHANNELS.AUTOMATION_ADD_DOMAIN,
   IPC_CHANNELS.AUTOMATION_GET_TASKS,
+  IPC_CHANNELS.AUTOMATION_SCHEDULE,
+  IPC_CHANNELS.AUTOMATION_PAUSE,
+  IPC_CHANNELS.AUTOMATION_RESUME,
   IPC_CHANNELS.SESSION_SAVE,
   IPC_CHANNELS.SESSION_LOAD,
   IPC_CHANNELS.SESSION_LIST,
@@ -101,6 +106,8 @@ contextBridge.exposeInMainWorld('api', {
     update: (id: string, updates: unknown) => secureInvoke(IPC_CHANNELS.TAB_UPDATE, id, updates),
     list: () => secureInvoke(IPC_CHANNELS.TAB_LIST),
     navigate: (id: string, url: string) => secureInvoke(IPC_CHANNELS.TAB_NAVIGATE, id, url),
+    assignProxy: (tabId: string, proxyId: string | null) => 
+      secureInvoke(IPC_CHANNELS.TAB_ASSIGN_PROXY, tabId, proxyId),
     goBack: (id: string) => secureInvoke('tab:go-back', id),
     goForward: (id: string) => secureInvoke('tab:go-forward', id),
     reload: (id: string) => secureInvoke('tab:reload', id)
@@ -111,7 +118,8 @@ contextBridge.exposeInMainWorld('api', {
     setFingerprint: (config: unknown) => secureInvoke(IPC_CHANNELS.PRIVACY_SET_FINGERPRINT, config),
     toggleWebRTC: (enabled: boolean) => secureInvoke(IPC_CHANNELS.PRIVACY_TOGGLE_WEBRTC, enabled),
     toggleTrackerBlocking: (enabled: boolean) => 
-      secureInvoke(IPC_CHANNELS.PRIVACY_TOGGLE_TRACKER_BLOCKING, enabled)
+      secureInvoke(IPC_CHANNELS.PRIVACY_TOGGLE_TRACKER_BLOCKING, enabled),
+    getStats: (tabId?: string) => secureInvoke(IPC_CHANNELS.PRIVACY_GET_STATS, tabId)
   },
 
   // Automation
@@ -122,7 +130,10 @@ contextBridge.exposeInMainWorld('api', {
       secureInvoke(IPC_CHANNELS.AUTOMATION_ADD_KEYWORD, sessionId, keyword),
     addDomain: (domain: string, pattern?: string) => 
       secureInvoke(IPC_CHANNELS.AUTOMATION_ADD_DOMAIN, domain, pattern),
-    getTasks: (sessionId: string) => secureInvoke(IPC_CHANNELS.AUTOMATION_GET_TASKS, sessionId)
+    getTasks: (sessionId: string) => secureInvoke(IPC_CHANNELS.AUTOMATION_GET_TASKS, sessionId),
+    schedule: (config: unknown) => secureInvoke(IPC_CHANNELS.AUTOMATION_SCHEDULE, config),
+    pause: (sessionId: string) => secureInvoke(IPC_CHANNELS.AUTOMATION_PAUSE, sessionId),
+    resume: (sessionId: string) => secureInvoke(IPC_CHANNELS.AUTOMATION_RESUME, sessionId)
   },
 
   // Session Management
@@ -209,6 +220,7 @@ export interface SecureAPI {
     update: (id: string, updates: unknown) => Promise<unknown>;
     list: () => Promise<unknown>;
     navigate: (id: string, url: string) => Promise<unknown>;
+    assignProxy: (tabId: string, proxyId: string | null) => Promise<unknown>;
     goBack: (id: string) => Promise<unknown>;
     goForward: (id: string) => Promise<unknown>;
     reload: (id: string) => Promise<unknown>;
@@ -217,6 +229,7 @@ export interface SecureAPI {
     setFingerprint: (config: unknown) => Promise<unknown>;
     toggleWebRTC: (enabled: boolean) => Promise<unknown>;
     toggleTrackerBlocking: (enabled: boolean) => Promise<unknown>;
+    getStats: (tabId?: string) => Promise<unknown>;
   };
   automation: {
     startSearch: (config: unknown) => Promise<unknown>;
@@ -224,6 +237,9 @@ export interface SecureAPI {
     addKeyword: (sessionId: string, keyword: string) => Promise<unknown>;
     addDomain: (domain: string, pattern?: string) => Promise<unknown>;
     getTasks: (sessionId: string) => Promise<unknown>;
+    schedule: (config: unknown) => Promise<unknown>;
+    pause: (sessionId: string) => Promise<unknown>;
+    resume: (sessionId: string) => Promise<unknown>;
   };
   session: {
     save: (name: string) => Promise<unknown>;

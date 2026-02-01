@@ -36,137 +36,180 @@ export interface AutomationSession {
   };
 }
 
-interface AutomationState {
-  sessions: AutomationSession[];
-  activeSessionId: string | null;
+/** Configuration required to start a new automation session */
+interface SessionStartConfig {
+  engine: SearchEngine;
   keywords: string[];
   targetDomains: string[];
-  selectedEngine: SearchEngine;
-  
-  // Actions
-  startSession: (config: { engine: SearchEngine; keywords: string[]; targetDomains: string[] }) => Promise<void>;
-  stopSession: (id: string) => Promise<void>;
-  pauseSession: (id: string) => Promise<void>;
-  resumeSession: (id: string) => Promise<void>;
-  addKeyword: (keyword: string) => void;
-  removeKeyword: (keyword: string) => void;
-  addTargetDomain: (domain: string) => Promise<void>;
-  removeTargetDomain: (domain: string) => void;
-  setEngine: (engine: SearchEngine) => void;
-  getActiveSession: () => AutomationSession | undefined;
-  clearKeywords: () => void;
-  clearTargetDomains: () => void;
 }
 
-export const useAutomationStore = create<AutomationState>((set, get) => ({
-  sessions: [],
-  activeSessionId: null,
-  keywords: [],
-  targetDomains: [],
-  selectedEngine: 'google',
+interface AutomationState {
+  // State
+  sessionList: AutomationSession[];
+  currentActiveSessionId: string | null;
+  keywordQueue: string[];
+  targetDomainList: string[];
+  selectedSearchEngine: SearchEngine;
+  
+  // Actions - Session Lifecycle
+  startNewSession: (config: SessionStartConfig) => Promise<void>;
+  stopSessionById: (sessionId: string) => Promise<void>;
+  pauseSessionById: (sessionId: string) => Promise<void>;
+  resumeSessionById: (sessionId: string) => Promise<void>;
+  
+  // Actions - Keyword Management
+  addKeywordToQueue: (keyword: string) => void;
+  removeKeywordFromQueue: (keyword: string) => void;
+  clearAllKeywords: () => void;
+  
+  // Actions - Domain Management
+  addTargetDomainToList: (domain: string) => Promise<void>;
+  removeTargetDomainFromList: (domain: string) => void;
+  clearAllTargetDomains: () => void;
+  
+  // Actions - Configuration
+  setSelectedSearchEngine: (engine: SearchEngine) => void;
+  
+  // Selectors
+  selectCurrentActiveSession: () => AutomationSession | undefined;
+}
 
-  startSession: async (config) => {
+/** Session status constants for type safety */
+const SESSION_STATUS = {
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  STOPPED: 'stopped',
+} as const;
+
+export const useAutomationStore = create<AutomationState>((set, get) => ({
+  sessionList: [],
+  currentActiveSessionId: null,
+  keywordQueue: [],
+  targetDomainList: [],
+  selectedSearchEngine: 'google',
+
+  startNewSession: async (config) => {
     try {
       const result = await window.api.automation.startSearch(config) as { success: boolean; session?: AutomationSession };
       
       if (result.success && result.session) {
+        const createdSession = result.session;
         set((state) => ({
-          sessions: [...state.sessions, result.session as AutomationSession],
-          activeSessionId: (result.session as AutomationSession).id
+          sessionList: [...state.sessionList, createdSession],
+          currentActiveSessionId: createdSession.id
         }));
       }
     } catch (error) {
-      console.error('Failed to start session:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[AutomationStore] Failed to start new session:', errorMessage);
     }
   },
 
-  stopSession: async (id) => {
+  stopSessionById: async (sessionId) => {
     try {
-      const result = await window.api.automation.stopSearch(id) as { success: boolean };
+      const result = await window.api.automation.stopSearch(sessionId) as { success: boolean };
       
       if (result.success) {
         set((state) => ({
-          sessions: state.sessions.map(s =>
-            s.id === id ? { ...s, status: 'stopped' as const } : s
+          sessionList: state.sessionList.map(session =>
+            session.id === sessionId 
+              ? { ...session, status: SESSION_STATUS.STOPPED } 
+              : session
           ),
-          activeSessionId: state.activeSessionId === id ? null : state.activeSessionId
+          currentActiveSessionId: state.currentActiveSessionId === sessionId 
+            ? null 
+            : state.currentActiveSessionId
         }));
       }
     } catch (error) {
-      console.error('Failed to stop session:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[AutomationStore] Failed to stop session:', errorMessage, { sessionId });
     }
   },
 
-  pauseSession: async (id) => {
+  pauseSessionById: async (sessionId) => {
     set((state) => ({
-      sessions: state.sessions.map(s =>
-        s.id === id ? { ...s, status: 'paused' as const } : s
+      sessionList: state.sessionList.map(session =>
+        session.id === sessionId 
+          ? { ...session, status: SESSION_STATUS.PAUSED } 
+          : session
       )
     }));
   },
 
-  resumeSession: async (id) => {
+  resumeSessionById: async (sessionId) => {
     set((state) => ({
-      sessions: state.sessions.map(s =>
-        s.id === id ? { ...s, status: 'active' as const } : s
+      sessionList: state.sessionList.map(session =>
+        session.id === sessionId 
+          ? { ...session, status: SESSION_STATUS.ACTIVE } 
+          : session
       )
     }));
   },
 
-  addKeyword: (keyword) => {
-    const trimmed = keyword.trim();
-    if (!trimmed) {return;}
+  addKeywordToQueue: (keyword) => {
+    const trimmedKeyword = keyword.trim();
+    const isEmptyKeyword = !trimmedKeyword;
+    if (isEmptyKeyword) { return; }
     
+    set((state) => {
+      const isDuplicate = state.keywordQueue.includes(trimmedKeyword);
+      return {
+        keywordQueue: isDuplicate
+          ? state.keywordQueue
+          : [...state.keywordQueue, trimmedKeyword]
+      };
+    });
+  },
+
+  removeKeywordFromQueue: (keywordToRemove) => {
     set((state) => ({
-      keywords: state.keywords.includes(trimmed)
-        ? state.keywords
-        : [...state.keywords, trimmed]
+      keywordQueue: state.keywordQueue.filter(keyword => keyword !== keywordToRemove)
     }));
   },
 
-  removeKeyword: (keyword) => {
-    set((state) => ({
-      keywords: state.keywords.filter(k => k !== keyword)
-    }));
-  },
-
-  addTargetDomain: async (domain) => {
-    const trimmed = domain.trim();
-    if (!trimmed) {return;}
+  addTargetDomainToList: async (domain) => {
+    const trimmedDomain = domain.trim();
+    const isEmptyDomain = !trimmedDomain;
+    if (isEmptyDomain) { return; }
     
     try {
-      await window.api.automation.addDomain(trimmed);
+      await window.api.automation.addDomain(trimmedDomain);
       
-      set((state) => ({
-        targetDomains: state.targetDomains.includes(trimmed)
-          ? state.targetDomains
-          : [...state.targetDomains, trimmed]
-      }));
+      set((state) => {
+        const isDuplicate = state.targetDomainList.includes(trimmedDomain);
+        return {
+          targetDomainList: isDuplicate
+            ? state.targetDomainList
+            : [...state.targetDomainList, trimmedDomain]
+        };
+      });
     } catch (error) {
-      console.error('Failed to add domain:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[AutomationStore] Failed to add target domain:', errorMessage, { domain: trimmedDomain });
     }
   },
 
-  removeTargetDomain: (domain) => {
+  removeTargetDomainFromList: (domainToRemove) => {
     set((state) => ({
-      targetDomains: state.targetDomains.filter(d => d !== domain)
+      targetDomainList: state.targetDomainList.filter(domain => domain !== domainToRemove)
     }));
   },
 
-  setEngine: (engine) => {
-    set({ selectedEngine: engine });
+  setSelectedSearchEngine: (engine) => {
+    set({ selectedSearchEngine: engine });
   },
 
-  getActiveSession: () => {
+  selectCurrentActiveSession: () => {
     const state = get();
-    return state.sessions.find(s => s.id === state.activeSessionId);
+    return state.sessionList.find(session => session.id === state.currentActiveSessionId);
   },
 
-  clearKeywords: () => {
-    set({ keywords: [] });
+  clearAllKeywords: () => {
+    set({ keywordQueue: [] });
   },
 
-  clearTargetDomains: () => {
-    set({ targetDomains: [] });
+  clearAllTargetDomains: () => {
+    set({ targetDomainList: [] });
   }
 }));

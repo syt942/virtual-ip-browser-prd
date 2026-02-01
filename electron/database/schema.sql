@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS proxies (
   protocol TEXT NOT NULL CHECK (protocol IN ('http', 'https', 'socks4', 'socks5')),
   username TEXT,
   password TEXT,
+  credential_id TEXT,
   status TEXT DEFAULT 'checking' CHECK (status IN ('active', 'failed', 'checking', 'disabled')),
   latency INTEGER,
   last_checked DATETIME,
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS proxies (
 
 CREATE INDEX IF NOT EXISTS idx_proxies_status ON proxies(status);
 CREATE INDEX IF NOT EXISTS idx_proxies_region ON proxies(region);
+CREATE INDEX IF NOT EXISTS idx_proxies_credential_id ON proxies(credential_id);
 
 -- Search Tasks Table
 CREATE TABLE IF NOT EXISTS search_tasks (

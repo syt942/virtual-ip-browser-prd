@@ -74,7 +74,6 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
 // ============================================================
 
 import { BorderBeam } from '../../../src/components/ui/border-beam';
-import { AnimatedList } from '../../../src/components/ui/animated-list';
 import { NeonGradientCard } from '../../../src/components/ui/neon-gradient-card';
 import { Particles } from '../../../src/components/ui/particles';
 import { AnimatedGradientText } from '../../../src/components/ui/animated-gradient-text';
@@ -109,21 +108,6 @@ describe('Animation Overhead Tests', () => {
 
       const avgTime = times.reduce((a, b) => a + b, 0) / iterations;
       expect(avgTime).toBeLessThan(100);
-    });
-
-    it('AnimatedList renders under 100ms with 50 items', () => {
-      const items = Array.from({ length: 50 }, (_, i) => (
-        <div key={i}>Item {i}</div>
-      ));
-
-      const start = performance.now();
-      const { unmount } = render(
-        <AnimatedList animated={false}>{items}</AnimatedList>
-      );
-      const renderTime = performance.now() - start;
-
-      expect(renderTime).toBeLessThan(100);
-      unmount();
     });
 
     it('NeonGradientCard renders under 100ms', () => {
@@ -185,25 +169,6 @@ describe('Animation Overhead Tests', () => {
       expect(totalTime).toBeLessThan(500);
     });
 
-    it('AnimatedList handles item updates efficiently', () => {
-      const { rerender } = render(
-        <AnimatedList animated={false}>
-          <div key="1">Item 1</div>
-        </AnimatedList>
-      );
-
-      const start = performance.now();
-      for (let i = 0; i < 50; i++) {
-        const items = Array.from({ length: i + 1 }, (_, j) => (
-          <div key={j}>Item {j}</div>
-        ));
-        rerender(<AnimatedList animated={false}>{items}</AnimatedList>);
-      }
-      const totalTime = performance.now() - start;
-
-      // Growing list 50 times should complete in under 1000ms (allowing for CI variance)
-      expect(totalTime).toBeLessThan(1000);
-    });
   });
 });
 
@@ -222,27 +187,6 @@ describe('Memory Leak Prevention', () => {
     
     // Should not throw and should clean up properly
     expect(() => unmount()).not.toThrow();
-  });
-
-  it('AnimatedList cleans up timers on unmount', () => {
-    vi.useFakeTimers();
-    
-    const { unmount } = render(
-      <AnimatedList delay={1000}>
-        <div key="1">Item 1</div>
-        <div key="2">Item 2</div>
-      </AnimatedList>
-    );
-
-    // Unmount before timer fires
-    expect(() => unmount()).not.toThrow();
-    
-    // Advance timer - should not cause errors
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-
-    vi.useRealTimers();
   });
 
   it('Particles cleans up animation frame on unmount', () => {
@@ -285,9 +229,6 @@ describe('Memory Leak Prevention', () => {
       const { unmount } = render(
         <div>
           <BorderBeam />
-          <AnimatedList animated={false}>
-            <div key="1">Item</div>
-          </AnimatedList>
           <NeonGradientCard>Card</NeonGradientCard>
         </div>
       );
@@ -352,28 +293,6 @@ describe('CPU Usage Optimization', () => {
     vi.useRealTimers();
   });
 
-  it('AnimatedList stops animation timer after all items shown', async () => {
-    const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
-    
-    render(
-      <AnimatedList delay={100}>
-        <div key="1">Item 1</div>
-        <div key="2">Item 2</div>
-      </AnimatedList>
-    );
-
-    // Count initial setTimeout calls
-    const initialCalls = setTimeoutSpy.mock.calls.length;
-
-    // Advance past all animations
-    act(() => {
-      vi.advanceTimersByTime(500);
-    });
-
-    // No new timers should be set after all items are shown
-    // (implementation should stop setting timers)
-  });
-
   it('Particles respects staticity for reduced calculations', () => {
     // Higher staticity = less frequent position updates
     render(<Particles staticity={100} />);
@@ -410,7 +329,6 @@ describe('Performance Benchmark Summary', () => {
      * 
      * Initial Render Times (target < 100ms each):
      * - BorderBeam: ~5-10ms
-     * - AnimatedList (50 items): ~20-50ms
      * - NeonGradientCard: ~5-15ms
      * - Particles (100): ~30-50ms
      * - AnimatedGradientText: ~2-5ms

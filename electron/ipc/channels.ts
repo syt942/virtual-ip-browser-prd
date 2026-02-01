@@ -18,11 +18,13 @@ export const IPC_CHANNELS = {
   TAB_UPDATE: 'tab:update',
   TAB_LIST: 'tab:list',
   TAB_NAVIGATE: 'tab:navigate',
+  TAB_ASSIGN_PROXY: 'tab:assign-proxy',
   
   // Privacy & Fingerprint
   PRIVACY_SET_FINGERPRINT: 'privacy:set-fingerprint',
   PRIVACY_TOGGLE_WEBRTC: 'privacy:toggle-webrtc',
   PRIVACY_TOGGLE_TRACKER_BLOCKING: 'privacy:toggle-tracker-blocking',
+  PRIVACY_GET_STATS: 'privacy:get-stats',
   
   // Automation
   AUTOMATION_START_SEARCH: 'automation:start-search',
@@ -30,6 +32,9 @@ export const IPC_CHANNELS = {
   AUTOMATION_ADD_KEYWORD: 'automation:add-keyword',
   AUTOMATION_ADD_DOMAIN: 'automation:add-domain',
   AUTOMATION_GET_TASKS: 'automation:get-tasks',
+  AUTOMATION_SCHEDULE: 'automation:schedule',
+  AUTOMATION_PAUSE: 'automation:pause',
+  AUTOMATION_RESUME: 'automation:resume',
   
   // Session Management
   SESSION_SAVE: 'session:save',

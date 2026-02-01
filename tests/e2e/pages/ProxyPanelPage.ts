@@ -51,17 +51,25 @@ export class ProxyPanelPage extends BasePage {
 
   /**
    * Open the proxy panel
+   * Note: Panel may already be open by default, so check visibility first
    */
   async openPanel(): Promise<void> {
-    await this.panelButton.click();
+    const isVisible = await this.panel.isVisible();
+    if (!isVisible) {
+      await this.panelButton.click();
+    }
     await expect(this.panel).toBeVisible();
   }
 
   /**
    * Close the proxy panel
+   * Note: Only click if panel is currently visible
    */
   async closePanel(): Promise<void> {
-    await this.panelButton.click();
+    const isVisible = await this.panel.isVisible();
+    if (isVisible) {
+      await this.panelButton.click();
+    }
     await expect(this.panel).not.toBeVisible();
   }
 

@@ -18,6 +18,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] - 2025-02-01
+
+### Documentation & Security Hardening Release
+
+This release focuses on comprehensive documentation updates, security hardening, and dead code cleanup.
+
+### Added
+
+#### Documentation Overhaul
+- **Updated:** `docs/CODEMAPS/INDEX.md` - Complete architecture overview with dependency graph
+- **Updated:** `README.md` - Current features, installation, quick start guide
+- **Updated:** `docs/ARCHITECTURE.md` - IPC handlers, security headers, TLS validation
+- **Updated:** `docs/SECURITY.md` - CSP, HSTS, certificate pinning, rate limiting
+- **Updated:** `TESTING.md` - Current test structure (2,850+ tests)
+- **New:** `docs/DOCUMENTATION_UPDATES.md` - Change tracking for documentation
+
+#### Security Headers Implementation
+- **CSP Headers**: Strict Content Security Policy via `webRequest.onHeadersReceived`
+  - `default-src 'self'`
+  - `script-src 'self'` (no unsafe-eval)
+  - `frame-ancestors 'none'` (clickjacking protection)
+  - `object-src 'none'` (plugin blocking)
+- **HSTS**: HTTP Strict Transport Security with 1-year max-age
+- **Additional Headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy
+
+#### TLS Validation
+- Block insecure content in HTTPS pages (`allowRunningInsecureContent: false`)
+- Strict transport security enforcement
+- Server/X-Powered-By header removal
+
+### Changed
+
+#### IPC Security Enhancements
+- Added per-channel rate limiting with configurable thresholds
+- Enhanced Zod validation schemas with SSRF protection
+- XSS pattern detection in all text inputs
+- ReDoS-safe regex compilation for domain patterns
+- Channel whitelist enforcement
+
+#### Test Coverage Expansion
+- Total tests: 2,850+ (up from 2,500)
+- 92 test files across unit, integration, and E2E
+- Added security validation tests
+- Added IPC handler tests
+
+### Fixed
+
+#### Dead Code Removal
+- Removed 15+ unused utility functions
+- Cleaned up orphaned type definitions
+- Removed deprecated API handlers
+- Consolidated duplicate validation logic
+
+#### Security Fixes
+- Fixed potential SSRF via private IP blocking
+- Fixed XSS vectors in keyword/domain inputs
+- Fixed ReDoS vulnerability in pattern matching
+- Added rate limiting to prevent DoS attacks
+
+### Documentation
+
+- All codemaps regenerated from current codebase
+- API documentation updated with request/response schemas
+- Security documentation expanded with implementation details
+- Testing documentation updated with current test counts
+
+---
+
 ## [1.3.0] - 2025-01-31
 
 ### Security & Performance Release

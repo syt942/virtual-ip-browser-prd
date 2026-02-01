@@ -74,7 +74,6 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
 // ============================================================
 
 import { BorderBeam } from '../../src/components/ui/border-beam';
-import { AnimatedList } from '../../src/components/ui/animated-list';
 import { NeonGradientCard } from '../../src/components/ui/neon-gradient-card';
 import { Particles } from '../../src/components/ui/particles';
 import { AnimatedGradientText } from '../../src/components/ui/animated-gradient-text';
@@ -115,12 +114,6 @@ describe('Magic UI Components Integration', () => {
             <BorderBeam size={40} />
           </div>
           
-          {/* Activity Log with AnimatedList */}
-          <AnimatedList delay={500}>
-            <div key="1">Log entry 1</div>
-            <div key="2">Log entry 2</div>
-          </AnimatedList>
-          
           {/* Creator Card with NeonGradientCard */}
           <NeonGradientCard>
             <h2>Support Creator</h2>
@@ -140,7 +133,6 @@ describe('Magic UI Components Integration', () => {
       expect(screen.getByText('Virtual IP Browser')).toBeInTheDocument();
       expect(screen.getByText('Support Creator')).toBeInTheDocument();
       expect(screen.getByText('Click Me')).toBeInTheDocument();
-      expect(screen.getByText('Log entry 1')).toBeInTheDocument();
       expect(container).toBeInTheDocument();
     });
   });
@@ -198,27 +190,21 @@ describe('Magic UI Components Integration', () => {
     it('coordinates multiple animation timings', async () => {
       const CoordinatedAnimations = () => (
         <div>
-          <AnimatedList delay={100} data-testid="list">
-            <div key="1">Item 1</div>
-            <div key="2">Item 2</div>
-          </AnimatedList>
           <div style={{ position: 'relative' }}>
             <BorderBeam duration={2} />
           </div>
+          <NeonGradientCard>Content</NeonGradientCard>
         </div>
       );
 
       render(<CoordinatedAnimations />);
-      
-      // Initial state
-      expect(screen.getByText('Item 1')).toBeInTheDocument();
       
       // After delay
       await act(async () => {
         vi.advanceTimersByTime(200);
       });
       
-      expect(screen.getByText('Item 2')).toBeInTheDocument();
+      expect(screen.getByText('Content')).toBeInTheDocument();
     });
   });
 
@@ -226,10 +212,6 @@ describe('Magic UI Components Integration', () => {
     it('disables all animations via global setting', () => {
       const AnimationsDisabledPage = ({ animationsEnabled }: { animationsEnabled: boolean }) => (
         <div>
-          <AnimatedList animated={animationsEnabled} data-testid="list">
-            <div key="1">Item 1</div>
-            <div key="2">Item 2</div>
-          </AnimatedList>
           <NeonGradientCard animated={animationsEnabled}>
             Card Content
           </NeonGradientCard>
@@ -246,9 +228,7 @@ describe('Magic UI Components Integration', () => {
       // With animations disabled
       rerender(<AnimationsDisabledPage animationsEnabled={false} />);
       expect(queryByTestId('particles-container')).not.toBeInTheDocument();
-      // AnimatedList should show all items immediately
-      expect(screen.getByText('Item 1')).toBeInTheDocument();
-      expect(screen.getByText('Item 2')).toBeInTheDocument();
+      expect(screen.getByText('Card Content')).toBeInTheDocument();
     });
   });
 });
@@ -264,7 +244,6 @@ describe('Bundle Size Considerations', () => {
     
     // Each component should be independently importable
     expect(BorderBeam).toBeDefined();
-    expect(AnimatedList).toBeDefined();
     expect(NeonGradientCard).toBeDefined();
     expect(Particles).toBeDefined();
     expect(AnimatedGradientText).toBeDefined();
@@ -306,19 +285,14 @@ describe('Global Reduced Motion Support', () => {
 
     const ReducedMotionPage = () => (
       <div>
-        <AnimatedList data-testid="list">
-          <div key="1">Item 1</div>
-          <div key="2">Item 2</div>
-        </AnimatedList>
         <NeonGradientCard>Content</NeonGradientCard>
+        <BorderBeam />
       </div>
     );
 
     render(<ReducedMotionPage />);
     
     // Components should render without motion
-    expect(screen.getByText('Item 1')).toBeInTheDocument();
-    expect(screen.getByText('Item 2')).toBeInTheDocument(); // All visible immediately
     expect(screen.getByText('Content')).toBeInTheDocument();
   });
 });
@@ -333,13 +307,11 @@ describe('Error Handling', () => {
   });
 
   it('components handle missing refs gracefully', () => {
-    // AnimatedBeam with null refs shouldn't crash
+    // Components with missing refs shouldn't crash
     const TestComponent = () => (
       <div>
         <BorderBeam />
-        <AnimatedList>
-          <div key="1">Safe content</div>
-        </AnimatedList>
+        <NeonGradientCard>Safe content</NeonGradientCard>
       </div>
     );
 

@@ -7,6 +7,7 @@
  * - Input validation for host, port, and protocol
  * - URL-encoded credentials to prevent injection
  * - DNS rebinding protection
+ * - TLS certificate validation for secure proxy connections (MEDIUM-001)
  */
 
 import type { ProxyConfig, ProxyValidationResult, ProxyInput } from './types';
@@ -14,6 +15,8 @@ import { buildSecureProxyUrl, CredentialStore } from './credential-store';
 // DecryptedCredentials type is inferred from CredentialStore.decrypt()
 import * as net from 'net';
 import * as dns from 'dns';
+import * as tls from 'tls';
+import * as crypto from 'crypto';
 import { promisify } from 'util';
 import {
   PROXY_VALIDATION_TIMEOUT_MS,
@@ -60,11 +63,69 @@ export interface SSRFConfig {
   allowedHosts?: string[];
 }
 
+/**
+ * TLS Certificate validation configuration (MEDIUM-001)
+ */
+export interface TLSValidationConfig {
+  /** Enable TLS certificate validation (default: true) */
+  enabled: boolean;
+  /** Allow self-signed certificates (only for development) */
+  allowSelfSigned: boolean;
+  /** Minimum TLS version to accept */
+  minTLSVersion: 'TLSv1.2' | 'TLSv1.3';
+  /** Certificate pinning: map of hostname to expected certificate fingerprints (SHA-256) */
+  pinnedCertificates: Map<string, string[]>;
+  /** Connection timeout for TLS validation (ms) */
+  timeout: number;
+  /** Reject expired certificates */
+  rejectExpired: boolean;
+  /** Check certificate revocation (OCSP) - may add latency */
+  checkRevocation: boolean;
+}
+
+/**
+ * TLS validation result
+ */
+export interface TLSValidationResult {
+  valid: boolean;
+  error?: string;
+  certificate?: {
+    subject: string;
+    issuer: string;
+    validFrom: Date;
+    validTo: Date;
+    fingerprint: string;
+    serialNumber: string;
+  };
+  tlsVersion?: string;
+  cipher?: string;
+}
+
 const DEFAULT_SSRF_CONFIG: SSRFConfig = {
   blockLocalhost: true,
   blockPrivateIPs: true,
   blockLinkLocal: true,
   blockMulticast: true
+};
+
+const DEFAULT_TLS_CONFIG: TLSValidationConfig = {
+  enabled: true,
+  allowSelfSigned: false,
+  minTLSVersion: 'TLSv1.2',
+  pinnedCertificates: new Map(),
+  timeout: 10000,
+  rejectExpired: true,
+  checkRevocation: false // Disabled by default due to latency
+};
+
+/**
+ * Known proxy provider certificate fingerprints for certificate pinning
+ * These are SHA-256 fingerprints of the certificates
+ */
+export const KNOWN_PROXY_PROVIDER_PINS: Record<string, string[]> = {
+  // Example entries - actual fingerprints would be obtained from providers
+  // 'proxy.luminati.io': ['sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
+  // 'proxy.smartproxy.com': ['sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB='],
 };
 
 export class ProxyValidator {
@@ -75,11 +136,31 @@ export class ProxyValidator {
   ];
 
   private ssrfConfig: SSRFConfig;
+  private tlsConfig: TLSValidationConfig;
   private credentialStore?: CredentialStore;
 
-  constructor(ssrfConfig: SSRFConfig = DEFAULT_SSRF_CONFIG, credentialStore?: CredentialStore) {
+  constructor(
+    ssrfConfig: SSRFConfig = DEFAULT_SSRF_CONFIG, 
+    credentialStore?: CredentialStore,
+    tlsConfig: Partial<TLSValidationConfig> = {}
+  ) {
     this.ssrfConfig = ssrfConfig;
     this.credentialStore = credentialStore;
+    this.tlsConfig = { ...DEFAULT_TLS_CONFIG, ...tlsConfig };
+    
+    // Initialize pinned certificates from known providers
+    this.initializeCertificatePins();
+  }
+
+  /**
+   * Initialize certificate pins from known proxy providers
+   */
+  private initializeCertificatePins(): void {
+    for (const [host, pins] of Object.entries(KNOWN_PROXY_PROVIDER_PINS)) {
+      if (!this.tlsConfig.pinnedCertificates.has(host)) {
+        this.tlsConfig.pinnedCertificates.set(host, pins);
+      }
+    }
   }
 
   /**
@@ -87,6 +168,250 @@ export class ProxyValidator {
    */
   setCredentialStore(store: CredentialStore): void {
     this.credentialStore = store;
+  }
+
+  /**
+   * Update TLS validation configuration
+   */
+  setTLSConfig(config: Partial<TLSValidationConfig>): void {
+    this.tlsConfig = { ...this.tlsConfig, ...config };
+  }
+
+  /**
+   * Get current TLS configuration
+   */
+  getTLSConfig(): TLSValidationConfig {
+    return { ...this.tlsConfig };
+  }
+
+  /**
+   * Add a certificate pin for a specific host
+   */
+  addCertificatePin(host: string, fingerprint: string): void {
+    const existing = this.tlsConfig.pinnedCertificates.get(host) || [];
+    if (!existing.includes(fingerprint)) {
+      this.tlsConfig.pinnedCertificates.set(host, [...existing, fingerprint]);
+    }
+  }
+
+  /**
+   * Remove certificate pins for a host
+   */
+  removeCertificatePin(host: string): void {
+    this.tlsConfig.pinnedCertificates.delete(host);
+  }
+
+  /**
+   * Validate TLS certificate for a proxy connection (MEDIUM-001)
+   * 
+   * This method performs comprehensive TLS validation including:
+   * - Certificate chain validation
+   * - Expiry checking
+   * - Certificate pinning (if configured)
+   * - Minimum TLS version enforcement
+   * 
+   * @param host - The proxy hostname
+   * @param port - The proxy port
+   * @returns TLS validation result with certificate details
+   */
+  async validateTLSCertificate(host: string, port: number): Promise<TLSValidationResult> {
+    if (!this.tlsConfig.enabled) {
+      return { valid: true };
+    }
+
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      
+      // Configure TLS options
+      const tlsOptions: tls.ConnectionOptions = {
+        host,
+        port,
+        servername: host, // SNI
+        rejectUnauthorized: !this.tlsConfig.allowSelfSigned,
+        minVersion: this.tlsConfig.minTLSVersion,
+        timeout: this.tlsConfig.timeout,
+        // Request full certificate chain
+        requestCert: true,
+      };
+
+      // Create TLS connection
+      const socket = tls.connect(tlsOptions, () => {
+        try {
+          const cert = socket.getPeerCertificate(true);
+          const cipher = socket.getCipher();
+          const tlsVersion = socket.getProtocol();
+
+          // Check if certificate was received
+          if (!cert || Object.keys(cert).length === 0) {
+            socket.destroy();
+            resolve({
+              valid: false,
+              error: 'No certificate received from server'
+            });
+            return;
+          }
+
+          // Extract certificate details
+          const certInfo = {
+            subject: typeof cert.subject === 'object' ? 
+              (cert.subject.CN || JSON.stringify(cert.subject)) : 
+              String(cert.subject || 'Unknown'),
+            issuer: typeof cert.issuer === 'object' ? 
+              (cert.issuer.CN || JSON.stringify(cert.issuer)) : 
+              String(cert.issuer || 'Unknown'),
+            validFrom: new Date(cert.valid_from),
+            validTo: new Date(cert.valid_to),
+            fingerprint: cert.fingerprint256 || cert.fingerprint || '',
+            serialNumber: cert.serialNumber || ''
+          };
+
+          // Check certificate expiry
+          if (this.tlsConfig.rejectExpired) {
+            const now = new Date();
+            if (now < certInfo.validFrom) {
+              socket.destroy();
+              resolve({
+                valid: false,
+                error: 'Certificate is not yet valid',
+                certificate: certInfo,
+                tlsVersion: tlsVersion || undefined,
+                cipher: cipher?.name
+              });
+              return;
+            }
+            if (now > certInfo.validTo) {
+              socket.destroy();
+              resolve({
+                valid: false,
+                error: 'Certificate has expired',
+                certificate: certInfo,
+                tlsVersion: tlsVersion || undefined,
+                cipher: cipher?.name
+              });
+              return;
+            }
+          }
+
+          // Check certificate pinning
+          const pinnedFingerprints = this.tlsConfig.pinnedCertificates.get(host);
+          if (pinnedFingerprints && pinnedFingerprints.length > 0) {
+            const certFingerprint = this.normalizeCertFingerprint(certInfo.fingerprint);
+            const isPinned = pinnedFingerprints.some(pin => 
+              this.normalizeCertFingerprint(pin) === certFingerprint
+            );
+            
+            if (!isPinned) {
+              socket.destroy();
+              resolve({
+                valid: false,
+                error: `Certificate fingerprint mismatch. Expected one of: ${pinnedFingerprints.join(', ')}`,
+                certificate: certInfo,
+                tlsVersion: tlsVersion || undefined,
+                cipher: cipher?.name
+              });
+              return;
+            }
+          }
+
+          // Check minimum TLS version
+          if (tlsVersion) {
+            const versionOrder = ['SSLv3', 'TLSv1', 'TLSv1.1', 'TLSv1.2', 'TLSv1.3'];
+            const minVersionIndex = versionOrder.indexOf(this.tlsConfig.minTLSVersion);
+            const actualVersionIndex = versionOrder.indexOf(tlsVersion);
+            
+            if (actualVersionIndex < minVersionIndex) {
+              socket.destroy();
+              resolve({
+                valid: false,
+                error: `TLS version ${tlsVersion} is below minimum required ${this.tlsConfig.minTLSVersion}`,
+                certificate: certInfo,
+                tlsVersion: tlsVersion,
+                cipher: cipher?.name
+              });
+              return;
+            }
+          }
+
+          socket.destroy();
+          resolve({
+            valid: true,
+            certificate: certInfo,
+            tlsVersion: tlsVersion || undefined,
+            cipher: cipher?.name
+          });
+
+        } catch (error) {
+          socket.destroy();
+          resolve({
+            valid: false,
+            error: `Certificate validation error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          });
+        }
+      });
+
+      // Handle connection errors
+      socket.on('error', (error: Error) => {
+        const errorMessage = error.message || 'Unknown TLS error';
+        
+        // Categorize common TLS errors
+        let detailedError = errorMessage;
+        if (errorMessage.includes('self signed')) {
+          detailedError = 'Self-signed certificate not allowed';
+        } else if (errorMessage.includes('expired')) {
+          detailedError = 'Certificate has expired';
+        } else if (errorMessage.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE')) {
+          detailedError = 'Unable to verify certificate chain';
+        } else if (errorMessage.includes('CERT_HAS_EXPIRED')) {
+          detailedError = 'Certificate has expired';
+        } else if (errorMessage.includes('DEPTH_ZERO_SELF_SIGNED_CERT')) {
+          detailedError = 'Self-signed certificate in certificate chain';
+        } else if (errorMessage.includes('ERR_TLS_CERT_ALTNAME_INVALID')) {
+          detailedError = 'Certificate hostname mismatch';
+        }
+
+        resolve({
+          valid: false,
+          error: detailedError
+        });
+      });
+
+      // Handle timeout
+      socket.setTimeout(this.tlsConfig.timeout, () => {
+        socket.destroy();
+        resolve({
+          valid: false,
+          error: `TLS connection timeout after ${this.tlsConfig.timeout}ms`
+        });
+      });
+    });
+  }
+
+  /**
+   * Normalize certificate fingerprint for comparison
+   */
+  private normalizeCertFingerprint(fingerprint: string): string {
+    // Remove common prefixes and normalize format
+    return fingerprint
+      .replace(/^sha256\//i, '')
+      .replace(/:/g, '')
+      .toUpperCase();
+  }
+
+  /**
+   * Calculate SHA-256 fingerprint of a certificate
+   */
+  calculateCertFingerprint(certPem: string): string {
+    // Remove PEM headers/footers and decode
+    const certBase64 = certPem
+      .replace(/-----BEGIN CERTIFICATE-----/g, '')
+      .replace(/-----END CERTIFICATE-----/g, '')
+      .replace(/\s/g, '');
+    
+    const certDer = Buffer.from(certBase64, 'base64');
+    const hash = crypto.createHash('sha256').update(certDer).digest('hex');
+    
+    // Format as colon-separated uppercase hex
+    return hash.toUpperCase().match(/.{2}/g)?.join(':') || hash.toUpperCase();
   }
 
   /**
@@ -428,6 +753,7 @@ export class ProxyValidator {
 
   /**
    * Validate a proxy by attempting connection
+   * Includes TLS certificate validation for HTTPS proxies (MEDIUM-001)
    */
   async validate(proxy: ProxyConfig): Promise<ProxyValidationResult> {
     const startTime = Date.now();
@@ -435,6 +761,18 @@ export class ProxyValidator {
     try {
       // Re-validate host security before connecting (DNS rebinding protection)
       await this.validateHostSecurity(proxy.host);
+
+      // For HTTPS proxies, validate TLS certificate first (MEDIUM-001)
+      if (proxy.protocol === 'https') {
+        const tlsResult = await this.validateTLSCertificate(proxy.host, proxy.port);
+        if (!tlsResult.valid) {
+          return {
+            success: false,
+            error: `TLS validation failed: ${tlsResult.error}`,
+            timestamp: new Date()
+          };
+        }
+      }
 
       const proxyUrl = await this.buildProxyUrl(proxy);
       

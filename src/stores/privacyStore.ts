@@ -38,23 +38,28 @@ export interface FingerprintProfile {
 }
 
 interface PrivacyState {
-  currentSettings: PrivacySettings;
-  profiles: FingerprintProfile[];
+  // State
+  currentPrivacySettings: PrivacySettings;
+  fingerprintProfileList: FingerprintProfile[];
   activeProfileId: string | null;
   
-  // Actions
-  updateSettings: (settings: Partial<PrivacySettings>) => Promise<void>;
-  toggleCanvas: () => void;
-  toggleWebGL: () => void;
-  toggleAudio: () => void;
-  toggleNavigator: () => void;
-  toggleTimezone: () => void;
-  toggleWebRTC: () => Promise<void>;
-  toggleTrackerBlocking: () => Promise<void>;
-  createProfile: (name: string, settings: PrivacySettings) => void;
-  deleteProfile: (id: string) => void;
-  activateProfile: (id: string) => void;
-  generateRandomProfile: () => void;
+  // Actions - Settings Management
+  updatePrivacySettings: (settingsUpdate: Partial<PrivacySettings>) => Promise<void>;
+  
+  // Actions - Individual Toggles
+  toggleCanvasSpoofing: () => void;
+  toggleWebGLSpoofing: () => void;
+  toggleAudioSpoofing: () => void;
+  toggleNavigatorSpoofing: () => void;
+  toggleTimezoneSpoofing: () => void;
+  toggleWebRTCProtection: () => Promise<void>;
+  toggleTrackerBlockingProtection: () => Promise<void>;
+  
+  // Actions - Profile Management
+  createFingerprintProfile: (profileName: string, settings: PrivacySettings) => void;
+  deleteFingerprintProfileById: (profileId: string) => void;
+  activateFingerprintProfileById: (profileId: string) => void;
+  generateRandomFingerprintSettings: () => void;
 }
 
 const defaultSettings: PrivacySettings = {
@@ -67,147 +72,151 @@ const defaultSettings: PrivacySettings = {
   trackerBlocking: true
 };
 
+/** Default privacy settings with all protections enabled */
+const DEFAULT_RANDOM_PROFILE_SETTINGS: PrivacySettings = {
+  canvas: true,
+  webgl: true,
+  audio: true,
+  navigator: true,
+  timezone: true,
+  webrtc: true,
+  trackerBlocking: true
+};
+
 export const usePrivacyStore = create<PrivacyState>()(
   persist(
     (set, get) => ({
-      currentSettings: defaultSettings,
-      profiles: [],
+      currentPrivacySettings: defaultSettings,
+      fingerprintProfileList: [],
       activeProfileId: null,
 
-      updateSettings: async (updates) => {
-        const newSettings = { ...get().currentSettings, ...updates };
-        set({ currentSettings: newSettings });
+      updatePrivacySettings: async (settingsUpdate) => {
+        const mergedSettings = { ...get().currentPrivacySettings, ...settingsUpdate };
+        set({ currentPrivacySettings: mergedSettings });
         
-        // Apply settings via IPC
-        await window.api.privacy.setFingerprint(newSettings);
+        await window.api.privacy.setFingerprint(mergedSettings);
       },
 
-      toggleCanvas: () => {
+      toggleCanvasSpoofing: () => {
         set((state) => ({
-          currentSettings: {
-            ...state.currentSettings,
-            canvas: !state.currentSettings.canvas
+          currentPrivacySettings: {
+            ...state.currentPrivacySettings,
+            canvas: !state.currentPrivacySettings.canvas
           }
         }));
       },
 
-      toggleWebGL: () => {
+      toggleWebGLSpoofing: () => {
         set((state) => ({
-          currentSettings: {
-            ...state.currentSettings,
-            webgl: !state.currentSettings.webgl
+          currentPrivacySettings: {
+            ...state.currentPrivacySettings,
+            webgl: !state.currentPrivacySettings.webgl
           }
         }));
       },
 
-      toggleAudio: () => {
+      toggleAudioSpoofing: () => {
         set((state) => ({
-          currentSettings: {
-            ...state.currentSettings,
-            audio: !state.currentSettings.audio
+          currentPrivacySettings: {
+            ...state.currentPrivacySettings,
+            audio: !state.currentPrivacySettings.audio
           }
         }));
       },
 
-      toggleNavigator: () => {
+      toggleNavigatorSpoofing: () => {
         set((state) => ({
-          currentSettings: {
-            ...state.currentSettings,
-            navigator: !state.currentSettings.navigator
+          currentPrivacySettings: {
+            ...state.currentPrivacySettings,
+            navigator: !state.currentPrivacySettings.navigator
           }
         }));
       },
 
-      toggleTimezone: () => {
+      toggleTimezoneSpoofing: () => {
         set((state) => ({
-          currentSettings: {
-            ...state.currentSettings,
-            timezone: !state.currentSettings.timezone
+          currentPrivacySettings: {
+            ...state.currentPrivacySettings,
+            timezone: !state.currentPrivacySettings.timezone
           }
         }));
       },
 
-      toggleWebRTC: async () => {
-        const state = get();
-        const newValue = !state.currentSettings.webrtc;
-        
-        set((state) => ({
-          currentSettings: {
-            ...state.currentSettings,
-            webrtc: newValue
-          }
-        }));
-
-        await window.api.privacy.toggleWebRTC(newValue);
-      },
-
-      toggleTrackerBlocking: async () => {
-        const state = get();
-        const newValue = !state.currentSettings.trackerBlocking;
+      toggleWebRTCProtection: async () => {
+        const currentState = get();
+        const newWebRTCEnabled = !currentState.currentPrivacySettings.webrtc;
         
         set((state) => ({
-          currentSettings: {
-            ...state.currentSettings,
-            trackerBlocking: newValue
+          currentPrivacySettings: {
+            ...state.currentPrivacySettings,
+            webrtc: newWebRTCEnabled
           }
         }));
 
-        await window.api.privacy.toggleTrackerBlocking(newValue);
+        await window.api.privacy.toggleWebRTC(newWebRTCEnabled);
       },
 
-      createProfile: (name, settings) => {
+      toggleTrackerBlockingProtection: async () => {
+        const currentState = get();
+        const newTrackerBlockingEnabled = !currentState.currentPrivacySettings.trackerBlocking;
+        
+        set((state) => ({
+          currentPrivacySettings: {
+            ...state.currentPrivacySettings,
+            trackerBlocking: newTrackerBlockingEnabled
+          }
+        }));
+
+        await window.api.privacy.toggleTrackerBlocking(newTrackerBlockingEnabled);
+      },
+
+      createFingerprintProfile: (profileName, settings) => {
         const newProfile: FingerprintProfile = {
           id: crypto.randomUUID(),
-          name,
+          name: profileName,
           settings,
           isActive: false
         };
 
         set((state) => ({
-          profiles: [...state.profiles, newProfile]
+          fingerprintProfileList: [...state.fingerprintProfileList, newProfile]
         }));
       },
 
-      deleteProfile: (id) => {
-        set((state) => ({
-          profiles: state.profiles.filter(p => p.id !== id),
-          activeProfileId: state.activeProfileId === id ? null : state.activeProfileId
-        }));
+      deleteFingerprintProfileById: (profileId) => {
+        set((state) => {
+          const wasActiveProfile = state.activeProfileId === profileId;
+          return {
+            fingerprintProfileList: state.fingerprintProfileList.filter(profile => profile.id !== profileId),
+            activeProfileId: wasActiveProfile ? null : state.activeProfileId
+          };
+        });
       },
 
-      activateProfile: (id) => {
-        const profile = get().profiles.find(p => p.id === id);
-        if (!profile) {return;}
+      activateFingerprintProfileById: (profileId) => {
+        const targetProfile = get().fingerprintProfileList.find(profile => profile.id === profileId);
+        const profileNotFound = !targetProfile;
+        if (profileNotFound) { return; }
 
         set((state) => ({
-          currentSettings: profile.settings,
-          activeProfileId: id,
-          profiles: state.profiles.map(p => ({
-            ...p,
-            isActive: p.id === id
+          currentPrivacySettings: targetProfile.settings,
+          activeProfileId: profileId,
+          fingerprintProfileList: state.fingerprintProfileList.map(profile => ({
+            ...profile,
+            isActive: profile.id === profileId
           }))
         }));
       },
 
-      generateRandomProfile: () => {
-        const randomSettings: PrivacySettings = {
-          canvas: true,
-          webgl: true,
-          audio: true,
-          navigator: true,
-          timezone: true,
-          webrtc: true,
-          trackerBlocking: true
-        };
-
-        set({ currentSettings: randomSettings });
+      generateRandomFingerprintSettings: () => {
+        set({ currentPrivacySettings: DEFAULT_RANDOM_PROFILE_SETTINGS });
       }
     }),
     {
       name: 'privacy-storage',
       partialize: (state) => ({
-        currentSettings: state.currentSettings,
-        profiles: state.profiles,
+        currentPrivacySettings: state.currentPrivacySettings,
+        fingerprintProfileList: state.fingerprintProfileList,
         activeProfileId: state.activeProfileId
       })
     }

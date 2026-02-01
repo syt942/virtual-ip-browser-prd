@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS proxies (
   protocol TEXT NOT NULL CHECK (protocol IN ('http', 'https', 'socks4', 'socks5')),
   username TEXT,
   password TEXT,
+  credential_id TEXT,
   status TEXT DEFAULT 'checking' CHECK (status IN ('active', 'failed', 'checking', 'disabled')),
   latency INTEGER,
   last_checked DATETIME,
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS proxies (
 
 CREATE INDEX IF NOT EXISTS idx_proxies_status ON proxies(status);
 CREATE INDEX IF NOT EXISTS idx_proxies_region ON proxies(region);
+CREATE INDEX IF NOT EXISTS idx_proxies_credential_id ON proxies(credential_id);
 
 -- Search Tasks Table
 CREATE TABLE IF NOT EXISTS search_tasks (
@@ -192,6 +194,12 @@ export class DatabaseManager {
     // Enable foreign keys and WAL mode for better performance
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('journal_mode = WAL');
+    
+    // Set busy timeout for concurrent access (REC-001: 5 seconds)
+    this.db.pragma('busy_timeout = 5000');
+    
+    // Performance optimizations for high-concurrency scenarios
+    this.db.pragma('synchronous = NORMAL'); // Faster, still safe with WAL
     
     // Execute embedded schema
     this.db.exec(DATABASE_SCHEMA);

@@ -35,113 +35,123 @@ export interface Proxy {
   updatedAt: Date;
 }
 
+/** Input data required to create a new proxy (auto-generated fields excluded) */
+type NewProxyInput = Omit<Proxy, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'failureCount' | 'totalRequests' | 'successRate'>;
+
 interface ProxyState {
-  proxies: Proxy[];
-  rotationStrategy: RotationStrategy;
-  isLoading: boolean;
+  // State
+  proxyList: Proxy[];
+  currentRotationStrategy: RotationStrategy;
+  isLoadingProxies: boolean;
   
-  // Actions
-  addProxy: (proxy: Omit<Proxy, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'failureCount' | 'totalRequests' | 'successRate'>) => Promise<void>;
-  removeProxy: (id: string) => Promise<void>;
-  updateProxy: (id: string, updates: Partial<Proxy>) => Promise<void>;
-  validateProxy: (id: string) => Promise<void>;
-  setRotationStrategy: (strategy: RotationStrategy) => Promise<void>;
-  loadProxies: () => Promise<void>;
-  getActiveProxies: () => Proxy[];
-  getProxyById: (id: string) => Proxy | undefined;
+  // Actions - Proxy CRUD
+  createProxy: (proxyInput: NewProxyInput) => Promise<void>;
+  deleteProxyById: (proxyId: string) => Promise<void>;
+  updateProxyById: (proxyId: string, updates: Partial<Proxy>) => Promise<void>;
+  
+  // Actions - Proxy Operations
+  validateProxyConnection: (proxyId: string) => Promise<void>;
+  setProxyRotationStrategy: (strategy: RotationStrategy) => Promise<void>;
+  loadProxyListFromBackend: () => Promise<void>;
+  
+  // Selectors
+  selectActiveProxies: () => Proxy[];
+  selectProxyById: (proxyId: string) => Proxy | undefined;
 }
 
 export const useProxyStore = create<ProxyState>((set, get) => ({
-  proxies: [],
-  rotationStrategy: 'round-robin',
-  isLoading: false,
+  proxyList: [],
+  currentRotationStrategy: 'round-robin',
+  isLoadingProxies: false,
 
-  addProxy: async (proxyData) => {
+  createProxy: async (proxyInput) => {
     try {
-      set({ isLoading: true });
-      const result = await window.api.proxy.add(proxyData) as { success: boolean; proxy?: Proxy };
+      set({ isLoadingProxies: true });
+      const result = await window.api.proxy.add(proxyInput) as { success: boolean; proxy?: Proxy };
       
       if (result.success && result.proxy) {
+        const createdProxy = result.proxy;
         set((state) => ({
-          proxies: [...state.proxies, result.proxy as Proxy],
-          isLoading: false
+          proxyList: [...state.proxyList, createdProxy],
+          isLoadingProxies: false
         }));
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[ProxyStore] Failed to add proxy:', errorMessage, {
-        host: proxyData.host,
-        port: proxyData.port
+      console.error('[ProxyStore] Failed to create proxy:', errorMessage, {
+        host: proxyInput.host,
+        port: proxyInput.port
       });
-      set({ isLoading: false });
-      // Re-throw to allow UI to handle the error
-      throw new Error(`Failed to add proxy: ${errorMessage}`);
+      set({ isLoadingProxies: false });
+      throw new Error(`Failed to create proxy: ${errorMessage}`);
     }
   },
 
-  removeProxy: async (id) => {
+  deleteProxyById: async (proxyId) => {
     try {
-      const result = await window.api.proxy.remove(id) as { success: boolean };
+      const result = await window.api.proxy.remove(proxyId) as { success: boolean };
       
       if (result.success) {
         set((state) => ({
-          proxies: state.proxies.filter(p => p.id !== id)
+          proxyList: state.proxyList.filter(proxy => proxy.id !== proxyId)
         }));
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[ProxyStore] Failed to remove proxy:', errorMessage, { proxyId: id });
-      throw new Error(`Failed to remove proxy: ${errorMessage}`);
+      console.error('[ProxyStore] Failed to delete proxy:', errorMessage, { proxyId });
+      throw new Error(`Failed to delete proxy: ${errorMessage}`);
     }
   },
 
-  updateProxy: async (id, updates) => {
+  updateProxyById: async (proxyId, updates) => {
     try {
-      const result = await window.api.proxy.update(id, updates) as { success: boolean; proxy?: Proxy };
+      const result = await window.api.proxy.update(proxyId, updates) as { success: boolean; proxy?: Proxy };
       
       if (result.success && result.proxy) {
+        const updatedProxy = result.proxy;
         set((state) => ({
-          proxies: state.proxies.map(p =>
-            p.id === id ? (result.proxy as Proxy) : p
+          proxyList: state.proxyList.map(proxy =>
+            proxy.id === proxyId ? updatedProxy : proxy
           )
         }));
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[ProxyStore] Failed to update proxy:', errorMessage, { proxyId: id });
+      console.error('[ProxyStore] Failed to update proxy:', errorMessage, { proxyId });
       throw new Error(`Failed to update proxy: ${errorMessage}`);
     }
   },
 
-  validateProxy: async (id) => {
+  validateProxyConnection: async (proxyId) => {
+    const CHECKING_STATUS: ProxyStatus = 'checking';
+    const FAILED_STATUS: ProxyStatus = 'failed';
+    
     try {
-      // Update status to checking
       set((state) => ({
-        proxies: state.proxies.map(p =>
-          p.id === id ? { ...p, status: 'checking' as ProxyStatus } : p
+        proxyList: state.proxyList.map(proxy =>
+          proxy.id === proxyId ? { ...proxy, status: CHECKING_STATUS } : proxy
         )
       }));
 
-      await window.api.proxy.validate(id);
+      await window.api.proxy.validate(proxyId);
       
-      // Reload proxies to get updated status
-      await get().loadProxies();
+      await get().loadProxyListFromBackend();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[ProxyStore] Failed to validate proxy:', errorMessage, { proxyId: id });
-      // Update proxy status to failed on validation error
+      console.error('[ProxyStore] Failed to validate proxy connection:', errorMessage, { proxyId });
+      
       set((state) => ({
-        proxies: state.proxies.map(p =>
-          p.id === id ? { ...p, status: 'failed' as ProxyStatus } : p
+        proxyList: state.proxyList.map(proxy =>
+          proxy.id === proxyId ? { ...proxy, status: FAILED_STATUS } : proxy
         )
       }));
     }
   },
 
-  setRotationStrategy: async (strategy) => {
+  setProxyRotationStrategy: async (strategy) => {
     try {
       await window.api.proxy.setRotation({ strategy });
-      set({ rotationStrategy: strategy });
+      set({ currentRotationStrategy: strategy });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[ProxyStore] Failed to set rotation strategy:', errorMessage, { strategy });
@@ -149,30 +159,29 @@ export const useProxyStore = create<ProxyState>((set, get) => ({
     }
   },
 
-  loadProxies: async () => {
+  loadProxyListFromBackend: async () => {
     try {
-      set({ isLoading: true });
+      set({ isLoadingProxies: true });
       const result = await window.api.proxy.list() as { success: boolean; proxies?: Proxy[] };
       
       if (result.success && result.proxies) {
         set({
-          proxies: result.proxies,
-          isLoading: false
+          proxyList: result.proxies,
+          isLoadingProxies: false
         });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[ProxyStore] Failed to load proxies:', errorMessage);
-      set({ isLoading: false });
-      // Don't throw here - allow UI to show empty state with error notification
+      console.error('[ProxyStore] Failed to load proxy list:', errorMessage);
+      set({ isLoadingProxies: false });
     }
   },
 
-  getActiveProxies: () => {
-    return get().proxies.filter(p => p.status === 'active');
+  selectActiveProxies: () => {
+    return get().proxyList.filter(proxy => proxy.status === 'active');
   },
 
-  getProxyById: (id) => {
-    return get().proxies.find(p => p.id === id);
+  selectProxyById: (proxyId) => {
+    return get().proxyList.find(proxy => proxy.id === proxyId);
   }
 }));

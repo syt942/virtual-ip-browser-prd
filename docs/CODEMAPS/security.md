@@ -1,382 +1,238 @@
 # Security Layer Codemap
 
-**Last Updated:** 2025-01-28  
-**Version:** 1.1.0  
-**Entry Points:** `electron/ipc/validation.ts`, `electron/ipc/rate-limiter.ts`, `electron/utils/security.ts`
+**Last Updated:** 2025-02-01  
+**Version:** 1.3.0
 
 ## Overview
 
-The security layer provides comprehensive protection for all IPC communication, input validation, and attack prevention. Introduced in v1.1.0, it implements enterprise-grade security controls.
+The security layer provides defense-in-depth protection across the application stack, including input validation, rate limiting, CSP headers, credential encryption, and process isolation.
 
-## Architecture Diagram
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           SECURITY LAYER                                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                     INPUT VALIDATION (Zod)                           │   │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │   │
-│  │  │ SafeUrlSchema│ │RegexPattern  │ │ DomainSchema │ │ProxyConfig │  │   │
-│  │  │ SSRF protect │ │ReDoS protect │ │ XSS prevent  │ │ type-safe  │  │   │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │   │
-│  │  │ TabConfig    │ │ Fingerprint  │ │ SessionId    │ │ Keyword    │  │   │
-│  │  │ Schema       │ │ ConfigSchema │ │ UUID valid   │ │ Schema     │  │   │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                    ▼                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                     RATE LIMITING                                    │   │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │   │
-│  │  │PerChannel   │ │SlidingWindow │ │ BurstProtect │ │ AutoClean  │  │   │
-│  │  │ Limits      │ │ Algorithm    │ │ Detection    │ │ Expired    │  │   │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                    ▼                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                     SANITIZATION & PREVENTION                        │   │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │   │
-│  │  │ sanitizeUrl  │ │sanitizeText  │ │sanitizeCSS   │ │compileRegex│  │   │
-│  │  │ protocol chk │ │ HTML encode  │ │ injection    │ │ ReDoS safe │  │   │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                    ▼                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                     IPC SECURITY                                     │   │
-│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │   │
-│  │  │ChannelWL    │ │ContextIso   │ │ PreloadSafe  │ │ CSP Gen    │  │   │
-│  │  │ 22 invoke   │ │contextBridge│ │ Sandbox      │ │ Headers    │  │   │
-│  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     Security Architecture                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                 Network Security Layer                   │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │  │ CSP Headers │  │    HSTS     │  │TLS Validation│     │   │
+│  │  │ (strict)    │  │ (1yr max)   │  │(no insecure) │     │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                  IPC Security Layer                      │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │  │Rate Limiter │  │Zod Validation│  │  Whitelist  │     │   │
+│  │  │(per-channel)│  │(type-safe)  │  │ (channels)  │     │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                Input Sanitization Layer                  │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │  │SSRF Protect │  │XSS Prevention│  │ReDoS Protect│     │   │
+│  │  │(private IPs)│  │(patterns)   │  │(safe regex) │     │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                  Data Security Layer                     │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │  │ Encryption  │  │ OS Keychain │  │Memory Clear │     │   │
+│  │  │(AES-256-GCM)│  │(safeStorage)│  │ (on exit)   │     │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## File Structure
 
 ```
 electron/
+├── main/
+│   └── index.ts              # Security headers setup
 ├── ipc/
-│   ├── validation.ts        # Zod validation utilities
-│   ├── rate-limiter.ts      # Per-channel rate limiting
-│   ├── channels.ts          # IPC channel definitions
-│   └── schemas/
-│       └── index.ts         # Centralized Zod schemas
+│   ├── validation.ts         # Zod schemas, SSRF/XSS protection
+│   ├── rate-limiter.ts       # Per-channel rate limiting
+│   └── channels.ts           # Channel definitions
 ├── utils/
-│   └── security.ts          # Security utilities (sanitization, CSP)
+│   ├── security.ts           # CSP, sanitization, ReDoS protection
+│   ├── validation.ts         # Input validation utilities
+│   └── error-sanitization.ts # Error message sanitization
 └── database/
     └── services/
-        └── encryption.service.ts  # AES-256-GCM encryption
+        ├── encryption.service.ts   # AES-256-GCM encryption
+        └── safe-storage.service.ts # OS keychain integration
 ```
 
-## Components
+## Key Components
 
-### 1. Input Validation (`validation.ts`)
-
-**Purpose**: Type-safe input validation using Zod schemas
+### 1. Security Headers (`electron/main/index.ts`)
 
 ```typescript
-// Core validation function
-export function validateInput<T>(
-  schema: z.ZodSchema<T>,
-  input: unknown
-): { success: true; data: T } | { success: false; error: string };
-
-// Validated handler wrapper
-export function createValidatedHandler<TInput, TOutput>(
-  schema: z.ZodSchema<TInput>,
-  handler: (data: TInput) => Promise<TOutput>
-): (input: unknown) => Promise<{ success: boolean; data?: TOutput; error?: string }>;
-```
-
-**Key Schemas** (`schemas/index.ts`):
-
-| Schema | Protection | Validation |
-|--------|------------|------------|
-| `SafeUrlSchema` | SSRF | Protocol whitelist, private IP blocking |
-| `RegexPatternSchema` | ReDoS | Nested quantifier detection |
-| `DomainSchema` | XSS | Format validation, dangerous pattern check |
-| `KeywordSchema` | XSS | Script injection detection |
-| `ProxyConfigSchema` | Type Safety | Host, port, type validation |
-| `TabConfigSchema` | Type Safety | URL, proxy, fingerprint validation |
-| `FingerprintConfigSchema` | Type Safety | Boolean flags with defaults |
-| `SessionIdSchema` | Format | UUID validation |
-| `TabIdSchema` | Format | UUID validation |
-| `ProxyIdSchema` | Format | UUID validation |
-
-### 2. Rate Limiting (`rate-limiter.ts`)
-
-**Purpose**: Prevent abuse via per-channel sliding window rate limiting
-
-```typescript
-class RateLimiter {
-  constructor(options: { maxRequests: number; windowMs: number });
-  
-  checkLimit(key: string): RateLimitResult;
-  cleanup(): void;
-}
-
-interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  retryAfter?: number;  // Seconds
-}
-
-class IPCRateLimitManager {
-  getLimiter(channel: string): RateLimiter;
-  checkLimit(channel: string): RateLimitResult;
-}
-```
-
-**Channel Limits**:
-
-| Category | Channels | Max Requests | Window |
-|----------|----------|--------------|--------|
-| Automation | `automation:*` | 10 | 60s |
-| Privacy | `privacy:*` | 20 | 60s |
-| Proxy | `proxy:add/remove/validate` | 30 | 60s |
-| Navigation | `tab:*` | 60 | 60s |
-| Read | `*:list`, `*:get` | 100 | 60s |
-
-### 3. Security Utilities (`security.ts`)
-
-**Purpose**: Common security functions for sanitization and attack prevention
-
-#### URL Sanitization
-
-```typescript
-export function sanitizeUrl(url: string): string {
-  // 1. Trim and normalize
-  // 2. Check dangerous protocols (javascript:, file:, data:, vbscript:)
-  // 3. Add https:// if no protocol
-  // 4. Return sanitized URL
-}
-```
-
-#### Text Input Sanitization
-
-```typescript
-export function sanitizeTextInput(input: string, maxLength?: number): string {
-  // 1. Remove null bytes
-  // 2. Trim whitespace
-  // 3. Truncate to maxLength
-  // 4. HTML entity encode (<, >, &, ", ')
-}
-```
-
-#### CSS Selector Sanitization
-
-```typescript
-export function sanitizeSelector(selector: string): string {
-  // 1. Length limit (500 chars)
-  // 2. Null byte detection
-  // 3. Dangerous pattern detection:
-  //    - <script
-  //    - javascript:
-  //    - on*= event handlers
-  //    - eval(, expression(, url(, import(
-  //    - @import, binding:, -moz-binding
-  // 4. Quote escape detection
-  // 5. Balanced bracket validation
-}
-```
-
-#### ReDoS-Safe Regex
-
-```typescript
-export function compileRegexSafely(pattern: string): RegExp {
-  // 1. Length limit (200 chars)
-  // 2. ReDoS pattern detection:
-  //    - (a+)+ nested quantifiers
-  //    - (.*)+  wildcard with quantifier
-  //    - (a|b)+ alternation with quantifier
-  // 3. Syntax validation
-}
-
-export function testRegexSafely(regex: RegExp, input: string, maxLength?: number): boolean {
-  // 1. Input length limit
-  // 2. Safe test execution
-}
-```
-
-#### Content Security Policy
-
-```typescript
-export function generateCSP(options?: CSPOptions): string {
-  // Generates strict CSP:
-  // - default-src 'self'
-  // - script-src 'self' [+ nonce]
-  // - frame-ancestors 'none'
-  // - object-src 'none'
-  // - upgrade-insecure-requests
-  // - block-all-mixed-content
-}
-
-export function validateCSP(csp: string): { valid: boolean; issues: string[] };
-```
-
-### 4. IPC Channel Whitelist
-
-```typescript
-export const IPC_INVOKE_WHITELIST = new Set([
-  // Proxy (5 channels)
-  'proxy:add', 'proxy:remove', 'proxy:update', 'proxy:list', 'proxy:validate',
-  'proxy:set-rotation',
-  
-  // Tab (8 channels)
-  'tab:create', 'tab:close', 'tab:update', 'tab:list',
-  'tab:navigate', 'tab:go-back', 'tab:go-forward', 'tab:reload',
-  
-  // Privacy (3 channels)
-  'privacy:set-fingerprint', 'privacy:toggle-webrtc', 'privacy:toggle-tracker-blocking',
-  
-  // Automation (5 channels)
-  'automation:start-search', 'automation:stop-search',
-  'automation:add-keyword', 'automation:add-domain', 'automation:get-tasks',
-  
-  // Session (3 channels)
-  'session:save', 'session:load', 'session:list',
-]);
-
-export const IPC_EVENT_WHITELIST = new Set([
-  'proxy:updated', 'proxy:validated',
-  'tab:created', 'tab:closed', 'tab:updated',
-  'automation:task:completed', 'automation:task:failed', 'automation:session:updated',
-  'privacy:updated',
-  'session:saved', 'session:loaded',
-]);
-
-export function isChannelAllowed(channel: string, type: 'invoke' | 'event'): boolean;
-```
-
-## Data Flow
-
-### IPC Request Flow
-
-```
-Renderer Process                    Main Process
-      │                                  │
-      │  ipcRenderer.invoke('proxy:add', data)
-      │ ─────────────────────────────────►│
-      │                                  │
-      │                    ┌─────────────┴─────────────┐
-      │                    │  1. Channel Whitelist     │
-      │                    │     isChannelAllowed()    │
-      │                    ├───────────────────────────┤
-      │                    │  2. Rate Limit Check      │
-      │                    │     rateLimiter.checkLimit│
-      │                    ├───────────────────────────┤
-      │                    │  3. Input Validation      │
-      │                    │     validateInput(schema) │
-      │                    ├───────────────────────────┤
-      │                    │  4. Handler Execution     │
-      │                    │     proxyManager.addProxy │
-      │                    └─────────────┬─────────────┘
-      │                                  │
-      │◄─────────────────────────────────│
-      │  { success: true, proxy: {...} }
-```
-
-### Attack Prevention Flow
-
-```
-Input → URL Schema → SSRF Check → Protocol Check → IP Range Check → ALLOW/DENY
-          │
-          └─→ Regex Schema → Length Check → ReDoS Pattern Check → Syntax Check → ALLOW/DENY
-                    │
-                    └─→ CSS Schema → Length Check → Injection Check → Bracket Check → ALLOW/DENY
-```
-
-## Integration Example
-
-```typescript
-// In IPC handler setup (electron/ipc/handlers/index.ts)
-import { validateInput, ProxyConfigSchema } from '../validation';
-import { getIPCRateLimiter } from '../rate-limiter';
-import { isChannelAllowed } from '../../utils/security';
-
-export function setupIpcHandlers(context: HandlerContext) {
-  const rateLimiter = getIPCRateLimiter();
-
-  ipcMain.handle('proxy:add', async (_event, config) => {
-    // Layer 1: Channel whitelist (in preload.ts)
-    // Already validated by contextBridge exposure
-
-    // Layer 2: Rate limiting
-    const rateCheck = rateLimiter.checkLimit('proxy:add');
-    if (!rateCheck.allowed) {
-      return { 
-        success: false, 
-        error: 'Rate limit exceeded',
-        retryAfter: rateCheck.retryAfter 
-      };
+function setupSecurityHeaders(): void {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = { ...details.responseHeaders };
+    
+    // CSP for HTML documents
+    if (isHtmlDocument(details)) {
+      responseHeaders['Content-Security-Policy'] = [generateCSP({ strict: true })];
     }
-
-    // Layer 3: Input validation
-    const validation = validateInput(ProxyConfigSchema, config);
-    if (!validation.success) {
-      return { success: false, error: validation.error };
+    
+    // HSTS for HTTPS
+    if (details.url.startsWith('https://')) {
+      responseHeaders['Strict-Transport-Security'] = ['max-age=31536000; includeSubDomains'];
     }
-
-    // Layer 4: Business logic with validated data
-    try {
-      const proxy = await context.proxyManager.addProxy(validation.data);
-      return { success: true, proxy };
-    } catch (error) {
-      return { success: false, error: (error as Error).message };
-    }
+    
+    // Additional headers
+    responseHeaders['X-Content-Type-Options'] = ['nosniff'];
+    responseHeaders['X-Frame-Options'] = ['DENY'];
+    responseHeaders['X-XSS-Protection'] = ['1; mode=block'];
+    responseHeaders['Referrer-Policy'] = ['strict-origin-when-cross-origin'];
+    
+    callback({ responseHeaders });
   });
 }
 ```
 
-## Testing
+### 2. CSP Generator (`electron/utils/security.ts`)
 
-### Security Test Files
-
-| File | Tests | Coverage |
-|------|-------|----------|
-| `security-fixes.test.ts` | 45 | Input validation, sanitization |
-| `comprehensive-security.test.ts` | 63 | Full security audit |
-
-### Running Security Tests
-
-```bash
-# All security tests
-npm test -- --grep "security"
-
-# Specific test file
-npm test -- tests/unit/security-fixes.test.ts
-
-# With coverage
-npm test -- --coverage --grep "security"
+```typescript
+export function generateCSP(options: CSPOptions = {}): string {
+  return [
+    "default-src 'self'",
+    "script-src 'self'",              // No unsafe-eval
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https:",
+    "frame-ancestors 'none'",          // Clickjacking protection
+    "form-action 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",               // Block plugins
+    "upgrade-insecure-requests",
+    "block-all-mixed-content"
+  ].join('; ');
+}
 ```
 
-### Test Categories
+### 3. Rate Limiter (`electron/ipc/rate-limiter.ts`)
 
-- **Zod Validation**: Schema compliance, error messages
-- **Rate Limiting**: Limit enforcement, cleanup, retry-after
-- **ReDoS Protection**: Pattern detection, safe compilation
-- **SSRF Prevention**: IP blocking, protocol whitelist
-- **CSS Sanitization**: Injection detection, encoding
+```typescript
+export class IPCRateLimiter {
+  private readonly channelLimits = new Map([
+    ['proxy:add', { windowMs: 60000, maxRequests: 10 }],
+    ['automation:start-search', { windowMs: 60000, maxRequests: 5 }],
+    ['privacy:get-stats', { windowMs: 60000, maxRequests: 120 }],
+    // ... more channels
+  ]);
 
-## Security Metrics
+  checkLimit(channel: string): { allowed: boolean; retryAfter: number } {
+    // Sliding window rate limiting
+  }
+}
+```
 
-| Metric | Value | Target |
-|--------|-------|--------|
-| Test Coverage | 93%+ | >80% |
-| Security Tests | 108 | - |
-| Vulnerabilities Fixed | 7 | 0 remaining |
-| Rate Limit Channels | 22 | All invoke |
-| Validated Schemas | 12 | All input types |
+### 4. Input Validation (`electron/ipc/validation.ts`)
 
-## Related Documentation
+```typescript
+// SSRF Protection
+function isPrivateOrBlockedIP(hostname: string): boolean {
+  const blockedHosts = ['localhost', '127.0.0.1', '169.254.169.254'];
+  // Block 10.x.x.x, 172.16-31.x.x, 192.168.x.x
+}
 
-- [SECURITY.md](../../SECURITY.md) - Comprehensive security guide
-- [api-reference.md](./api-reference.md) - IPC channel documentation
-- [COMPREHENSIVE_SECURITY_AUDIT.md](../../COMPREHENSIVE_SECURITY_AUDIT.md) - Security audit report
+// XSS Detection
+const XSS_PATTERNS = /<script|javascript:|on\w+\s*=/i;
+
+// Safe URL Schema
+export const SafeUrlSchema = z.string()
+  .max(2048)
+  .refine((url) => {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol) &&
+           !isPrivateOrBlockedIP(parsed.hostname);
+  });
+```
+
+### 5. ReDoS Protection (`electron/utils/security.ts`)
+
+```typescript
+export function compileRegexSafely(pattern: string): RegExp {
+  if (pattern.length > 200) throw new Error('Pattern too long');
+  
+  const redosPatterns = [
+    /\([^)]*[+*]\)[+*]/,       // Nested quantifiers
+    /\(\.\*\)[+*{]/,           // Multiple wildcards
+  ];
+  
+  for (const redos of redosPatterns) {
+    if (redos.test(pattern)) throw new Error('ReDoS pattern detected');
+  }
+  
+  return new RegExp(pattern);
+}
+```
+
+### 6. Encryption Service (`electron/database/services/encryption.service.ts`)
+
+```typescript
+class EncryptionService {
+  encrypt(plaintext: string): string {
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', this.masterKey, iv);
+    const encrypted = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+    return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted.toString('base64')}`;
+  }
+
+  destroy(): void {
+    this.masterKey?.fill(0);  // Clear from memory
+  }
+}
+```
+
+## Security Controls Matrix
+
+| Control | Location | Description |
+|---------|----------|-------------|
+| CSP Headers | `electron/main/index.ts` | Strict Content Security Policy |
+| HSTS | `electron/main/index.ts` | HTTP Strict Transport Security |
+| TLS Validation | BrowserWindow config | Block insecure content |
+| Rate Limiting | `electron/ipc/rate-limiter.ts` | Per-channel request limits |
+| Zod Validation | `electron/ipc/validation.ts` | Type-safe input validation |
+| SSRF Protection | `electron/ipc/validation.ts` | Private IP blocking |
+| XSS Prevention | `electron/ipc/validation.ts` | Pattern detection |
+| ReDoS Protection | `electron/utils/security.ts` | Safe regex compilation |
+| Encryption | `encryption.service.ts` | AES-256-GCM |
+| Key Storage | `safe-storage.service.ts` | OS keychain |
+| Channel Whitelist | `electron/utils/security.ts` | Explicit allow list |
+| Process Isolation | `electron/main/index.ts` | Sandbox + context isolation |
+
+## Rate Limits Reference
+
+| Channel Category | Limit | Window |
+|------------------|-------|--------|
+| Proxy (write) | 10-20 req | 60s |
+| Proxy (read) | 100 req | 60s |
+| Tab operations | 50-100 req | 60s |
+| Automation (sensitive) | 5-10 req | 60s |
+| Privacy | 20-120 req | 60s |
+| Session | 10 req | 60s |
+
+## Related Modules
+
+- [Architecture](../ARCHITECTURE.md) - System architecture
+- [API Documentation](../API_DOCUMENTATION.md) - IPC API reference
+- [Database](./database.md) - Encryption storage
 
 ---
 
-*Last Updated: 2025-01-28*
+**Last Updated:** 2025-02-01 | **Version:** 1.3.0

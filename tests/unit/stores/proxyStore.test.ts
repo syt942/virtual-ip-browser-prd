@@ -45,9 +45,9 @@ describe('useProxyStore', () => {
     
     // Reset store state
     useProxyStore.setState({
-      proxies: [],
-      rotationStrategy: 'round-robin',
-      isLoading: false,
+      proxyList: [],
+      currentRotationStrategy: 'round-robin',
+      isLoadingProxies: false,
     });
   });
 
@@ -64,19 +64,19 @@ describe('useProxyStore', () => {
     it('initializes with empty proxies array', () => {
       const state = useProxyStore.getState();
       
-      expect(state.proxies).toEqual([]);
+      expect(state.proxyList).toEqual([]);
     });
 
     it('initializes with round-robin strategy', () => {
       const state = useProxyStore.getState();
       
-      expect(state.rotationStrategy).toBe('round-robin');
+      expect(state.currentRotationStrategy).toBe('round-robin');
     });
 
-    it('initializes with isLoading false', () => {
+    it('initializes with isLoadingProxies false', () => {
       const state = useProxyStore.getState();
       
-      expect(state.isLoading).toBe(false);
+      expect(state.isLoadingProxies).toBe(false);
     });
   });
 
@@ -84,12 +84,12 @@ describe('useProxyStore', () => {
   // ADD PROXY TESTS
   // ============================================================================
 
-  describe('addProxy', () => {
+  describe('createProxy', () => {
     it('calls window.api.proxy.add with proxy data', async () => {
       const proxyData = validProxyConfigs[0];
       
       await act(async () => {
-        await useProxyStore.getState().addProxy(proxyData);
+        await useProxyStore.getState().createProxy(proxyData);
       });
       
       expect(mockApi.proxy.add).toHaveBeenCalledWith(proxyData);
@@ -105,15 +105,15 @@ describe('useProxyStore', () => {
       });
       
       await act(async () => {
-        await useProxyStore.getState().addProxy(proxyData);
+        await useProxyStore.getState().createProxy(proxyData);
       });
       
       const state = useProxyStore.getState();
-      expect(state.proxies).toHaveLength(1);
-      expect(state.proxies[0].id).toBe('new-proxy-id');
+      expect(state.proxyList).toHaveLength(1);
+      expect(state.proxyList[0].id).toBe('new-proxy-id');
     });
 
-    it('sets isLoading during operation', async () => {
+    it('sets isLoadingProxies during operation', async () => {
       const proxyData = validProxyConfigs[0];
       
       // Create a delayed response
@@ -124,7 +124,7 @@ describe('useProxyStore', () => {
       
       // Start the add operation
       const addPromise = act(async () => {
-        return useProxyStore.getState().addProxy(proxyData);
+        return useProxyStore.getState().createProxy(proxyData);
       });
       
       // Check loading state (may be synchronously set)
@@ -135,8 +135,8 @@ describe('useProxyStore', () => {
       resolveAdd!({ success: true, proxy: createMockProxy() });
       await addPromise;
       
-      // After completion, isLoading should be false
-      expect(useProxyStore.getState().isLoading).toBe(false);
+      // After completion, isLoadingProxies should be false
+      expect(useProxyStore.getState().isLoadingProxies).toBe(false);
     });
 
     it('throws and logs on failure', async () => {
@@ -148,14 +148,14 @@ describe('useProxyStore', () => {
       let thrownError: Error | null = null;
       try {
         await act(async () => {
-          await useProxyStore.getState().addProxy(proxyData);
+          await useProxyStore.getState().createProxy(proxyData);
         });
       } catch (error) {
         thrownError = error as Error;
       }
       
       expect(thrownError).not.toBeNull();
-      expect(thrownError?.message).toContain('Failed to add proxy');
+      expect(thrownError?.message).toContain('Failed to create proxy');
       // Console.error is called within the store's catch block
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[ProxyStore]'),
@@ -171,10 +171,10 @@ describe('useProxyStore', () => {
       mockApi.proxy.add.mockResolvedValueOnce({ success: false });
       
       await act(async () => {
-        await useProxyStore.getState().addProxy(proxyData);
+        await useProxyStore.getState().createProxy(proxyData);
       });
       
-      expect(useProxyStore.getState().proxies).toHaveLength(0);
+      expect(useProxyStore.getState().proxyList).toHaveLength(0);
     });
   });
 
@@ -182,11 +182,11 @@ describe('useProxyStore', () => {
   // REMOVE PROXY TESTS
   // ============================================================================
 
-  describe('removeProxy', () => {
+  describe('deleteProxyById', () => {
     beforeEach(() => {
       // Seed state with proxies
       useProxyStore.setState({
-        proxies: [
+        proxyList: [
           createMockProxy({ id: 'proxy-1' }),
           createMockProxy({ id: 'proxy-2' }),
         ],
@@ -197,17 +197,17 @@ describe('useProxyStore', () => {
       mockApi.proxy.remove.mockResolvedValueOnce({ success: true });
       
       await act(async () => {
-        await useProxyStore.getState().removeProxy('proxy-1');
+        await useProxyStore.getState().deleteProxyById('proxy-1');
       });
       
       const state = useProxyStore.getState();
-      expect(state.proxies).toHaveLength(1);
-      expect(state.proxies[0].id).toBe('proxy-2');
+      expect(state.proxyList).toHaveLength(1);
+      expect(state.proxyList[0].id).toBe('proxy-2');
     });
 
     it('calls window.api.proxy.remove with ID', async () => {
       await act(async () => {
-        await useProxyStore.getState().removeProxy('proxy-1');
+        await useProxyStore.getState().deleteProxyById('proxy-1');
       });
       
       expect(mockApi.proxy.remove).toHaveBeenCalledWith('proxy-1');
@@ -219,9 +219,9 @@ describe('useProxyStore', () => {
       
       await expect(
         act(async () => {
-          await useProxyStore.getState().removeProxy('proxy-1');
+          await useProxyStore.getState().deleteProxyById('proxy-1');
         })
-      ).rejects.toThrow('Failed to remove proxy');
+      ).rejects.toThrow('Failed to delete proxy');
       
       consoleSpy.mockRestore();
     });
@@ -230,11 +230,11 @@ describe('useProxyStore', () => {
       mockApi.proxy.remove.mockResolvedValueOnce({ success: false });
       
       await act(async () => {
-        await useProxyStore.getState().removeProxy('proxy-1');
+        await useProxyStore.getState().deleteProxyById('proxy-1');
       });
       
       // Proxy should still be in state
-      expect(useProxyStore.getState().proxies).toHaveLength(2);
+      expect(useProxyStore.getState().proxyList).toHaveLength(2);
     });
   });
 
@@ -242,10 +242,10 @@ describe('useProxyStore', () => {
   // UPDATE PROXY TESTS
   // ============================================================================
 
-  describe('updateProxy', () => {
+  describe('updateProxyById', () => {
     beforeEach(() => {
       useProxyStore.setState({
-        proxies: [createMockProxy({ id: 'proxy-1', name: 'Original Name' })],
+        proxyList: [createMockProxy({ id: 'proxy-1', name: 'Original Name' })],
       });
     });
 
@@ -257,18 +257,18 @@ describe('useProxyStore', () => {
       });
       
       await act(async () => {
-        await useProxyStore.getState().updateProxy('proxy-1', { name: 'Updated Name' });
+        await useProxyStore.getState().updateProxyById('proxy-1', { name: 'Updated Name' });
       });
       
       const state = useProxyStore.getState();
-      expect(state.proxies[0].name).toBe('Updated Name');
+      expect(state.proxyList[0].name).toBe('Updated Name');
     });
 
     it('calls window.api.proxy.update with ID and updates', async () => {
       const updates = { name: 'New Name', port: 9090 };
       
       await act(async () => {
-        await useProxyStore.getState().updateProxy('proxy-1', updates);
+        await useProxyStore.getState().updateProxyById('proxy-1', updates);
       });
       
       expect(mockApi.proxy.update).toHaveBeenCalledWith('proxy-1', updates);
@@ -280,7 +280,7 @@ describe('useProxyStore', () => {
       
       await expect(
         act(async () => {
-          await useProxyStore.getState().updateProxy('proxy-1', { name: 'New' });
+          await useProxyStore.getState().updateProxyById('proxy-1', { name: 'New' });
         })
       ).rejects.toThrow('Failed to update proxy');
       
@@ -292,10 +292,10 @@ describe('useProxyStore', () => {
   // VALIDATE PROXY TESTS
   // ============================================================================
 
-  describe('validateProxy', () => {
+  describe('validateProxyConnection', () => {
     beforeEach(() => {
       useProxyStore.setState({
-        proxies: [createMockProxy({ id: 'proxy-1', status: 'active' })],
+        proxyList: [createMockProxy({ id: 'proxy-1', status: 'active' })],
       });
     });
 
@@ -306,11 +306,11 @@ describe('useProxyStore', () => {
       );
       
       const validatePromise = act(async () => {
-        return useProxyStore.getState().validateProxy('proxy-1');
+        return useProxyStore.getState().validateProxyConnection('proxy-1');
       });
       
       // Status should be checking
-      expect(useProxyStore.getState().proxies[0].status).toBe('checking');
+      expect(useProxyStore.getState().proxyList[0].status).toBe('checking');
       
       // Resolve and complete
       resolveValidate!({ success: true });
@@ -322,18 +322,18 @@ describe('useProxyStore', () => {
       mockApiError(mockApi, 'proxy', 'validate', 'Timeout');
       
       await act(async () => {
-        await useProxyStore.getState().validateProxy('proxy-1');
+        await useProxyStore.getState().validateProxyConnection('proxy-1');
       });
       
-      expect(useProxyStore.getState().proxies[0].status).toBe('failed');
+      expect(useProxyStore.getState().proxyList[0].status).toBe('failed');
       consoleSpy.mockRestore();
     });
 
-    it('calls loadProxies after successful validation', async () => {
-      const loadSpy = vi.spyOn(useProxyStore.getState(), 'loadProxies');
+    it('calls loadProxyListFromBackend after successful validation', async () => {
+      const loadSpy = vi.spyOn(useProxyStore.getState(), 'loadProxyListFromBackend');
       
       await act(async () => {
-        await useProxyStore.getState().validateProxy('proxy-1');
+        await useProxyStore.getState().validateProxyConnection('proxy-1');
       });
       
       expect(loadSpy).toHaveBeenCalled();
@@ -344,26 +344,26 @@ describe('useProxyStore', () => {
   // LOAD PROXIES TESTS
   // ============================================================================
 
-  describe('loadProxies', () => {
+  describe('loadProxyListFromBackend', () => {
     it('loads proxies from API', async () => {
       const proxies = [createMockProxy({ id: 'p1' }), createMockProxy({ id: 'p2' })];
       mockApi.proxy.list.mockResolvedValueOnce({ success: true, proxies });
       
       await act(async () => {
-        await useProxyStore.getState().loadProxies();
+        await useProxyStore.getState().loadProxyListFromBackend();
       });
       
-      expect(useProxyStore.getState().proxies).toHaveLength(2);
+      expect(useProxyStore.getState().proxyList).toHaveLength(2);
     });
 
-    it('sets isLoading during load', async () => {
+    it('sets isLoadingProxies during load', async () => {
       let resolveList: (value: unknown) => void;
       mockApi.proxy.list.mockImplementationOnce(() => 
         new Promise(resolve => { resolveList = resolve; })
       );
       
       const loadPromise = act(async () => {
-        return useProxyStore.getState().loadProxies();
+        return useProxyStore.getState().loadProxyListFromBackend();
       });
       
       // Should have called the API
@@ -372,7 +372,7 @@ describe('useProxyStore', () => {
       resolveList!({ success: true, proxies: [] });
       await loadPromise;
       
-      expect(useProxyStore.getState().isLoading).toBe(false);
+      expect(useProxyStore.getState().isLoadingProxies).toBe(false);
     });
 
     it('handles API errors gracefully without throwing', async () => {
@@ -381,10 +381,10 @@ describe('useProxyStore', () => {
       
       // Should not throw
       await act(async () => {
-        await useProxyStore.getState().loadProxies();
+        await useProxyStore.getState().loadProxyListFromBackend();
       });
       
-      expect(useProxyStore.getState().isLoading).toBe(false);
+      expect(useProxyStore.getState().isLoadingProxies).toBe(false);
       consoleSpy.mockRestore();
     });
   });
@@ -393,18 +393,18 @@ describe('useProxyStore', () => {
   // SET ROTATION STRATEGY TESTS
   // ============================================================================
 
-  describe('setRotationStrategy', () => {
+  describe('setProxyRotationStrategy', () => {
     it('updates rotation strategy in state', async () => {
       await act(async () => {
-        await useProxyStore.getState().setRotationStrategy('random');
+        await useProxyStore.getState().setProxyRotationStrategy('random');
       });
       
-      expect(useProxyStore.getState().rotationStrategy).toBe('random');
+      expect(useProxyStore.getState().currentRotationStrategy).toBe('random');
     });
 
     it('calls window.api.proxy.setRotation', async () => {
       await act(async () => {
-        await useProxyStore.getState().setRotationStrategy('least-used');
+        await useProxyStore.getState().setProxyRotationStrategy('least-used');
       });
       
       expect(mockApi.proxy.setRotation).toHaveBeenCalledWith({ strategy: 'least-used' });
@@ -416,7 +416,7 @@ describe('useProxyStore', () => {
       
       await expect(
         act(async () => {
-          await useProxyStore.getState().setRotationStrategy('random');
+          await useProxyStore.getState().setProxyRotationStrategy('random');
         })
       ).rejects.toThrow('Failed to set rotation strategy');
       
@@ -431,42 +431,42 @@ describe('useProxyStore', () => {
   describe('Selectors', () => {
     beforeEach(() => {
       useProxyStore.setState({
-        proxies: createMixedStatusProxies(),
+        proxyList: createMixedStatusProxies(),
       });
     });
 
-    it('getActiveProxies filters by active status', () => {
-      const activeProxies = useProxyStore.getState().getActiveProxies();
+    it('selectActiveProxies filters by active status', () => {
+      const activeProxies = useProxyStore.getState().selectActiveProxies();
       
       expect(activeProxies).toHaveLength(1);
       expect(activeProxies[0].status).toBe('active');
     });
 
-    it('getActiveProxies returns empty array when no active proxies', () => {
+    it('selectActiveProxies returns empty array when no active proxies', () => {
       useProxyStore.setState({
-        proxies: [
+        proxyList: [
           createMockProxy({ status: 'failed' }),
           createMockProxy({ status: 'disabled' }),
         ],
       });
       
-      const activeProxies = useProxyStore.getState().getActiveProxies();
+      const activeProxies = useProxyStore.getState().selectActiveProxies();
       
       expect(activeProxies).toHaveLength(0);
     });
 
-    it('getProxyById returns correct proxy', () => {
-      const proxies = useProxyStore.getState().proxies;
-      const targetId = proxies[0].id;
+    it('selectProxyById returns correct proxy', () => {
+      const proxyList = useProxyStore.getState().proxyList;
+      const targetId = proxyList[0].id;
       
-      const proxy = useProxyStore.getState().getProxyById(targetId);
+      const proxy = useProxyStore.getState().selectProxyById(targetId);
       
       expect(proxy).toBeDefined();
       expect(proxy?.id).toBe(targetId);
     });
 
-    it('getProxyById returns undefined for non-existent ID', () => {
-      const proxy = useProxyStore.getState().getProxyById('non-existent-id');
+    it('selectProxyById returns undefined for non-existent ID', () => {
+      const proxy = useProxyStore.getState().selectProxyById('non-existent-id');
       
       expect(proxy).toBeUndefined();
     });

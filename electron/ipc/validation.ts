@@ -73,99 +73,173 @@ function isPrivateOrBlockedIP(hostname: string): boolean {
 // PROXY VALIDATION SCHEMAS
 // ============================================================================
 
+// ============================================================================
+// PROXY VALIDATION CONSTANTS
+// ============================================================================
+
+/** Valid port range constraints */
+const PORT_RANGE = {
+  MIN: 1,
+  MAX: 65535,
+} as const;
+
+/** Maximum length constraints for proxy fields */
+const PROXY_FIELD_LIMITS = {
+  HOST_MAX_LENGTH: 255,
+  USERNAME_MAX_LENGTH: 255,
+  PASSWORD_MAX_LENGTH: 255,
+  NAME_MAX_LENGTH: 100,
+  REGION_MAX_LENGTH: 100,
+  TAG_MAX_LENGTH: 50,
+  MAX_TAGS_COUNT: 20,
+} as const;
+
+/** Regex pattern for valid hostname format */
+const VALID_HOSTNAME_PATTERN = /^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$/;
+
 export const ProxyConfigSchema = z.object({
   host: z.string()
-    .min(1, 'Host is required')
-    .max(255, 'Host too long')
+    .min(1, 'Proxy host is required - please provide an IP address or hostname')
+    .max(PROXY_FIELD_LIMITS.HOST_MAX_LENGTH, `Proxy host must not exceed ${PROXY_FIELD_LIMITS.HOST_MAX_LENGTH} characters`)
     .transform(sanitize)
     .refine(
-      (host) => /^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$/.test(host),
-      { message: 'Invalid host format' }
+      (host) => VALID_HOSTNAME_PATTERN.test(host),
+      { message: 'Proxy host must be a valid hostname or IP address (e.g., proxy.example.com or 192.168.1.1)' }
     )
     .refine(
       (host) => !hasXSSPatterns(host),
-      { message: 'Host contains invalid characters' }
+      { message: 'Proxy host contains potentially dangerous characters that are not allowed' }
     ),
-  port: z.number().int().min(1).max(65535),
-  protocol: z.enum(['http', 'https', 'socks4', 'socks5']),
-  username: z.string().max(255).transform(sanitize).optional(),
-  password: z.string().max(255).transform(sanitize).optional(),
-  name: z.string().max(100).transform(sanitize).default(''),
-  region: z.string().max(100).transform(sanitize).optional(),
-  tags: z.array(z.string().max(50).transform(sanitize)).max(20).optional(),
+  port: z.number()
+    .int('Proxy port must be a whole number')
+    .min(PORT_RANGE.MIN, `Proxy port must be at least ${PORT_RANGE.MIN}`)
+    .max(PORT_RANGE.MAX, `Proxy port must be between ${PORT_RANGE.MIN} and ${PORT_RANGE.MAX}`),
+  protocol: z.enum(['http', 'https', 'socks4', 'socks5'], {
+    errorMap: () => ({ message: 'Proxy protocol must be one of: http, https, socks4, or socks5' })
+  }),
+  username: z.string().max(PROXY_FIELD_LIMITS.USERNAME_MAX_LENGTH, `Username must not exceed ${PROXY_FIELD_LIMITS.USERNAME_MAX_LENGTH} characters`).transform(sanitize).optional(),
+  password: z.string().max(PROXY_FIELD_LIMITS.PASSWORD_MAX_LENGTH, `Password must not exceed ${PROXY_FIELD_LIMITS.PASSWORD_MAX_LENGTH} characters`).transform(sanitize).optional(),
+  name: z.string().max(PROXY_FIELD_LIMITS.NAME_MAX_LENGTH, `Proxy name must not exceed ${PROXY_FIELD_LIMITS.NAME_MAX_LENGTH} characters`).transform(sanitize).default(''),
+  region: z.string().max(PROXY_FIELD_LIMITS.REGION_MAX_LENGTH, `Region must not exceed ${PROXY_FIELD_LIMITS.REGION_MAX_LENGTH} characters`).transform(sanitize).optional(),
+  tags: z.array(z.string().max(PROXY_FIELD_LIMITS.TAG_MAX_LENGTH, `Each tag must not exceed ${PROXY_FIELD_LIMITS.TAG_MAX_LENGTH} characters`).transform(sanitize)).max(PROXY_FIELD_LIMITS.MAX_TAGS_COUNT, `Maximum ${PROXY_FIELD_LIMITS.MAX_TAGS_COUNT} tags allowed`).optional(),
 });
 
-export const ProxyIdSchema = z.string().uuid('Invalid proxy ID');
+export const ProxyIdSchema = z.string().uuid('Proxy ID must be a valid UUID format (e.g., 123e4567-e89b-12d3-a456-426614174000)');
+
+/** Rotation configuration constraints */
+const ROTATION_LIMITS = {
+  MAX_INTERVAL_MS: 3600000, // 1 hour in milliseconds
+  MIN_FAILURES: 1,
+  MAX_FAILURES: 100,
+} as const;
+
+/** Available rotation strategies */
+const VALID_ROTATION_STRATEGIES = ['round-robin', 'random', 'least-used', 'fastest', 'failure-aware'] as const;
 
 export const RotationConfigSchema = z.object({
-  strategy: z.enum(['round-robin', 'random', 'least-used', 'fastest', 'failure-aware']),
-  interval: z.number().int().min(0).max(3600000).optional(), // Max 1 hour
-  maxFailures: z.number().int().min(1).max(100).optional(),
+  strategy: z.enum(VALID_ROTATION_STRATEGIES, {
+    errorMap: () => ({ message: `Rotation strategy must be one of: ${VALID_ROTATION_STRATEGIES.join(', ')}` })
+  }),
+  interval: z.number()
+    .int('Rotation interval must be a whole number')
+    .min(0, 'Rotation interval cannot be negative')
+    .max(ROTATION_LIMITS.MAX_INTERVAL_MS, `Rotation interval must not exceed ${ROTATION_LIMITS.MAX_INTERVAL_MS}ms (1 hour)`)
+    .optional(),
+  maxFailures: z.number()
+    .int('Max failures must be a whole number')
+    .min(ROTATION_LIMITS.MIN_FAILURES, `Max failures must be at least ${ROTATION_LIMITS.MIN_FAILURES}`)
+    .max(ROTATION_LIMITS.MAX_FAILURES, `Max failures must not exceed ${ROTATION_LIMITS.MAX_FAILURES}`)
+    .optional(),
 }).strict();
 
 // ============================================================================
 // TAB VALIDATION SCHEMAS
 // ============================================================================
 
+/** URL validation constraints */
+const URL_LIMITS = {
+  MAX_LENGTH: 2048,
+} as const;
+
+/** Allowed URL protocols for navigation */
+const ALLOWED_URL_PROTOCOLS = ['http:', 'https:'] as const;
+
+/**
+ * Check if URL is a valid relative path
+ */
+function isValidRelativeUrl(url: string): boolean {
+  return url.startsWith('/') || url.startsWith('./');
+}
+
+/**
+ * Check if URL protocol is allowed
+ */
+function hasAllowedProtocol(parsedUrl: URL): boolean {
+  return ALLOWED_URL_PROTOCOLS.includes(parsedUrl.protocol as typeof ALLOWED_URL_PROTOCOLS[number]);
+}
+
+/**
+ * Check if URL contains embedded credentials
+ */
+function hasEmbeddedCredentials(parsedUrl: URL): boolean {
+  return Boolean(parsedUrl.username || parsedUrl.password);
+}
+
 /**
  * Safe URL schema with SSRF protection
  */
 export const SafeUrlSchema = z.string()
-  .max(2048, 'URL too long')
+  .max(URL_LIMITS.MAX_LENGTH, `URL must not exceed ${URL_LIMITS.MAX_LENGTH} characters`)
   .transform(sanitize)
   .refine(
     (url) => {
-      if (!url) {return true;}
+      if (!url) { return true; }
       
       try {
-        const parsed = new URL(url);
+        const parsedUrl = new URL(url);
         
-        // Only allow http/https
-        if (!['http:', 'https:'].includes(parsed.protocol)) {
+        if (!hasAllowedProtocol(parsedUrl)) {
           return false;
         }
         
-        // Block private IPs and metadata endpoints
-        if (isPrivateOrBlockedIP(parsed.hostname)) {
+        if (isPrivateOrBlockedIP(parsedUrl.hostname)) {
           return false;
         }
         
-        // Block credentials in URL
-        if (parsed.username || parsed.password) {
+        if (hasEmbeddedCredentials(parsedUrl)) {
           return false;
         }
         
         return true;
-      } catch (error) {
-        // URL parsing failed - allow relative URLs but log for debugging
-        // This is expected for relative paths like "/page" or "./resource"
-        const isRelativeUrl = url.startsWith('/') || url.startsWith('./');
-        if (!isRelativeUrl) {
-          console.debug('[IPC Validation] URL parse failed, not a relative URL:', 
-            url.substring(0, 50), error instanceof Error ? error.message : 'Parse error');
-        }
-        return isRelativeUrl;
+      } catch {
+        // URL parsing failed - allow relative URLs
+        return isValidRelativeUrl(url);
       }
     },
-    { message: 'Invalid or blocked URL' }
+    { message: 'URL must be a valid HTTP/HTTPS URL. Private IPs, credentials in URL, and non-HTTP protocols are not allowed.' }
   );
+
+/** Tab field constraints */
+const TAB_FIELD_LIMITS = {
+  TITLE_MAX_LENGTH: 500,
+} as const;
 
 export const TabConfigSchema = z.object({
   url: SafeUrlSchema.optional(),
-  title: z.string().max(500).transform(sanitize).optional(),
-  proxyId: z.string().uuid().optional(),
+  title: z.string().max(TAB_FIELD_LIMITS.TITLE_MAX_LENGTH, `Tab title must not exceed ${TAB_FIELD_LIMITS.TITLE_MAX_LENGTH} characters`).transform(sanitize).optional(),
+  proxyId: z.string().uuid('Proxy ID must be a valid UUID format').optional(),
 }).strict();
 
-export const TabIdSchema = z.string().uuid('Invalid tab ID');
+export const TabIdSchema = z.string().uuid('Tab ID must be a valid UUID format (e.g., 123e4567-e89b-12d3-a456-426614174000)');
 
 export const TabUpdateSchema = z.object({
-  title: z.string().max(500).transform(sanitize).optional(),
+  title: z.string().max(TAB_FIELD_LIMITS.TITLE_MAX_LENGTH, `Tab title must not exceed ${TAB_FIELD_LIMITS.TITLE_MAX_LENGTH} characters`).transform(sanitize).optional(),
   url: SafeUrlSchema.optional(),
-  active: z.boolean().optional(),
+  active: z.boolean({ invalid_type_error: 'Active state must be a boolean (true or false)' }).optional(),
 }).strict();
 
 export const NavigationSchema = z.object({
-  tabId: z.string().uuid('Invalid tab ID'),
+  tabId: z.string().uuid('Tab ID must be a valid UUID format'),
   url: SafeUrlSchema,
 }).strict();
 
@@ -173,135 +247,384 @@ export const NavigationSchema = z.object({
 // AUTOMATION VALIDATION SCHEMAS
 // ============================================================================
 
+/** Automation field constraints */
+const AUTOMATION_FIELD_LIMITS = {
+  KEYWORD_MIN_LENGTH: 1,
+  KEYWORD_MAX_LENGTH: 200,
+  DOMAIN_MAX_LENGTH: 255,
+  PATTERN_MAX_LENGTH: 200,
+} as const;
+
+/** Valid domain name pattern */
+const VALID_DOMAIN_PATTERN = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$/;
+
+/** Patterns that could cause ReDoS (Regular Expression Denial of Service) */
+const REDOS_VULNERABILITY_PATTERNS = [/\(\.\*\)\+/, /\(\.\+\)\+/, /\([^)]+\+\)\+/];
+
+/**
+ * Check if a regex pattern could cause ReDoS vulnerability
+ */
+function couldCauseReDoS(pattern: string): boolean {
+  return REDOS_VULNERABILITY_PATTERNS.some(vulnerablePattern => vulnerablePattern.test(pattern));
+}
+
+/**
+ * Check if a string is a valid regex pattern
+ */
+function isValidRegexPattern(pattern: string): boolean {
+  try {
+    new RegExp(pattern);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const KeywordSchema = z.string()
-  .min(1, 'Keyword required')
-  .max(200, 'Keyword too long')
+  .min(AUTOMATION_FIELD_LIMITS.KEYWORD_MIN_LENGTH, 'Search keyword is required - please provide at least one keyword')
+  .max(AUTOMATION_FIELD_LIMITS.KEYWORD_MAX_LENGTH, `Search keyword must not exceed ${AUTOMATION_FIELD_LIMITS.KEYWORD_MAX_LENGTH} characters`)
   .transform(sanitize)
   .refine(
-    (kw) => !hasXSSPatterns(kw),
-    { message: 'Keyword contains invalid patterns' }
+    (keyword) => !hasXSSPatterns(keyword),
+    { message: 'Search keyword contains potentially dangerous patterns that are not allowed' }
   );
 
 export const DomainSchema = z.string()
-  .min(1, 'Domain required')
-  .max(255, 'Domain too long')
+  .min(1, 'Target domain is required - please provide a domain name (e.g., example.com)')
+  .max(AUTOMATION_FIELD_LIMITS.DOMAIN_MAX_LENGTH, `Domain name must not exceed ${AUTOMATION_FIELD_LIMITS.DOMAIN_MAX_LENGTH} characters`)
   .transform(sanitize)
-  .transform(v => v.toLowerCase())
+  .transform(domain => domain.toLowerCase())
   .refine(
-    (d) => /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$/.test(d),
-    { message: 'Invalid domain format' }
+    (domain) => VALID_DOMAIN_PATTERN.test(domain),
+    { message: 'Domain must be a valid format (e.g., example.com or sub.example.com). No protocols or paths allowed.' }
   );
 
 export const DomainPatternSchema = z.string()
-  .max(200, 'Pattern too long')
+  .max(AUTOMATION_FIELD_LIMITS.PATTERN_MAX_LENGTH, `Domain pattern must not exceed ${AUTOMATION_FIELD_LIMITS.PATTERN_MAX_LENGTH} characters`)
   .transform(sanitize)
   .refine(
     (pattern) => {
-      if (!pattern) {return true;}
-      // Check for ReDoS patterns
-      const redosPatterns = [/\(\.\*\)\+/, /\(\.\+\)\+/, /\([^)]+\+\)\+/];
-      return !redosPatterns.some(p => p.test(pattern));
+      if (!pattern) { return true; }
+      return !couldCauseReDoS(pattern);
     },
-    { message: 'Pattern may cause ReDoS' }
+    { message: 'Domain pattern contains patterns that could cause performance issues (ReDoS vulnerability)' }
   )
   .refine(
     (pattern) => {
-      if (!pattern) {return true;}
-      try { 
-        new RegExp(pattern); 
-        return true; 
-      } catch (error) { 
-        // Invalid regex pattern - log for debugging
-        console.debug('[IPC Validation] Invalid regex pattern:', pattern,
-          error instanceof Error ? error.message : 'Invalid regex');
-        return false; 
-      }
+      if (!pattern) { return true; }
+      return isValidRegexPattern(pattern);
     },
-    { message: 'Invalid regex pattern' }
+    { message: 'Domain pattern must be a valid regular expression' }
   )
   .optional();
 
+/** Automation configuration constraints */
+const AUTOMATION_CONFIG_LIMITS = {
+  MAX_KEYWORDS: 100,
+  MAX_TARGET_DOMAINS: 50,
+  MAX_RETRIES: 10,
+  MIN_DELAY_MS: 1000,
+  MAX_DELAY_MS: 60000,
+  DEFAULT_DELAY_MS: 3000,
+  DEFAULT_RETRIES: 3,
+  MAX_RESULTS: 100,
+} as const;
+
+/** Supported search engines */
+const SUPPORTED_SEARCH_ENGINES = ['google', 'bing', 'duckduckgo', 'yahoo', 'brave'] as const;
+
 export const AutomationConfigSchema = z.object({
-  keywords: z.array(KeywordSchema).max(100).default([]),
-  engine: z.enum(['google', 'bing', 'duckduckgo', 'yahoo', 'brave']).default('google'),
-  targetDomains: z.array(DomainSchema).max(50).default([]),
-  maxRetries: z.number().int().min(0).max(10).default(3),
-  delayBetweenSearches: z.number().int().min(1000).max(60000).default(3000),
-  useRandomProxy: z.boolean().default(false),
-  clickThrough: z.boolean().default(true),
-  simulateHumanBehavior: z.boolean().default(true),
+  keywords: z.array(KeywordSchema)
+    .max(AUTOMATION_CONFIG_LIMITS.MAX_KEYWORDS, `Maximum ${AUTOMATION_CONFIG_LIMITS.MAX_KEYWORDS} keywords allowed per automation session`)
+    .default([]),
+  engine: z.enum(SUPPORTED_SEARCH_ENGINES, {
+    errorMap: () => ({ message: `Search engine must be one of: ${SUPPORTED_SEARCH_ENGINES.join(', ')}` })
+  }).default('google'),
+  targetDomains: z.array(DomainSchema)
+    .max(AUTOMATION_CONFIG_LIMITS.MAX_TARGET_DOMAINS, `Maximum ${AUTOMATION_CONFIG_LIMITS.MAX_TARGET_DOMAINS} target domains allowed`)
+    .default([]),
+  maxRetries: z.number()
+    .int('Max retries must be a whole number')
+    .min(0, 'Max retries cannot be negative')
+    .max(AUTOMATION_CONFIG_LIMITS.MAX_RETRIES, `Max retries must not exceed ${AUTOMATION_CONFIG_LIMITS.MAX_RETRIES}`)
+    .default(AUTOMATION_CONFIG_LIMITS.DEFAULT_RETRIES),
+  delayBetweenSearches: z.number()
+    .int('Delay must be a whole number in milliseconds')
+    .min(AUTOMATION_CONFIG_LIMITS.MIN_DELAY_MS, `Delay must be at least ${AUTOMATION_CONFIG_LIMITS.MIN_DELAY_MS}ms (1 second) to avoid rate limiting`)
+    .max(AUTOMATION_CONFIG_LIMITS.MAX_DELAY_MS, `Delay must not exceed ${AUTOMATION_CONFIG_LIMITS.MAX_DELAY_MS}ms (60 seconds)`)
+    .default(AUTOMATION_CONFIG_LIMITS.DEFAULT_DELAY_MS),
+  useRandomProxy: z.boolean({ invalid_type_error: 'useRandomProxy must be true or false' }).default(false),
+  clickThrough: z.boolean({ invalid_type_error: 'clickThrough must be true or false' }).default(true),
+  simulateHumanBehavior: z.boolean({ invalid_type_error: 'simulateHumanBehavior must be true or false' }).default(true),
   // Legacy fields for backward compatibility
-  searchEngine: z.enum(['google', 'bing', 'duckduckgo', 'yahoo', 'brave']).optional(),
-  maxResults: z.number().int().min(1).max(100).optional(),
-  delayMs: z.number().int().min(1000).max(60000).optional(),
+  searchEngine: z.enum(SUPPORTED_SEARCH_ENGINES).optional(),
+  maxResults: z.number()
+    .int('Max results must be a whole number')
+    .min(1, 'Max results must be at least 1')
+    .max(AUTOMATION_CONFIG_LIMITS.MAX_RESULTS, `Max results must not exceed ${AUTOMATION_CONFIG_LIMITS.MAX_RESULTS}`)
+    .optional(),
+  delayMs: z.number()
+    .int('Delay must be a whole number in milliseconds')
+    .min(AUTOMATION_CONFIG_LIMITS.MIN_DELAY_MS)
+    .max(AUTOMATION_CONFIG_LIMITS.MAX_DELAY_MS)
+    .optional(),
 });
 
-export const SessionIdSchema = z.string().uuid('Invalid session ID');
+export const SessionIdSchema = z.string().uuid('Session ID must be a valid UUID format (e.g., 123e4567-e89b-12d3-a456-426614174000)');
 
 // ============================================================================
 // PRIVACY VALIDATION SCHEMAS
 // ============================================================================
 
+/** Privacy field constraints */
+const PRIVACY_FIELD_LIMITS = {
+  LANGUAGE_CODE_MAX_LENGTH: 10,
+  TIMEZONE_MAX_LENGTH: 100,
+} as const;
+
+/** Valid language code pattern (e.g., en, en-US) */
+const LANGUAGE_CODE_PATTERN = /^[a-z]{2}(-[A-Z]{2})?$/;
+
+/**
+ * Check if a timezone string is valid using Intl API
+ */
+function isValidTimezone(timezone: string): boolean {
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const LanguageCodeSchema = z.string()
-  .max(10)
-  .regex(/^[a-z]{2}(-[A-Z]{2})?$/, 'Invalid language code (e.g., en-US)');
+  .max(PRIVACY_FIELD_LIMITS.LANGUAGE_CODE_MAX_LENGTH, `Language code must not exceed ${PRIVACY_FIELD_LIMITS.LANGUAGE_CODE_MAX_LENGTH} characters`)
+  .regex(LANGUAGE_CODE_PATTERN, 'Language code must be in format: xx or xx-XX (e.g., en or en-US)');
 
 export const TimezoneSchema = z.string()
-  .max(100)
+  .max(PRIVACY_FIELD_LIMITS.TIMEZONE_MAX_LENGTH, `Timezone must not exceed ${PRIVACY_FIELD_LIMITS.TIMEZONE_MAX_LENGTH} characters`)
   .transform(sanitize)
   .refine(
-    (tz) => {
-      try {
-        Intl.DateTimeFormat(undefined, { timeZone: tz });
-        return true;
-      } catch (error) { 
-        // Invalid timezone - Intl.DateTimeFormat threw an error
-        console.debug('[IPC Validation] Invalid timezone:', tz,
-          error instanceof Error ? error.message : 'Invalid timezone');
-        return false; 
-      }
-    },
-    { message: 'Invalid timezone' }
+    isValidTimezone,
+    { message: 'Timezone must be a valid IANA timezone identifier (e.g., America/New_York, Europe/London, Asia/Tokyo)' }
   );
 
+/** Screen resolution constraints */
+const SCREEN_RESOLUTION_LIMITS = {
+  MIN_WIDTH: 320,
+  MAX_WIDTH: 7680,  // 8K resolution
+  MIN_HEIGHT: 240,
+  MAX_HEIGHT: 4320, // 8K resolution
+} as const;
+
+/** Hardware spoofing constraints */
+const HARDWARE_SPOOF_LIMITS = {
+  MIN_CPU_CORES: 1,
+  MAX_CPU_CORES: 32,
+  MIN_DEVICE_MEMORY_GB: 1,
+  MAX_DEVICE_MEMORY_GB: 64,
+  USER_AGENT_MAX_LENGTH: 500,
+} as const;
+
+/** Supported platform values for navigator spoofing */
+const SUPPORTED_PLATFORMS = ['Win32', 'MacIntel', 'Linux x86_64'] as const;
+
 export const FingerprintConfigSchema = z.object({
-  canvas: z.boolean().default(true),
-  webgl: z.boolean().default(true),
-  audio: z.boolean().default(true),
-  navigator: z.boolean().default(true),
-  webrtc: z.boolean().default(true),
-  trackerBlocking: z.boolean().default(true),
+  canvas: z.boolean({ invalid_type_error: 'Canvas spoofing must be true or false' }).default(true),
+  webgl: z.boolean({ invalid_type_error: 'WebGL spoofing must be true or false' }).default(true),
+  audio: z.boolean({ invalid_type_error: 'Audio spoofing must be true or false' }).default(true),
+  navigator: z.boolean({ invalid_type_error: 'Navigator spoofing must be true or false' }).default(true),
+  webrtc: z.boolean({ invalid_type_error: 'WebRTC protection must be true or false' }).default(true),
+  trackerBlocking: z.boolean({ invalid_type_error: 'Tracker blocking must be true or false' }).default(true),
   timezone: TimezoneSchema.optional(),
   language: LanguageCodeSchema.optional(),
   screen: z.object({
-    width: z.number().int().min(320).max(7680).optional(),
-    height: z.number().int().min(240).max(4320).optional(),
+    width: z.number()
+      .int('Screen width must be a whole number')
+      .min(SCREEN_RESOLUTION_LIMITS.MIN_WIDTH, `Screen width must be at least ${SCREEN_RESOLUTION_LIMITS.MIN_WIDTH}px`)
+      .max(SCREEN_RESOLUTION_LIMITS.MAX_WIDTH, `Screen width must not exceed ${SCREEN_RESOLUTION_LIMITS.MAX_WIDTH}px`)
+      .optional(),
+    height: z.number()
+      .int('Screen height must be a whole number')
+      .min(SCREEN_RESOLUTION_LIMITS.MIN_HEIGHT, `Screen height must be at least ${SCREEN_RESOLUTION_LIMITS.MIN_HEIGHT}px`)
+      .max(SCREEN_RESOLUTION_LIMITS.MAX_HEIGHT, `Screen height must not exceed ${SCREEN_RESOLUTION_LIMITS.MAX_HEIGHT}px`)
+      .optional(),
   }).optional(),
   // Navigator spoofing
-  userAgent: z.string().max(500).transform(sanitize).optional(),
-  platform: z.enum(['Win32', 'MacIntel', 'Linux x86_64']).optional(),
-  hardwareConcurrency: z.number().int().min(1).max(32).optional(),
-  deviceMemory: z.number().min(1).max(64).optional(),
+  userAgent: z.string()
+    .max(HARDWARE_SPOOF_LIMITS.USER_AGENT_MAX_LENGTH, `User agent must not exceed ${HARDWARE_SPOOF_LIMITS.USER_AGENT_MAX_LENGTH} characters`)
+    .transform(sanitize)
+    .optional(),
+  platform: z.enum(SUPPORTED_PLATFORMS, {
+    errorMap: () => ({ message: `Platform must be one of: ${SUPPORTED_PLATFORMS.join(', ')}` })
+  }).optional(),
+  hardwareConcurrency: z.number()
+    .int('Hardware concurrency (CPU cores) must be a whole number')
+    .min(HARDWARE_SPOOF_LIMITS.MIN_CPU_CORES, `CPU cores must be at least ${HARDWARE_SPOOF_LIMITS.MIN_CPU_CORES}`)
+    .max(HARDWARE_SPOOF_LIMITS.MAX_CPU_CORES, `CPU cores must not exceed ${HARDWARE_SPOOF_LIMITS.MAX_CPU_CORES}`)
+    .optional(),
+  deviceMemory: z.number()
+    .min(HARDWARE_SPOOF_LIMITS.MIN_DEVICE_MEMORY_GB, `Device memory must be at least ${HARDWARE_SPOOF_LIMITS.MIN_DEVICE_MEMORY_GB}GB`)
+    .max(HARDWARE_SPOOF_LIMITS.MAX_DEVICE_MEMORY_GB, `Device memory must not exceed ${HARDWARE_SPOOF_LIMITS.MAX_DEVICE_MEMORY_GB}GB`)
+    .optional(),
 });
 
-export const WebRTCToggleSchema = z.boolean();
+export const WebRTCToggleSchema = z.boolean({
+  required_error: 'WebRTC toggle value is required',
+  invalid_type_error: 'WebRTC toggle must be true (enabled) or false (disabled)'
+});
 
-export const TrackerBlockingToggleSchema = z.boolean();
+export const TrackerBlockingToggleSchema = z.boolean({
+  required_error: 'Tracker blocking toggle value is required',
+  invalid_type_error: 'Tracker blocking toggle must be true (enabled) or false (disabled)'
+});
 
 // ============================================================================
 // SESSION VALIDATION SCHEMAS
 // ============================================================================
 
+/** Session field constraints */
+const SESSION_FIELD_LIMITS = {
+  NAME_MIN_LENGTH: 1,
+  NAME_MAX_LENGTH: 100,
+} as const;
+
+/** Valid characters for session names (alphanumeric, spaces, underscores, hyphens) */
+const VALID_SESSION_NAME_PATTERN = /^[a-zA-Z0-9\s_-]+$/;
+
 export const SessionNameSchema = z.string()
-  .min(1, 'Session name required')
-  .max(100, 'Session name too long')
+  .min(SESSION_FIELD_LIMITS.NAME_MIN_LENGTH, 'Session name is required - please provide a descriptive name')
+  .max(SESSION_FIELD_LIMITS.NAME_MAX_LENGTH, `Session name must not exceed ${SESSION_FIELD_LIMITS.NAME_MAX_LENGTH} characters`)
   .transform(sanitize)
   .refine(
-    (name) => /^[a-zA-Z0-9\s_-]+$/.test(name),
-    { message: 'Session name contains invalid characters' }
+    (name) => VALID_SESSION_NAME_PATTERN.test(name),
+    { message: 'Session name can only contain letters, numbers, spaces, underscores, and hyphens' }
   );
 
-export const SessionLoadIdSchema = z.string().uuid('Invalid session ID');
+export const SessionLoadIdSchema = z.string().uuid('Session ID must be a valid UUID format for loading saved sessions');
+
+// ============================================================================
+// TAB PROXY ASSIGNMENT SCHEMAS
+// ============================================================================
+
+export const TabAssignProxySchema = z.object({
+  tabId: z.string().uuid('Tab ID must be a valid UUID format'),
+  proxyId: z.string().uuid('Proxy ID must be a valid UUID format').nullable(),
+}).strict();
+
+// ============================================================================
+// PRIVACY STATS SCHEMAS
+// ============================================================================
+
+export const PrivacyStatsRequestSchema = z.object({
+  tabId: z.string().uuid('Tab ID must be a valid UUID format for per-tab statistics').optional(),
+}).strict().optional();
+
+// ============================================================================
+// AUTOMATION SCHEDULING SCHEMAS
+// ============================================================================
+
+/** Schedule interval constraints */
+const SCHEDULE_LIMITS = {
+  MIN_INTERVAL_MS: 1000,      // 1 second minimum
+  MAX_INTERVAL_MS: 86400000,  // 24 hours maximum
+  CRON_MAX_LENGTH: 100,
+  CRON_FIELD_COUNT: 5,
+  DAYS_OF_WEEK_MIN: 0,        // Sunday
+  DAYS_OF_WEEK_MAX: 6,        // Saturday
+  MAX_DAYS_SELECTED: 7,
+} as const;
+
+/** Available schedule types */
+const SCHEDULE_TYPES = ['one-time', 'recurring', 'continuous', 'custom'] as const;
+
+/**
+ * Check if cron expression has valid structure (5 fields)
+ */
+function hasValidCronStructure(cronExpression: string): boolean {
+  const fields = cronExpression.trim().split(/\s+/);
+  return fields.length === SCHEDULE_LIMITS.CRON_FIELD_COUNT;
+}
+
+/**
+ * Check if schedule has required fields based on type
+ */
+function hasRequiredFieldsForScheduleType(data: { 
+  type: string; 
+  startTime?: string; 
+  interval?: number; 
+  cronExpression?: string 
+}): boolean {
+  switch (data.type) {
+    case 'one-time':
+      return Boolean(data.startTime);
+    case 'recurring':
+      return Boolean(data.interval);
+    case 'custom':
+      return Boolean(data.cronExpression);
+    default:
+      return true;
+  }
+}
+
+/**
+ * Check if start time is in the future
+ */
+function isStartTimeInFuture(startTime: string): boolean {
+  const startDate = new Date(startTime);
+  return startDate.getTime() > Date.now();
+}
+
+export const ScheduleTypeSchema = z.enum(SCHEDULE_TYPES, {
+  errorMap: () => ({ message: `Schedule type must be one of: ${SCHEDULE_TYPES.join(', ')}` })
+});
+
+export const ScheduleConfigSchema = z.object({
+  type: ScheduleTypeSchema,
+  startTime: z.string().datetime('Start time must be a valid ISO 8601 datetime string').optional(),
+  endTime: z.string().datetime('End time must be a valid ISO 8601 datetime string').optional(),
+  interval: z.number()
+    .int('Interval must be a whole number in milliseconds')
+    .min(SCHEDULE_LIMITS.MIN_INTERVAL_MS, `Interval must be at least ${SCHEDULE_LIMITS.MIN_INTERVAL_MS}ms (1 second)`)
+    .max(SCHEDULE_LIMITS.MAX_INTERVAL_MS, `Interval must not exceed ${SCHEDULE_LIMITS.MAX_INTERVAL_MS}ms (24 hours)`)
+    .optional(),
+  daysOfWeek: z.array(
+    z.number()
+      .int('Day of week must be a whole number')
+      .min(SCHEDULE_LIMITS.DAYS_OF_WEEK_MIN, 'Day of week must be 0 (Sunday) through 6 (Saturday)')
+      .max(SCHEDULE_LIMITS.DAYS_OF_WEEK_MAX, 'Day of week must be 0 (Sunday) through 6 (Saturday)')
+  ).max(SCHEDULE_LIMITS.MAX_DAYS_SELECTED, 'Cannot select more than 7 days').optional(),
+  cronExpression: z.string()
+    .max(SCHEDULE_LIMITS.CRON_MAX_LENGTH, `Cron expression must not exceed ${SCHEDULE_LIMITS.CRON_MAX_LENGTH} characters`)
+    .transform(sanitize)
+    .refine(
+      (cron) => {
+        if (!cron) { return true; }
+        return hasValidCronStructure(cron);
+      },
+      { message: 'Cron expression must have exactly 5 fields: minute hour day-of-month month day-of-week (e.g., "0 9 * * 1-5")' }
+    )
+    .refine(
+      (cron) => {
+        if (!cron) { return true; }
+        return !couldCauseReDoS(cron);
+      },
+      { message: 'Cron expression contains patterns that could cause performance issues' }
+    )
+    .optional(),
+  task: AutomationConfigSchema,
+}).strict().refine(
+  hasRequiredFieldsForScheduleType,
+  { message: 'Missing required fields: one-time schedules require startTime, recurring schedules require interval, custom schedules require cronExpression' }
+).refine(
+  (data) => {
+    if (data.type === 'one-time' && data.startTime) {
+      return isStartTimeInFuture(data.startTime);
+    }
+    return true;
+  },
+  { message: 'Start time must be in the future for one-time schedules' }
+);
 
 // ============================================================================
 // VALIDATION HELPER

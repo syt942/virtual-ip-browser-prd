@@ -1,899 +1,297 @@
-# API Reference - Virtual IP Browser
+# API Reference Codemap
 
-**Last Updated:** 2025-01-30  
-**Version:** 1.1.0
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [IPC Channels](#ipc-channels)
-3. [Validation Schemas](#validation-schemas)
-4. [Event System](#event-system)
-5. [Error Handling](#error-handling)
-6. [Rate Limits](#rate-limits)
-
----
+**Last Updated:** 2025-02-01  
+**Version:** 1.3.0
 
 ## Overview
 
-Virtual IP Browser uses Electron's IPC (Inter-Process Communication) system for communication between the renderer process (React UI) and the main process (Node.js backend). All channels are secured with:
+This codemap documents the IPC API layer that connects the renderer process to main process functionality. All APIs use validated channels with rate limiting and type-safe schemas.
 
-- **Channel Whitelisting**: Only approved channels can be invoked
-- **Zod Validation**: Type-safe input validation
-- **Rate Limiting**: Per-channel request limits
-- **SSRF Protection**: URL validation for navigation
-
-### Architecture
+## Architecture
 
 ```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   React UI   │───►│   Preload    │───►│  Validation  │───►│   Handler    │
-│   (Store)    │    │  (Whitelist) │    │    (Zod)     │    │   (Logic)    │
-└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                      IPC API Architecture                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Renderer Process                                                │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  window.api.invoke(channel, data)                        │   │
+│  └──────────────────────────┬──────────────────────────────┘   │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    Preload Bridge                        │   │
+│  │  contextBridge.exposeInMainWorld('api', { invoke })     │   │
+│  └──────────────────────────┬──────────────────────────────┘   │
+│                              │                                   │
+│  ════════════════════════════╪══════════════════════════════   │
+│                              │  IPC Channel                      │
+│  ════════════════════════════╪══════════════════════════════   │
+│                              │                                   │
+│  Main Process                ▼                                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  Rate Limiter → Zod Validation → Handler → Response     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Usage from Renderer
+## File Structure
+
+```
+electron/ipc/
+├── channels.ts           # Channel name constants
+├── validation.ts         # Zod validation schemas
+├── rate-limiter.ts       # Rate limiting implementation
+└── handlers/
+    ├── index.ts          # Handler registration
+    ├── automation.ts     # Automation handlers
+    ├── privacy.ts        # Privacy handlers
+    ├── navigation.ts     # Navigation handlers
+    └── tabs.ts           # Tab handlers
+```
+
+## Channel Definitions
+
+### `electron/ipc/channels.ts`
 
 ```typescript
-// Access via window.electronAPI (exposed by preload)
-const result = await window.electronAPI.invoke('channel:name', payload);
-
-// Listen to events
-window.electronAPI.on('event:name', (data) => {
-  console.log('Received:', data);
-});
+export const IPC_CHANNELS = {
+  // Proxy Management
+  PROXY_ADD: 'proxy:add',
+  PROXY_REMOVE: 'proxy:remove',
+  PROXY_UPDATE: 'proxy:update',
+  PROXY_LIST: 'proxy:list',
+  PROXY_VALIDATE: 'proxy:validate',
+  PROXY_SET_ROTATION: 'proxy:set-rotation',
+  
+  // Tab Management
+  TAB_CREATE: 'tab:create',
+  TAB_CLOSE: 'tab:close',
+  TAB_UPDATE: 'tab:update',
+  TAB_LIST: 'tab:list',
+  TAB_NAVIGATE: 'tab:navigate',
+  TAB_ASSIGN_PROXY: 'tab:assign-proxy',
+  
+  // Privacy & Fingerprint
+  PRIVACY_SET_FINGERPRINT: 'privacy:set-fingerprint',
+  PRIVACY_TOGGLE_WEBRTC: 'privacy:toggle-webrtc',
+  PRIVACY_TOGGLE_TRACKER_BLOCKING: 'privacy:toggle-tracker-blocking',
+  PRIVACY_GET_STATS: 'privacy:get-stats',
+  
+  // Automation
+  AUTOMATION_START_SEARCH: 'automation:start-search',
+  AUTOMATION_STOP_SEARCH: 'automation:stop-search',
+  AUTOMATION_ADD_KEYWORD: 'automation:add-keyword',
+  AUTOMATION_ADD_DOMAIN: 'automation:add-domain',
+  AUTOMATION_GET_TASKS: 'automation:get-tasks',
+  AUTOMATION_SCHEDULE: 'automation:schedule',
+  AUTOMATION_PAUSE: 'automation:pause',
+  AUTOMATION_RESUME: 'automation:resume',
+  
+  // Session Management
+  SESSION_SAVE: 'session:save',
+  SESSION_LOAD: 'session:load',
+  SESSION_LIST: 'session:list',
+  
+  // Events (Main → Renderer)
+  EVENT_PROXY_STATUS_CHANGE: 'event:proxy-status-change',
+  EVENT_TAB_UPDATE: 'event:tab-update',
+  EVENT_AUTOMATION_PROGRESS: 'event:automation-progress',
+  EVENT_LOG: 'event:log'
+} as const;
 ```
 
----
-
-## IPC Channels
+## API Summary
 
 ### Proxy Management
 
-#### `proxy:add`
-
-Add a new proxy configuration.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 50/minute |
-| Auth Required | No |
-
-**Request Schema:**
-```typescript
-{
-  host: string;        // 1-255 chars, required
-  port: number;        // 1-65535, required
-  protocol: 'http' | 'https' | 'socks4' | 'socks5';
-  username?: string;   // max 255 chars
-  password?: string;   // max 255 chars
-  country?: string;    // ISO 3166-1 alpha-2 (2 chars)
-  region?: string;     // max 50 chars
-  name?: string;       // max 100 chars
-}
-```
-
-**Response:**
-```typescript
-{
-  id: string;          // UUID
-  host: string;
-  port: number;
-  protocol: string;
-  status: 'active' | 'inactive' | 'validating';
-  createdAt: string;   // ISO 8601
-}
-```
-
-**Example:**
-```typescript
-const proxy = await window.electronAPI.invoke('proxy:add', {
-  host: '192.168.1.100',
-  port: 8080,
-  protocol: 'http',
-  country: 'US'
-});
-```
-
----
-
-#### `proxy:remove`
-
-Remove a proxy by ID.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 50/minute |
-
-**Request:**
-```typescript
-{
-  id: string;  // UUID of proxy to remove
-}
-```
-
-**Response:**
-```typescript
-{
-  success: boolean;
-  removedId: string;
-}
-```
-
----
-
-#### `proxy:update`
-
-Update an existing proxy configuration.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 50/minute |
-
-**Request:**
-```typescript
-{
-  id: string;          // UUID, required
-  host?: string;
-  port?: number;
-  protocol?: 'http' | 'https' | 'socks4' | 'socks5';
-  username?: string;
-  password?: string;
-  country?: string;
-  region?: string;
-  enabled?: boolean;
-}
-```
-
-**Response:**
-```typescript
-{
-  id: string;
-  // ... updated proxy fields
-  updatedAt: string;
-}
-```
-
----
-
-#### `proxy:list`
-
-Get all configured proxies.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 100/minute |
-
-**Request:** None
-
-**Response:**
-```typescript
-{
-  proxies: Array<{
-    id: string;
-    host: string;
-    port: number;
-    protocol: string;
-    country?: string;
-    region?: string;
-    status: 'active' | 'inactive' | 'failed';
-    latency?: number;      // ms
-    successRate?: number;  // 0-100
-    lastUsed?: string;     // ISO 8601
-  }>;
-  total: number;
-}
-```
-
----
-
-#### `proxy:validate`
-
-Test proxy connectivity and measure latency.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 20/minute |
-| SSRF Check | Yes |
-
-**Request:**
-```typescript
-{
-  id?: string;         // Validate existing proxy by ID
-  // OR provide proxy config directly:
-  host?: string;
-  port?: number;
-  protocol?: string;
-  timeout?: number;    // ms, default 5000, max 30000
-}
-```
-
-**Response:**
-```typescript
-{
-  valid: boolean;
-  latency?: number;    // ms (if valid)
-  ip?: string;         // External IP (if valid)
-  error?: string;      // Error message (if invalid)
-}
-```
-
----
-
-#### `proxy:set-rotation`
-
-Configure proxy rotation strategy.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 30/minute |
-
-**Request:**
-```typescript
-{
-  strategy: 'round-robin' | 'random' | 'least-used' | 'fastest' | 
-            'failure-aware' | 'weighted' | 'geographic' | 
-            'sticky-session' | 'time-based' | 'custom';
-  
-  // Strategy-specific options:
-  
-  // Geographic options
-  preferredCountries?: string[];    // ['US', 'CA', 'GB']
-  excludeCountries?: string[];      // ['CN', 'RU']
-  
-  // Sticky-session options
-  stickySessionTTL?: number;        // ms, default 3600000
-  stickyHashAlgorithm?: 'domain' | 'subdomain' | 'full-url';
-  
-  // Time-based options
-  interval?: number;                // ms
-  jitterPercent?: number;           // 0-50
-  scheduleWindows?: Array<{
-    startHour: number;              // 0-23
-    endHour: number;                // 0-23
-    daysOfWeek: number[];           // 0-6 (Sun-Sat)
-  }>;
-  
-  // Custom rules
-  rules?: Array<{
-    name: string;
-    priority: number;
-    conditions: Array<{
-      field: 'domain' | 'time' | 'request-count' | 'region';
-      operator: 'equals' | 'contains' | 'regex' | 'gt' | 'lt';
-      value: string | number;
-    }>;
-    actions: Array<{
-      action: 'use_proxy' | 'use_country' | 'use_region' | 'skip';
-      params?: Record<string, unknown>;
-    }>;
-  }>;
-}
-```
-
-**Response:**
-```typescript
-{
-  success: boolean;
-  strategy: string;
-  config: object;
-}
-```
-
----
+| Channel | Method | Rate Limit | Description |
+|---------|--------|------------|-------------|
+| `proxy:add` | invoke | 10/min | Add new proxy |
+| `proxy:remove` | invoke | 20/min | Remove proxy |
+| `proxy:update` | invoke | 20/min | Update proxy |
+| `proxy:list` | invoke | 100/min | List all proxies |
+| `proxy:validate` | invoke | 20/min | Validate proxy |
+| `proxy:set-rotation` | invoke | 10/min | Set rotation strategy |
 
 ### Tab Management
 
-#### `tab:create`
+| Channel | Method | Rate Limit | Description |
+|---------|--------|------------|-------------|
+| `tab:create` | invoke | 50/min | Create isolated tab |
+| `tab:close` | invoke | 50/min | Close tab |
+| `tab:update` | invoke | 50/min | Update tab |
+| `tab:list` | invoke | 100/min | List all tabs |
+| `tab:navigate` | invoke | 100/min | Navigate to URL |
+| `tab:assign-proxy` | invoke | 50/min | Assign proxy to tab |
 
-Create a new browser tab.
+### Privacy
 
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 50/minute |
-
-**Request:**
-```typescript
-{
-  url?: string;           // Initial URL (validated for SSRF)
-  proxyId?: string;       // Proxy to use
-  fingerprint?: object;   // Fingerprint config
-  partition?: string;     // Session partition name
-}
-```
-
-**Response:**
-```typescript
-{
-  id: string;             // Tab UUID
-  url: string;
-  title: string;
-  partition: string;
-  proxyId?: string;
-  createdAt: string;
-}
-```
-
----
-
-#### `tab:close`
-
-Close a browser tab.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 100/minute |
-
-**Request:**
-```typescript
-{
-  id: string;  // Tab UUID
-}
-```
-
-**Response:**
-```typescript
-{
-  success: boolean;
-  closedId: string;
-}
-```
-
----
-
-#### `tab:navigate`
-
-Navigate a tab to a URL.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 100/minute |
-| SSRF Check | Yes |
-
-**Request:**
-```typescript
-{
-  tabId: string;          // Tab UUID
-  url: string;            // URL to navigate (max 2048 chars)
-}
-```
-
-**Response:**
-```typescript
-{
-  success: boolean;
-  url: string;
-  title?: string;
-}
-```
-
-**SSRF Validation:**
-- Blocks `localhost`, `127.0.0.1`, `::1`
-- Blocks private IP ranges (10.x, 172.16-31.x, 192.168.x)
-- Blocks cloud metadata (169.254.169.254)
-- Only allows `http:` and `https:` protocols
-
----
-
-#### `tab:update`
-
-Update tab properties.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 100/minute |
-
-**Request:**
-```typescript
-{
-  id: string;
-  proxyId?: string;
-  fingerprint?: object;
-}
-```
-
----
-
-#### `tab:list`
-
-Get all open tabs.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 100/minute |
-
-**Response:**
-```typescript
-{
-  tabs: Array<{
-    id: string;
-    url: string;
-    title: string;
-    favicon?: string;
-    proxyId?: string;
-    isActive: boolean;
-  }>;
-}
-```
-
----
-
-### Privacy & Fingerprint
-
-#### `privacy:set-fingerprint`
-
-Configure fingerprint spoofing for a tab.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 30/minute |
-
-**Request:**
-```typescript
-{
-  tabId: string;
-  fingerprint: {
-    canvas?: {
-      enabled: boolean;
-      noise?: number;      // 0-10
-    };
-    webgl?: {
-      enabled: boolean;
-      vendor?: string;
-      renderer?: string;
-    };
-    audio?: {
-      enabled: boolean;
-      noise?: number;
-    };
-    navigator?: {
-      userAgent?: string;
-      platform?: string;
-      languages?: string[];
-      hardwareConcurrency?: number;
-    };
-    timezone?: {
-      offset?: number;     // minutes from UTC
-      name?: string;       // IANA timezone
-    };
-  };
-}
-```
-
----
-
-#### `privacy:toggle-webrtc`
-
-Enable/disable WebRTC leak protection.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 30/minute |
-
-**Request:**
-```typescript
-{
-  tabId?: string;         // Specific tab or global
-  enabled: boolean;
-}
-```
-
----
-
-#### `privacy:toggle-tracker-blocking`
-
-Enable/disable tracker blocking.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 30/minute |
-
-**Request:**
-```typescript
-{
-  tabId?: string;
-  enabled: boolean;
-  blocklists?: string[];  // 'easylist', 'easyprivacy', 'custom'
-}
-```
-
----
+| Channel | Method | Rate Limit | Description |
+|---------|--------|------------|-------------|
+| `privacy:set-fingerprint` | invoke | 20/min | Configure spoofing |
+| `privacy:toggle-webrtc` | invoke | 30/min | Toggle WebRTC protection |
+| `privacy:toggle-tracker-blocking` | invoke | 30/min | Toggle tracker blocking |
+| `privacy:get-stats` | invoke | 120/min | Get blocking stats |
 
 ### Automation
 
-#### `automation:start-search`
+| Channel | Method | Rate Limit | Description |
+|---------|--------|------------|-------------|
+| `automation:start-search` | invoke | 5/min | Start search session |
+| `automation:stop-search` | invoke | 10/min | Stop search session |
+| `automation:add-keyword` | invoke | 50/min | Add keyword to queue |
+| `automation:add-domain` | invoke | 30/min | Add target domain |
+| `automation:get-tasks` | invoke | 60/min | Get task status |
+| `automation:schedule` | invoke | 10/min | Schedule automation |
+| `automation:pause` | invoke | 20/min | Pause automation |
+| `automation:resume` | invoke | 20/min | Resume automation |
 
-Start an automated search task.
+### Session
 
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 10/minute |
+| Channel | Method | Rate Limit | Description |
+|---------|--------|------------|-------------|
+| `session:save` | invoke | 10/min | Save session |
+| `session:load` | invoke | 10/min | Load session |
+| `session:list` | invoke | 100/min | List sessions |
 
-**Request:**
-```typescript
-{
-  keywords: string[];           // max 50 keywords, 100 chars each
-  searchEngine: 'google' | 'bing' | 'duckduckgo';
-  targetDomains?: string[];     // max 500 domains
-  maxResults?: number;          // 1-100, default 10
-  
-  // Domain targeting options
-  bounceRateTarget?: number;    // 0-100
-  minReadingTime?: number;      // seconds
-  maxReadingTime?: number;      // seconds
-  
-  // Behavior simulation
-  humanLike?: boolean;          // Enable behavior simulation
-  scrollPattern?: 'natural' | 'fast' | 'slow';
-}
-```
+### Events (Push)
 
-**Response:**
-```typescript
-{
-  taskId: string;
-  status: 'started' | 'queued';
-  estimatedDuration?: number;   // seconds
-}
-```
-
----
-
-#### `automation:stop-search`
-
-Stop a running automation task.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 20/minute |
-
-**Request:**
-```typescript
-{
-  taskId: string;
-}
-```
-
----
-
-#### `automation:add-keyword`
-
-Add keywords to automation queue.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 30/minute |
-
-**Request:**
-```typescript
-{
-  keywords: string[];     // max 100 chars each
-}
-```
-
----
-
-#### `automation:add-domain`
-
-Add target domains for automation.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 30/minute |
-
-**Request:**
-```typescript
-{
-  domains: string[];      // max 255 chars each
-  type: 'allowlist' | 'blocklist';
-  pattern?: 'exact' | 'wildcard' | 'regex';
-}
-```
-
----
-
-#### `automation:get-tasks`
-
-Get automation task status.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 100/minute |
-
-**Response:**
-```typescript
-{
-  tasks: Array<{
-    id: string;
-    type: 'search' | 'visit' | 'creator-support';
-    status: 'running' | 'completed' | 'failed' | 'paused';
-    progress: number;       // 0-100
-    results?: object;
-    error?: string;
-    startedAt: string;
-    completedAt?: string;
-  }>;
-}
-```
-
----
-
-### Session Management
-
-#### `session:save`
-
-Save current browser session.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 10/minute |
-
-**Request:**
-```typescript
-{
-  name: string;           // max 100 chars
-  description?: string;   // max 500 chars
-  includeTabs?: boolean;  // default true
-  includeProxies?: boolean;
-  includeFingerprints?: boolean;
-}
-```
-
-**Response:**
-```typescript
-{
-  sessionId: string;
-  name: string;
-  createdAt: string;
-  tabCount: number;
-}
-```
-
----
-
-#### `session:load`
-
-Load a saved session.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 10/minute |
-
-**Request:**
-```typescript
-{
-  sessionId: string;
-  mergeWithCurrent?: boolean;  // default false (replaces)
-}
-```
-
----
-
-#### `session:list`
-
-List all saved sessions.
-
-| Property | Value |
-|----------|-------|
-| Direction | Renderer → Main |
-| Rate Limit | 100/minute |
-
-**Response:**
-```typescript
-{
-  sessions: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    tabCount: number;
-    createdAt: string;
-    lastLoadedAt?: string;
-  }>;
-}
-```
-
----
+| Channel | Direction | Description |
+|---------|-----------|-------------|
+| `event:proxy-status-change` | Main → Renderer | Proxy status update |
+| `event:tab-update` | Main → Renderer | Tab state change |
+| `event:automation-progress` | Main → Renderer | Automation progress |
+| `event:log` | Main → Renderer | Activity log entry |
 
 ## Validation Schemas
 
-All schemas are defined using Zod in `electron/ipc/schemas/index.ts`.
-
-### ProxyConfigSchema
+### Key Schemas (`electron/ipc/validation.ts`)
 
 ```typescript
-import { z } from 'zod';
-
+// Proxy Configuration
 export const ProxyConfigSchema = z.object({
   host: z.string().min(1).max(255),
   port: z.number().int().min(1).max(65535),
   protocol: z.enum(['http', 'https', 'socks4', 'socks5']),
   username: z.string().max(255).optional(),
   password: z.string().max(255).optional(),
-  country: z.string().length(2).optional(),
-  region: z.string().max(50).optional(),
-  name: z.string().max(100).optional()
+  name: z.string().max(100).default(''),
 });
-```
 
-### NavigationSchema
+// Safe URL (SSRF protected)
+export const SafeUrlSchema = z.string()
+  .max(2048)
+  .refine((url) => {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol) &&
+           !isPrivateOrBlockedIP(parsed.hostname);
+  });
 
-```typescript
-export const NavigationSchema = z.object({
-  tabId: z.string().uuid(),
-  url: z.string().url().max(2048)
-});
-```
-
-### AutomationConfigSchema
-
-```typescript
+// Automation Configuration
 export const AutomationConfigSchema = z.object({
-  keywords: z.array(z.string().max(100)).max(50),
-  targetDomains: z.array(z.string().max(255)).max(500),
-  maxResults: z.number().int().min(1).max(100).default(10),
-  searchEngine: z.enum(['google', 'bing', 'duckduckgo']).default('google'),
-  bounceRateTarget: z.number().min(0).max(100).optional(),
-  minReadingTime: z.number().min(0).max(3600).optional(),
-  maxReadingTime: z.number().min(0).max(3600).optional(),
-  humanLike: z.boolean().default(true)
+  keywords: z.array(z.string().max(200)).max(100),
+  engine: z.enum(['google', 'bing', 'duckduckgo', 'yahoo', 'brave']),
+  targetDomains: z.array(z.string().max(255)).max(50),
+  maxRetries: z.number().int().min(0).max(10).default(3),
+  delayBetweenSearches: z.number().int().min(1000).max(60000),
+});
+
+// Fingerprint Configuration
+export const FingerprintConfigSchema = z.object({
+  canvas: z.boolean().default(true),
+  webgl: z.boolean().default(true),
+  audio: z.boolean().default(true),
+  navigator: z.boolean().default(true),
+  timezone: z.string().max(100).optional(),
 });
 ```
 
----
+## Handler Registration
 
-## Event System
-
-Events are emitted from Main process to Renderer.
-
-### `event:proxy-status-change`
-
-Emitted when proxy status changes.
+### `electron/ipc/handlers/index.ts`
 
 ```typescript
-{
-  proxyId: string;
-  status: 'active' | 'inactive' | 'failed';
-  latency?: number;
-  error?: string;
+export function setupIpcHandlers(context: HandlerContext) {
+  const { proxyManager, tabManager, privacyManager, automationManager } = context;
+  const rateLimiter = getIPCRateLimiter();
+
+  // Setup specialized handlers
+  setupPrivacyHandlers(privacyManager);
+  setupAutomationHandlers(automationManager);
+  setupNavigationHandlers(tabManager);
+  setupTabHandlers(tabManager, proxyManager);
+
+  // Proxy handlers with validation + rate limiting
+  ipcMain.handle(IPC_CHANNELS.PROXY_ADD, async (_event, config) => {
+    const rateCheck = rateLimiter.checkLimit(IPC_CHANNELS.PROXY_ADD);
+    if (!rateCheck.allowed) {
+      return { success: false, error: 'Rate limit exceeded', retryAfter: rateCheck.retryAfter };
+    }
+
+    const validation = validateInput(ProxyConfigSchema, config);
+    if (!validation.success) {
+      return { success: false, error: `Validation failed: ${validation.error}` };
+    }
+
+    try {
+      const proxy = await proxyManager.addProxy(validation.data);
+      return { success: true, proxy };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // ... more handlers
 }
 ```
 
-### `event:tab-update`
+## Response Format
 
-Emitted when tab state changes.
-
-```typescript
-{
-  tabId: string;
-  url?: string;
-  title?: string;
-  loading?: boolean;
-  favicon?: string;
-}
-```
-
-### `event:automation-progress`
-
-Emitted during automation tasks.
+All handlers return a standardized response:
 
 ```typescript
-{
-  taskId: string;
-  progress: number;        // 0-100
-  currentAction?: string;
-  results?: object;
+interface IPCResponse<T> {
+  success: boolean;
+  data?: T;           // Present when success: true
+  error?: string;     // Present when success: false
+  retryAfter?: number; // Present when rate limited (ms)
 }
 ```
-
-### `event:log`
-
-Emitted for activity logging.
-
-```typescript
-{
-  level: 'info' | 'warn' | 'error';
-  message: string;
-  timestamp: string;
-  module?: string;
-}
-```
-
----
 
 ## Error Handling
 
-### Error Response Format
-
 ```typescript
-{
-  success: false;
-  error: {
-    code: string;          // Error code
-    message: string;       // Human-readable message
-    details?: object;      // Additional details
-  }
+// Standard error handling pattern
+try {
+  const result = await operation(validatedData);
+  return { success: true, data: result };
+} catch (error) {
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  console.error(`[IPC:${channel}] Error:`, errorMessage);
+  return { success: false, error: errorMessage };
 }
 ```
 
-### Error Codes
+## Security Features
 
-| Code | Description |
-|------|-------------|
-| `VALIDATION_ERROR` | Input failed Zod validation |
-| `RATE_LIMITED` | Too many requests |
-| `NOT_FOUND` | Resource not found |
-| `SSRF_BLOCKED` | URL blocked by SSRF protection |
-| `PROXY_ERROR` | Proxy connection failed |
-| `UNAUTHORIZED` | Authentication required |
-| `INTERNAL_ERROR` | Server-side error |
+| Feature | Implementation |
+|---------|----------------|
+| Rate Limiting | Sliding window per channel |
+| Input Validation | Zod schemas with transforms |
+| SSRF Protection | Private IP blocking |
+| XSS Prevention | Pattern detection |
+| Type Safety | Full TypeScript types |
+| Channel Whitelist | Explicit allow list |
 
----
+## Related Documentation
 
-## Rate Limits
-
-| Channel Category | Limit | Window |
-|-----------------|-------|--------|
-| proxy:add/remove/update | 50/min | 60s |
-| proxy:validate | 20/min | 60s |
-| proxy:list | 100/min | 60s |
-| tab:* | 100/min | 60s |
-| privacy:* | 30/min | 60s |
-| automation:start-search | 10/min | 60s |
-| automation:* (other) | 30/min | 60s |
-| session:save/load | 10/min | 60s |
-| session:list | 100/min | 60s |
-
-### Rate Limit Response
-
-When rate limited, the response includes:
-
-```typescript
-{
-  success: false;
-  error: {
-    code: 'RATE_LIMITED',
-    message: 'Too many requests',
-    retryAfter: 30         // seconds until limit resets
-  }
-}
-```
+- [Full API Documentation](../API_DOCUMENTATION.md) - Complete API reference with examples
+- [Security](./security.md) - Security implementation details
+- [Architecture](../ARCHITECTURE.md) - System architecture
 
 ---
 
-## TypeScript Types
-
-For TypeScript users, import types from:
-
-```typescript
-// Types are inferred from Zod schemas
-import type { z } from 'zod';
-import { ProxyConfigSchema, NavigationSchema } from '@/ipc/schemas';
-
-type ProxyConfig = z.infer<typeof ProxyConfigSchema>;
-type NavigationPayload = z.infer<typeof NavigationSchema>;
-```
-
----
-
-*For implementation details, see [security.md](./security.md) and source files in `electron/ipc/`.*
+**Last Updated:** 2025-02-01 | **Version:** 1.3.0

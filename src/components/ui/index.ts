@@ -10,10 +10,8 @@
 
 // Core Magic UI Components
 export { BorderBeam } from './border-beam'
-export { AnimatedList, AnimatedListItem } from './animated-list'
 export { Confetti, useConfetti, type ConfettiRef } from './confetti'
 export { NeonGradientCard } from './neon-gradient-card'
-export { AnimatedBeam, type AnimatedBeamProps } from './animated-beam'
 export { Particles } from './particles'
 export { AnimatedGradientText, type AnimatedGradientTextProps } from './animated-gradient-text'
 
@@ -24,4 +22,3 @@ export { NumberTicker } from './number-ticker'
 
 // Utility Components
 export { ErrorBoundary } from './ErrorBoundary'
-export { ToastProvider, useToast } from './toast'

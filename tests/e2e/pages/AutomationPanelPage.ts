@@ -67,17 +67,25 @@ export class AutomationPanelPage extends BasePage {
 
   /**
    * Open the automation panel
+   * Note: Check visibility first to handle toggle behavior
    */
   async openPanel(): Promise<void> {
-    await this.panelButton.click();
+    const isVisible = await this.panel.isVisible();
+    if (!isVisible) {
+      await this.panelButton.click();
+    }
     await expect(this.panel).toBeVisible();
   }
 
   /**
    * Close the automation panel
+   * Note: Only click if panel is currently visible
    */
   async closePanel(): Promise<void> {
-    await this.panelButton.click();
+    const isVisible = await this.panel.isVisible();
+    if (isVisible) {
+      await this.panelButton.click();
+    }
     await expect(this.panel).not.toBeVisible();
   }
 

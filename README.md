@@ -1,302 +1,60 @@
 # Virtual IP Browser
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/virtualipbrowser/virtual-ip-browser/releases/tag/v1.3.0)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Linux%20|%20macOS%20|%20Windows-lightgrey.svg)](docs/DISTRIBUTION.md)
-[![Downloads](https://img.shields.io/badge/downloads-.deb%20|%20.rpm%20|%20AppImage%20|%20.dmg%20|%20.exe-orange.svg)](https://github.com/virtualipbrowser/virtual-ip-browser/releases/tag/v1.3.0)
-[![Tests](https://img.shields.io/badge/tests-2444%2B_passing-success.svg)](./TESTING.md)
-[![Coverage](https://img.shields.io/badge/coverage-88%25-success.svg)](./coverage/index.html)
-[![Security](https://img.shields.io/badge/security-0_vulnerabilities-success.svg)](./docs/SECURITY_CONSOLIDATED.md)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](./tsconfig.json)
-[![Code Quality](https://img.shields.io/badge/code_quality-4.5%2F5-brightgreen.svg)](./docs/archive/implementation/CODE_QUALITY_REPORT.md)
-
-**Enhanced Privacy-Focused Browser with Proxy Management and Fingerprint Spoofing**
-
-A next-generation, privacy-focused Electron-based desktop browser designed to provide users with unprecedented control over their online identity and browsing privacy.
-
-![Electron](https://img.shields.io/badge/electron-35.x-green)
-![React](https://img.shields.io/badge/react-19.x-blue)
-![TypeScript](https://img.shields.io/badge/typescript-5.6-blue)
-![Security](https://img.shields.io/badge/security-enterprise--grade-brightgreen)
-
----
-
-## 📥 Installation
-
-### Quick Install (Debian/Ubuntu)
-
-```bash
-# Download the latest .deb package
-wget https://github.com/virtualipbrowser/virtual-ip-browser/releases/download/v1.3.0/virtual-ip-browser_1.3.0_amd64.deb
-
-# Install with apt (recommended - handles dependencies)
-sudo apt install ./virtual-ip-browser_1.3.0_amd64.deb
-
-# Launch the application
-virtual-ip-browser
-```
-
-### System Requirements
-
-| Requirement | Specification |
-|-------------|---------------|
-| **OS** | Linux (64-bit) - Ubuntu 20.04+, Debian 11+, Fedora 35+ |
-| **Architecture** | x86_64 (amd64) |
-| **RAM** | 2 GB minimum, 4 GB recommended |
-| **Disk Space** | 500 MB |
-
-### Available Packages
-
-| Format | File | Size | Best For |
-|--------|------|------|----------|
-| **Debian** | `virtual-ip-browser_1.3.0_amd64.deb` | 95 MB | Ubuntu, Debian, Mint, Pop!_OS |
-| **AppImage** | `Virtual IP Browser-1.3.0-x86_64.AppImage` | 124 MB | Any Linux (portable) |
-| **RPM** | `virtual-ip-browser-1.3.0.x86_64.rpm` | 83 MB | Fedora, RHEL, openSUSE |
-| **macOS** | `Virtual IP Browser-1.3.0.dmg` | 130 MB | macOS 12+ |
-| **Windows** | `Virtual IP Browser Setup 1.3.0.exe` | 115 MB | Windows 10+ |
-
-### Install by Distribution
-
-<details>
-<summary><strong>Ubuntu / Debian / Linux Mint</strong></summary>
-
-```bash
-# Method 1: Using apt (recommended)
-sudo apt install ./virtual-ip-browser_1.3.0_amd64.deb
-
-# Method 2: Using dpkg
-sudo dpkg -i virtual-ip-browser_1.3.0_amd64.deb
-sudo apt-get install -f  # Fix dependencies if needed
-```
-</details>
-
-<details>
-<summary><strong>Fedora / RHEL / CentOS</strong></summary>
-
-```bash
-sudo dnf install ./virtual-ip-browser-1.3.0.x86_64.rpm
-```
-</details>
-
-<details>
-<summary><strong>openSUSE</strong></summary>
-
-```bash
-sudo zypper install ./virtual-ip-browser-1.3.0.x86_64.rpm
-```
-</details>
-
-<details>
-<summary><strong>AppImage (Any Distribution)</strong></summary>
-
-```bash
-chmod +x Virtual-IP-Browser-1.3.0-x86_64.AppImage
-./Virtual-IP-Browser-1.3.0-x86_64.AppImage
-```
-</details>
-
-### Post-Installation
-
-After installation, launch the browser:
-
-1. **Application Menu**: Search for "Virtual IP Browser" in your desktop's application menu
-2. **Command Line**: Run `virtual-ip-browser` in terminal
-3. **First Run**: The app creates its configuration in `~/.config/virtual-ip-browser/`
-
-> ⚠️ **Important**: Run as a regular user, not as root. Electron apps require a non-root user for security sandbox.
-
-For detailed installation instructions, see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md).
-
----
-
-## ✨ Key Features
-
-### 🔒 Advanced Proxy Management
-- **10 Rotation Strategies** including round-robin, random, fastest, failure-aware, weighted, and 4 advanced strategies
-- **Geographic Rotation** - Select proxies by country/region with exclusion lists
-- **Sticky-Session** - Maintain consistent proxy-domain mappings with TTL
-- **Time-Based Rotation** - Scheduled proxy rotation with configurable jitter
-- **Custom Rules** - Conditional proxy selection based on domain, time, and more
-- Support for HTTP, HTTPS, SOCKS4, SOCKS5 protocols
-- Encrypted credential storage (AES-256-GCM)
-
-### 🎭 Fingerprint Spoofing
-- Canvas fingerprint randomization with native property masking
-- WebGL parameter spoofing with vendor/renderer hiding
-- Audio context noise injection
-- Navigator property customization
-- Timezone manipulation with Intl API spoofing
-
-### 🛡️ Privacy Protection
-- WebRTC leak prevention (ICE candidate filtering)
-- Comprehensive tracker blocking (EasyList, EasyPrivacy)
-- Per-tab session isolation with partition separation
-- Cookie management and fingerprint detection resistance
-
-### 🤖 Web Automation (Domain Targeting)
-- **Domain Filtering** - Allowlist, blocklist, and regex pattern matching
-- **Bounce Rate Control** - Maintain realistic visit patterns
-- **Human-Like Interaction** - Bezier mouse paths, Gaussian reading times
-- **Behavior Simulation** - Realistic scrolling, clicking, and navigation
-- Search engine automation with result targeting
-
-### ⏰ Cron Scheduler (P1 Feature)
-- **Full Cron Expression Support** - Standard 5-field cron syntax
-- **Human-Readable Parsing** - "every 5 minutes", "daily at 9am"
-- **Timezone-Aware Scheduling** - Execute tasks in local timezone
-- **Recurring Task Management** - Automation task scheduling
-
-### 🔄 Circuit Breaker (P1 Feature)
-- **Fault Tolerance** - Automatic failure detection and recovery
-- **Three-State Model** - CLOSED → OPEN → HALF_OPEN state machine
-- **Per-Service Breakers** - Separate breakers for proxy, search, API calls
-- **Metrics & Monitoring** - Failure rates, trip counts, recovery tracking
-- **Database Persistence** - State survives application restarts
-
-### 🔍 Captcha Detection (P1 Feature)
-- **Multi-Provider Detection** - reCAPTCHA v2/v3, hCaptcha, Cloudflare, Arkose
-- **Visual & Behavioral Analysis** - Image analysis, DOM inspection, behavioral patterns
-- **Challenge Classification** - Invisible, checkbox, image selection types
-- **Automated Response** - Configurable handling strategies
-
-### 🎬 Creator Support (EP-007)
-- **Multi-Platform Support** - YouTube, Twitch, Medium
-- **Ad Detection & Viewing** - Platform-specific ad selector detection
-- **Engagement Simulation** - Human-like ad interaction patterns
-- **Creator Tracking** - Monitor support sessions and analytics
-- **Scheduling** - Recurring, daily, weekly, or one-time support
-
-### 🌍 Translation Integration (EP-008)
-- **30+ Languages** - Comprehensive language support
-- **Auto-Detection** - Automatic source language detection
-- **Geographic Mapping** - Timezone and country to language inference
-- **LRU Caching** - 10,000 entry cache with hit rate tracking
-- **Search Keyword Translation** - Localized search automation
-
-### ✨ Magic UI Components
-- **NumberTicker** - Animated number counters with spring physics
-- **BorderBeam** - Gradient animated border effects
-- **PulsatingButton** - Buttons with pulse animation
-- **ShimmerButton** - Shimmer/shine button effects
-- **AnimatedList** - Staggered list animations (v1.3.0)
-- **NeonGradientCard** - Neon glow card effects (v1.3.0)
-- **Particles** - Ambient particle backgrounds (v1.3.0)
-- **Confetti** - Celebration animations (v1.3.0)
-
-### ⚙️ Animation Settings (v1.3.0)
-- **Enable/Disable Animations** - Master toggle for all animations
-- **Reduced Motion** - Respects OS accessibility settings
-- **Particle Density** - Configurable background particle count
-- **Animation Speed** - Global animation speed multiplier
-
-### 🔐 Security Features (v1.3.0)
-
-Virtual IP Browser implements enterprise-grade security controls:
-
-| Security Control | Description | Status |
-|-----------------|-------------|--------|
-| **Zod Validation** | Type-safe input validation on all IPC handlers | ✅ Implemented |
-| **Rate Limiting** | Per-channel sliding window rate limiting | ✅ Implemented |
-| **ReDoS Protection** | Bloom filter pattern matching (v1.3.0) | ✅ Hardened |
-| **SSRF Prevention** | Blocks private IPs, localhost, cloud metadata | ✅ Implemented |
-| **CSS Sanitization** | Injection prevention for CSS selectors | ✅ Implemented |
-| **IPC Whitelist** | Explicit channel allowlisting | ✅ Implemented |
-| **OS Keychain Encryption** | Credentials protected by OS keychain (v1.3.0) | ✅ Hardened |
-| **Context Isolation** | Secure Electron IPC via contextBridge | ✅ Implemented |
-| **Sandbox Mode** | Renderer process sandboxing enabled | ✅ Implemented |
-| **WebRTC Leak Prevention** | Complete WebRTC/ICE blocking (v1.3.0) | ✅ Hardened |
-| **Session URL Validation** | Re-validates URLs on session restore (v1.3.0) | ✅ Hardened |
-
-For detailed security documentation, see [docs/SECURITY_CONSOLIDATED.md](./docs/SECURITY_CONSOLIDATED.md).
-
----
-
-## 🎯 Code Quality (v1.2.1)
-
-Virtual IP Browser maintains high code quality standards with recent improvements:
-
-| Quality Metric | Before | After | Status |
-|----------------|--------|-------|--------|
-| **Magic Numbers** | 60+ instances | Named constants | ✅ Resolved |
-| **Error Handling** | 20+ empty catch blocks | Comprehensive logging | ✅ Resolved |
-| **`any` Types** | ~50 instances | 99.3% reduction | ✅ Resolved |
-| **Quality Rating** | 4/5 | 4.5/5 | ✅ Improved |
-
-### Quality Improvements
-
-- **Named Constants**: All magic numbers replaced with descriptive constants in dedicated files (`constants.ts`)
-- **Error Handling**: Custom error classes (`AppError`, `ProxyConnectionError`, etc.) with structured logging
-- **Type Safety**: Near-complete elimination of `any` types with proper TypeScript types
-- **React Error Boundary**: Comprehensive error boundary component for graceful UI error recovery
-
-For detailed quality documentation, see:
-- [docs/archive/implementation/CODE_QUALITY_REPORT.md](./docs/archive/implementation/CODE_QUALITY_REPORT.md) - Quality assessment and metrics
-- [docs/archive/implementation/QUALITY_IMPROVEMENTS.md](./docs/archive/implementation/QUALITY_IMPROVEMENTS.md) - Consolidated improvement details
-- [docs/ERROR_HANDLING_IMPROVEMENTS.md](./docs/ERROR_HANDLING_IMPROVEMENTS.md) - Error handling patterns
-
----
-
-## 📊 Test Coverage
-
-| Metric | Coverage | Target | Status |
-|--------|----------|--------|--------|
-| **Overall** | 88%+ | 80% | ✅ Exceeded |
-| **Tab Manager** | 90% | 90% | ✅ Met |
-| **Database** | 92% | 90% | ✅ Exceeded |
-| **Privacy** | 95% | 95% | ✅ Met |
-| **Security** | 95% | 90% | ✅ Exceeded |
-| **E2E PRD Coverage** | 100% | 100% | ✅ Met |
-
-### Test Suites
-
-| Category | Files | Tests | Status |
-|----------|-------|-------|--------|
-| Unit Tests | 37 files | 250+ | ✅ Passing |
-| Database Tests | 14 files | 95+ | ✅ Passing |
-| Privacy Tests | 12 files | 70+ | ✅ Passing |
-| Security Tests | 5 files | 65+ | ✅ Passing |
-| Resilience Tests | 2 files | 25+ | ✅ Passing |
-| Integration Tests | 3 files | 20+ | ✅ Passing |
-| E2E Tests | 12 files | 55+ | ✅ Passing |
-| **Total** | **59 files** | **450+** | ✅ **All Passing** |
-
-Run tests with: `npm test` or `npm run test:e2e`
-
-For detailed testing documentation, see [TESTING.md](./TESTING.md).
-
----
-
-## ⚠️ Known Issues
-
-Based on code review and security audit findings:
-
-| Issue | Severity | Status | Notes |
-|-------|----------|--------|-------|
-| Build-time vulnerabilities in electron-builder | Low | Known | Does not affect runtime security |
-| E2E tests require display server | Low | Known | Use Xvfb on headless systems |
-| Some P2 features pending | Low | Planned | See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) |
-
----
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/user/virtual-ip-browser)
+[![Tests](https://img.shields.io/badge/tests-2850%2B-green.svg)](./TESTING.md)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+
+A privacy-focused Electron browser with advanced proxy management, fingerprint spoofing, and web automation capabilities.
+
+## ✨ Features
+
+### 🔒 Privacy Protection
+- **WebRTC Leak Prevention**: 4 configurable policies (disable, disable_non_proxied, proxy_only, default)
+- **Fingerprint Spoofing**: 6 vectors (Canvas, WebGL, Audio, Navigator, Timezone, Fonts)
+- **Tracker Blocking**: Category-based blocking with 50K+ domain blocklist
+- **Tab Isolation**: Complete session partitioning per tab
+
+### 🌐 Proxy Management
+- **11 Rotation Strategies**: Round-robin, Random, Weighted, Fastest, Least-used, Geographic, Sticky-session, Failover, Time-based, Failure-aware, Custom rules
+- **Per-Tab Proxy Assignment**: Different proxy per tab with no cross-contamination
+- **Health Monitoring**: Real-time validation with latency tracking
+- **Protocol Support**: HTTP, HTTPS, SOCKS4, SOCKS5 with authentication
+
+### 🤖 Automation Engine
+- **Search Automation**: Multi-engine support (Google, Bing, DuckDuckGo, Yahoo, Brave)
+- **Domain Targeting**: Automated click-through with position tracking
+- **Human-Like Behavior**: Randomized timing, natural mouse movements, smart scrolling
+- **Self-Healing**: Automatic error recovery with circuit breaker pattern
+- **Scheduling**: One-time, recurring, continuous, and cron-based schedules
+
+### 🎨 Magic UI Components
+- **Particles**: Interactive background effects
+- **Confetti**: Success celebration animations
+- **Shimmer Buttons**: Loading state indicators
+- **Border Beam**: Active status animations
+- **Neon Gradient Cards**: Modern card styling
+- **Number Ticker**: Animated statistics
+
+### 🔐 Security
+- **CSP Headers**: Strict Content Security Policy
+- **HSTS**: HTTP Strict Transport Security
+- **IPC Rate Limiting**: DoS protection with per-channel limits
+- **Input Validation**: Zod schemas with SSRF/XSS protection
+- **Credential Encryption**: AES-256-GCM with OS keychain integration
+- **Process Isolation**: Sandbox and context isolation enabled
 
 ## 🚀 Quick Start
 
-> **For end users**: See the [Installation](#-installation) section above to download and install the pre-built packages.
+### Prerequisites
+- Node.js 18+ 
+- npm 9+
+- Git
 
-### Development Setup
-
-For developers who want to build from source:
-
-#### Prerequisites
-
-- Node.js >= 18.0.0
-- npm >= 8.0.0
-- Linux, macOS, or Windows (for development)
-
-#### Clone and Run
+### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/virtualipbrowser/virtual-ip-browser.git
+git clone https://github.com/user/virtual-ip-browser.git
 cd virtual-ip-browser
 
 # Install dependencies
@@ -306,351 +64,180 @@ npm install
 npm run dev
 ```
 
-#### Environment Setup (Optional)
-
-Create a `.env` file in the root directory:
-
-```env
-# Database
-DATABASE_PATH=./data/browser.db
-
-# Encryption (auto-generated if not provided)
-ENCRYPTION_KEY=your-32-byte-hex-key
-
-# Logging
-LOG_LEVEL=info
-```
-
-#### Verify Development Setup
+### Environment Setup
 
 ```bash
-# Run setup verification
-./verify-setup.sh
+# Copy example environment file
+cp .env.example .env
 
-# Check TypeScript compilation
-npm run typecheck
-
-# Run linter
-npm run lint
-
-# Run tests
-npm test
+# Edit with your configuration (optional)
 ```
 
-See [QUICK_START.md](QUICK_START.md) for a complete quick reference guide.
+### Build for Production
 
----
+```bash
+# Build application
+npm run build
+
+# Package for distribution
+npm run package           # Current platform
+npm run package:win       # Windows
+npm run package:mac       # macOS
+npm run package:linux     # Linux
+```
 
 ## 📁 Project Structure
 
 ```
 virtual-ip-browser/
-├── electron/                    # Main process code (104 TypeScript files)
-│   ├── core/
-│   │   ├── proxy-engine/       # Proxy management & rotation (10 strategies)
-│   │   │   └── strategies/     # 11 rotation strategy implementations
-│   │   ├── automation/         # Domain targeting & behavior simulation
-│   │   │   ├── captcha-detector.ts  # P1: Captcha detection
-│   │   │   ├── cron-parser.ts       # P1: Cron expression parser
-│   │   │   ├── scheduler.ts         # P1: Task scheduling
-│   │   │   └── search/              # Search engine modules
-│   │   ├── resilience/         # P1: Fault tolerance layer
-│   │   │   ├── circuit-breaker.ts   # Circuit breaker pattern
-│   │   │   └── circuit-breaker-registry.ts
-│   │   ├── creator-support/    # Creator monetization (EP-007)
-│   │   ├── translation/        # Multi-language support (EP-008)
-│   │   ├── privacy/            # Fingerprint & tracker blocking
-│   │   │   └── fingerprint/    # 5 fingerprint spoofing modules
-│   │   ├── session/            # Session management
-│   │   └── tabs/               # Tab management
-│   ├── database/               # SQLite persistence layer
-│   │   ├── repositories/       # 11 data access repositories
-│   │   ├── migrations/         # Schema migrations with embedded SQL
-│   │   └── services/           # Encryption service (AES-256-GCM)
-│   ├── ipc/                    # IPC handlers & validation
-│   │   ├── handlers/           # Channel handlers with Zod validation
-│   │   ├── schemas/            # Zod validation schemas
-│   │   └── rate-limiter.ts     # Per-channel rate limiting
-│   ├── types/                  # TypeScript type definitions
-│   ├── utils/                  # Security utilities
-│   └── main/                   # Electron entry point
-├── src/                        # Renderer process (React)
-│   ├── components/
-│   │   ├── browser/            # Browser chrome components
-│   │   ├── panels/             # Configuration panels
-│   │   ├── dashboard/          # Analytics dashboard
-│   │   └── ui/                 # Magic UI components
-│   ├── stores/                 # Zustand state management
-│   ├── hooks/                  # Custom React hooks
-│   └── utils/                  # Utility functions
-├── docs/                       # Documentation
-│   ├── CODEMAPS/              # 9 architecture codemaps
-│   ├── ARCHITECTURE.md        # System architecture
-│   └── SECURITY_CONSOLIDATED.md # Security documentation
-├── tests/                      # Test suites (54 test files)
-│   ├── unit/                  # Unit tests (32 files)
-│   │   ├── database/          # Database repository tests (12 files)
-│   │   ├── privacy/           # Privacy module tests (11 files)
-│   │   └── resilience/        # Circuit breaker tests (2 files)
-│   ├── integration/           # Integration tests (1 file)
-│   └── e2e/                   # End-to-end tests (11 files)
-│       └── pages/             # Page object models
-└── coverage/                   # Test coverage reports
+├── electron/                 # Main process
+│   ├── main/                # App entry point
+│   ├── core/                # Core modules
+│   │   ├── proxy-engine/    # Proxy management
+│   │   ├── privacy/         # Privacy protection
+│   │   ├── automation/      # Automation engine
+│   │   ├── resilience/      # Circuit breakers
+│   │   ├── tabs/            # Tab management
+│   │   ├── session/         # Session management
+│   │   ├── translation/     # Translation service
+│   │   └── creator-support/ # Creator support
+│   ├── ipc/                 # IPC handlers & validation
+│   ├── database/            # SQLite database
+│   └── utils/               # Utilities
+├── src/                     # Renderer process
+│   ├── components/          # React components
+│   │   ├── browser/         # Browser UI
+│   │   ├── dashboard/       # Dashboard
+│   │   ├── panels/          # Side panels
+│   │   └── ui/              # Magic UI
+│   ├── stores/              # Zustand stores
+│   └── utils/               # Frontend utilities
+├── tests/                   # Test suites
+│   ├── unit/                # Unit tests
+│   ├── integration/         # Integration tests
+│   └── e2e/                 # E2E tests
+└── docs/                    # Documentation
+    └── CODEMAPS/            # Architecture maps
 ```
 
-### Project Statistics
+## 🧪 Testing
 
-| Metric | Count |
-|--------|-------|
-| **Total TypeScript Files** | 203 |
-| **Electron Main Process** | 104 files |
-| **React Renderer** | 45 files |
-| **Test Files** | 54 files |
-| **Documentation Files** | 30+ files |
-| **Lines of Code** | ~25,000+ |
+```bash
+# Run all tests
+npm run test:all
 
----
+# Unit tests only
+npm run test:unit
+
+# Integration tests
+npm run test:integration
+
+# E2E tests
+npm run test:e2e
+
+# With coverage report
+npm run test:coverage
+
+# Interactive E2E
+npm run test:e2e:ui
+```
+
+### Test Coverage
+
+| Type | Count | Coverage |
+|------|-------|----------|
+| Unit Tests | ~2,000 | 80%+ |
+| Integration Tests | ~300 | Core flows |
+| E2E Tests | ~550 | Critical paths |
+| **Total** | **2,850+** | - |
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture](./docs/ARCHITECTURE.md) | System architecture and design |
+| [API Reference](./docs/CODEMAPS/api-reference.md) | IPC API documentation |
+| [Security](./docs/SECURITY.md) | Security controls and practices |
+| [Testing](./TESTING.md) | Test strategy and organization |
+| [Development Guide](./DEVELOPMENT_GUIDE.md) | Developer workflow |
+| [Codemaps](./docs/CODEMAPS/INDEX.md) | Module architecture maps |
 
 ## 🔧 Configuration
 
 ### Proxy Rotation Strategies
 
-```typescript
-// Geographic rotation - select by region
-{
-  strategy: 'geographic',
-  excludeCountries: ['CN', 'RU'],
-  preferredRegions: ['US-CA', 'US-NY']
-}
-
-// Sticky-session - consistent domain mapping
-{
-  strategy: 'sticky-session',
-  stickySessionTTL: 3600000,  // 1 hour
-  stickyHashAlgorithm: 'consistent'
-}
-
-// Time-based - scheduled rotation
-{
-  strategy: 'time-based',
-  interval: 300000,  // 5 minutes
-  jitterPercent: 20,
-  scheduleWindows: [{ startHour: 9, endHour: 17, daysOfWeek: [1,2,3,4,5] }]
-}
-
-// Custom rules - conditional logic
-{
-  strategy: 'custom',
-  rules: [{
-    name: 'Banking sites use US proxy',
-    conditions: [{ field: 'domain', operator: 'contains', value: 'bank' }],
-    actions: [{ action: 'use_country', params: { country: 'US' } }]
-  }]
-}
-```
-
-### Domain Targeting
-
-```typescript
-// Configure domain filters
-const targeting = new DomainTargeting({
-  bounceRateTarget: 40,      // 40% bounce rate
-  minReadingTime: 30,        // 30 seconds minimum
-  maxReadingTime: 120,       // 2 minutes maximum
-  journeyPagesMin: 2,        // Visit 2-3 pages
-  journeyPagesMax: 3
-});
-
-targeting.setFilters({
-  allowlist: ['example.com', 'target.org'],
-  blocklist: ['competitor.com'],
-  regexPatterns: ['^blog\\..*\\.com$']
-});
-```
-
----
-
-## 🧪 Testing
-
-```bash
-# Run unit tests
-npm test
-
-# Run with coverage
-npm test -- --coverage
-
-# Run E2E tests
-npm run test:e2e
-
-# Run E2E tests with UI
-npm run test:e2e -- --ui
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-```
-
----
-
-## 📦 Building
-
-```bash
-# Build for development
-npm run build
-
-# Package for distribution
-npm run package
-
-# Platform-specific builds
-npm run package:win    # Windows (NSIS, Portable)
-npm run package:mac    # macOS (DMG, ZIP)
-npm run package:linux  # Linux (AppImage, DEB)
-```
-
----
-
-## 📚 Documentation
-
-### Installation & Distribution
-
-| Document | Description |
+| Strategy | Description |
 |----------|-------------|
-| [Quick Start](QUICK_START.md) | Download, install, launch, configure quick reference |
-| [Distribution Guide](docs/DISTRIBUTION.md) | Package formats, system requirements, installation |
-| [Packaging Guide](docs/PACKAGING.md) | Building packages from source |
-| [Build Log](docs/archive/build-reports/BUILD_LOG.md) | Build execution details |
-| [Installation Verification](docs/archive/build-reports/INSTALLATION_VERIFICATION.md) | Installation verification report |
+| `round-robin` | Sequential rotation through proxy list |
+| `random` | Random proxy selection |
+| `weighted` | Priority-based selection |
+| `fastest` | Lowest latency preferred |
+| `least-used` | Load balancing by usage count |
+| `geographic` | Region-based rotation |
+| `sticky-session` | Domain-to-proxy affinity |
+| `failover` | Automatic fallback on failure |
+| `time-based` | Rotate every N minutes |
+| `failure-aware` | Avoid recently failed proxies |
+| `custom` | User-defined rules |
 
-### Core Documentation
+### Privacy Settings
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](docs/ARCHITECTURE.md) | System architecture, multi-process model |
-| [Security](docs/SECURITY_CONSOLIDATED.md) | Security controls & audit findings |
-| [Testing](TESTING.md) | Test coverage, strategy, and how to run tests |
-| [API Reference](docs/CODEMAPS/api-reference.md) | Complete IPC API documentation |
-| [Contributing](CONTRIBUTING.md) | Development guidelines, PR process |
-| [Changelog](CHANGELOG.md) | Version history |
-| [User Guide](USER_GUIDE.md) | End-user documentation |
+| Setting | Options | Default |
+|---------|---------|---------|
+| WebRTC Policy | disable, disable_non_proxied, proxy_only, default | disable_non_proxied |
+| Canvas Spoofing | true/false | true |
+| WebGL Spoofing | true/false | true |
+| Audio Spoofing | true/false | true |
+| Navigator Spoofing | true/false | true |
+| Tracker Blocking | true/false | true |
 
-### Quality Documentation (v1.2.1)
+## 🛡️ Security
 
-| Document | Description |
-|----------|-------------|
-| [Quality Improvements](docs/archive/implementation/QUALITY_IMPROVEMENTS.md) | Consolidated quality improvement summary |
-| [Code Quality Report](docs/archive/implementation/CODE_QUALITY_REPORT.md) | Quality assessment and metrics |
-| [Magic Numbers Refactoring](docs/MAGIC_NUMBERS_REFACTORING.md) | Constants documentation |
-| [Error Handling](docs/ERROR_HANDLING_IMPROVEMENTS.md) | Error handling patterns |
+### Security Headers
 
-### Project Status
+All responses include:
+- `Content-Security-Policy`: Strict CSP with no unsafe-eval
+- `Strict-Transport-Security`: 1 year max-age
+- `X-Content-Type-Options`: nosniff
+- `X-Frame-Options`: DENY
+- `X-XSS-Protection`: 1; mode=block
 
-| Document | Description |
-|----------|-------------|
-| [Final Project Status](FINAL_PROJECT_STATUS.md) | P1 completion summary, metrics |
-| [Implementation Plan](IMPLEMENTATION_PLAN.md) | Feature roadmap (all P1 complete) |
-| [Database Schema](DATABASE_SCHEMA.md) | SQLite schema documentation |
+### IPC Security
 
-### Codemaps (Architecture Documentation)
+- **Validation**: All inputs validated with Zod schemas
+- **Rate Limiting**: Per-channel limits (5-120 requests/minute)
+- **SSRF Protection**: Private IP and metadata endpoint blocking
+- **XSS Prevention**: Input sanitization and encoding
 
-| Module | Codemap |
-|--------|---------|
-| Overview | [docs/CODEMAPS/INDEX.md](docs/CODEMAPS/INDEX.md) |
-| Proxy Engine | [docs/CODEMAPS/proxy-engine.md](docs/CODEMAPS/proxy-engine.md) |
-| Automation | [docs/CODEMAPS/automation.md](docs/CODEMAPS/automation.md) |
-| Creator Support | [docs/CODEMAPS/creator-support.md](docs/CODEMAPS/creator-support.md) |
-| Translation | [docs/CODEMAPS/translation.md](docs/CODEMAPS/translation.md) |
-| Frontend | [docs/CODEMAPS/frontend.md](docs/CODEMAPS/frontend.md) |
-| Database | [docs/CODEMAPS/database.md](docs/CODEMAPS/database.md) |
-| Security | [docs/CODEMAPS/security.md](docs/CODEMAPS/security.md) |
+### Credential Security
 
-### Implementation Reports
-
-| Document | Description |
-|----------|-------------|
-| [Security Fixes](docs/archive/fixes/SECURITY_FIXES.md) | Security improvements made |
-| [Cleanup Log](docs/archive/implementation/CLEANUP_LOG.md) | Code cleanup record |
-| [Refactoring Log](docs/REFACTORING_LOG.md) | Refactoring changes |
-| [Captcha Handling](docs/CAPTCHA_HANDLING.md) | Captcha detection documentation |
-
----
-
-## 🛠️ Technology Stack
-
-| Category | Technology | Version |
-|----------|------------|---------|
-| Desktop Framework | Electron | 34.x |
-| Frontend | React | 19.x |
-| Language | TypeScript | 5.6.x |
-| State Management | Zustand | 5.x |
-| Styling | Tailwind CSS | 3.4.x |
-| Animation | Framer Motion | 12.x |
-| Database | better-sqlite3 | 11.x |
-| Validation | Zod | 4.x |
-| Testing | Vitest | 1.x |
-| E2E Testing | Playwright | 1.x |
-| Build Tool | electron-vite | 2.x |
-
----
-
-## 🗺️ Roadmap
-
-### Completed ✅
-- [x] Core browser functionality
-- [x] Proxy management with 10 rotation strategies
-- [x] Privacy protection (fingerprint, WebRTC, trackers)
-- [x] Web automation foundation
-- [x] **EP-005**: Domain targeting & behavior simulation
-- [x] **EP-007**: Creator support (YouTube, Twitch, Medium)
-- [x] **EP-008**: Translation integration (30+ languages)
-- [x] **Magic UI**: Enhanced UI components
-- [x] **Security**: Enterprise-grade security controls (v1.1.0)
-
-### Planned 📋
-- [ ] Improve test coverage to 80%+
-- [ ] Cloud sync for sessions
-- [ ] Plugin system
-- [ ] Advanced analytics dashboard
-- [ ] Browser extension support
-
----
+- **Encryption**: AES-256-GCM for sensitive data
+- **Key Storage**: OS keychain (Keychain on macOS, Credential Manager on Windows)
+- **Memory Safety**: Keys cleared on app close
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Write tests for your changes
+4. Ensure all tests pass (`npm run test:all`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
-### Development Requirements
-- All code must pass TypeScript strict checks
-- Minimum 80% test coverage for new features
-- Follow coding standards in CONTRIBUTING.md
-- Security review required for IPC changes
+## 📜 License
 
----
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
-## 📄 License
+## 🔗 Links
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- [Electron](https://www.electronjs.org/) - Desktop application framework
-- [React](https://react.dev/) - UI library
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
-- [Magic UI](https://magicui.design/) - UI component inspiration
-- [Radix UI](https://www.radix-ui.com/) - Accessible UI primitives
-- [Zod](https://zod.dev/) - TypeScript-first schema validation
+- [Changelog](./CHANGELOG.md)
+- [Release Notes](./RELEASE_NOTES.md)
+- [Security Policy](./SECURITY.md)
+- [Issue Tracker](https://github.com/user/virtual-ip-browser/issues)
 
 ---
 
-**Virtual IP Browser** - Take control of your online privacy.
-
-*Last Updated: January 2025 (v1.3.0)*
+**Version:** 1.3.0 | **Last Updated:** 2025-02-01

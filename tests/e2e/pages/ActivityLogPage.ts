@@ -69,17 +69,25 @@ export class ActivityLogPage extends BasePage {
 
   /**
    * Open the activity log panel
+   * Note: Check visibility first to handle toggle behavior
    */
   async openPanel(): Promise<void> {
-    await this.panelButton.click();
+    const isVisible = await this.panel.isVisible();
+    if (!isVisible) {
+      await this.panelButton.click();
+    }
     await expect(this.panelTitle).toBeVisible();
   }
 
   /**
    * Close the activity log panel
+   * Note: Only click if panel is currently visible
    */
   async closePanel(): Promise<void> {
-    await this.panelButton.click();
+    const isVisible = await this.panel.isVisible();
+    if (isVisible) {
+      await this.panelButton.click();
+    }
     await expect(this.panelTitle).not.toBeVisible();
   }
 
