@@ -152,12 +152,12 @@ describe('useAutomationStore', () => {
     });
   });
 
-  describe('stopSession', () => {
+  describe('stopSessionById', () => {
     it('updates session status to stopped', async () => {
       // Arrange
       const sessionId = '00000000-0000-4000-a000-000000000001';
       useAutomationStore.setState({
-        sessions: [{
+        sessionList: [{
           id: sessionId,
           name: 'Test',
           status: 'active',
@@ -167,25 +167,25 @@ describe('useAutomationStore', () => {
           tasks: [],
           statistics: { totalTasks: 0, completedTasks: 0, failedTasks: 0, avgDuration: 0, successRate: 0 },
         }],
-        activeSessionId: sessionId,
+        currentActiveSessionId: sessionId,
       });
 
       // Act
       await act(async () => {
-        await useAutomationStore.getState().stopSession(sessionId);
+        await useAutomationStore.getState().stopSessionById(sessionId);
       });
 
       // Assert
       const state = useAutomationStore.getState();
-      expect(state.sessions[0].status).toBe('stopped');
-      expect(state.activeSessionId).toBeNull();
+      expect(state.sessionList[0].status).toBe('stopped');
+      expect(state.currentActiveSessionId).toBeNull();
     });
 
     it('calls window.api.automation.stopSearch', async () => {
       // Arrange
       const sessionId = 'session-123';
       useAutomationStore.setState({
-        sessions: [{
+        sessionList: [{
           id: sessionId,
           name: 'Test',
           status: 'active',
@@ -195,12 +195,12 @@ describe('useAutomationStore', () => {
           tasks: [],
           statistics: { totalTasks: 0, completedTasks: 0, failedTasks: 0, avgDuration: 0, successRate: 0 },
         }],
-        activeSessionId: sessionId,
+        currentActiveSessionId: sessionId,
       });
 
       // Act
       await act(async () => {
-        await useAutomationStore.getState().stopSession(sessionId);
+        await useAutomationStore.getState().stopSessionById(sessionId);
       });
 
       // Assert
@@ -208,12 +208,12 @@ describe('useAutomationStore', () => {
     });
   });
 
-  describe('pauseSession', () => {
+  describe('pauseSessionById', () => {
     it('updates session status to paused', async () => {
       // Arrange
       const sessionId = 'session-123';
       useAutomationStore.setState({
-        sessions: [{
+        sessionList: [{
           id: sessionId,
           name: 'Test',
           status: 'active',
@@ -223,25 +223,25 @@ describe('useAutomationStore', () => {
           tasks: [],
           statistics: { totalTasks: 0, completedTasks: 0, failedTasks: 0, avgDuration: 0, successRate: 0 },
         }],
-        activeSessionId: sessionId,
+        currentActiveSessionId: sessionId,
       });
 
       // Act
       await act(async () => {
-        await useAutomationStore.getState().pauseSession(sessionId);
+        await useAutomationStore.getState().pauseSessionById(sessionId);
       });
 
       // Assert
-      expect(useAutomationStore.getState().sessions[0].status).toBe('paused');
+      expect(useAutomationStore.getState().sessionList[0].status).toBe('paused');
     });
   });
 
-  describe('resumeSession', () => {
+  describe('resumeSessionById', () => {
     it('updates session status to active', async () => {
       // Arrange
       const sessionId = 'session-123';
       useAutomationStore.setState({
-        sessions: [{
+        sessionList: [{
           id: sessionId,
           name: 'Test',
           status: 'paused',
@@ -251,113 +251,113 @@ describe('useAutomationStore', () => {
           tasks: [],
           statistics: { totalTasks: 0, completedTasks: 0, failedTasks: 0, avgDuration: 0, successRate: 0 },
         }],
-        activeSessionId: sessionId,
+        currentActiveSessionId: sessionId,
       });
 
       // Act
       await act(async () => {
-        await useAutomationStore.getState().resumeSession(sessionId);
+        await useAutomationStore.getState().resumeSessionById(sessionId);
       });
 
       // Assert
-      expect(useAutomationStore.getState().sessions[0].status).toBe('active');
+      expect(useAutomationStore.getState().sessionList[0].status).toBe('active');
     });
   });
 
   // ============================================================
   // KEYWORD MANAGEMENT TESTS
   // ============================================================
-  describe('addKeyword', () => {
+  describe('addKeywordToQueue', () => {
     it('adds trimmed keyword to list', () => {
       // Act
       act(() => {
-        useAutomationStore.getState().addKeyword('  test keyword  ');
+        useAutomationStore.getState().addKeywordToQueue('  test keyword  ');
       });
 
       // Assert
       const state = useAutomationStore.getState();
-      expect(state.keywords).toContain('test keyword');
+      expect(state.keywordQueue).toContain('test keyword');
     });
 
     it('prevents duplicate keywords', () => {
       // Act
       act(() => {
-        useAutomationStore.getState().addKeyword('keyword');
-        useAutomationStore.getState().addKeyword('keyword');
+        useAutomationStore.getState().addKeywordToQueue('keyword');
+        useAutomationStore.getState().addKeywordToQueue('keyword');
       });
 
       // Assert
       const state = useAutomationStore.getState();
-      expect(state.keywords).toHaveLength(1);
+      expect(state.keywordQueue).toHaveLength(1);
     });
 
     it('ignores empty keywords', () => {
       // Act
       act(() => {
-        useAutomationStore.getState().addKeyword('');
-        useAutomationStore.getState().addKeyword('   ');
+        useAutomationStore.getState().addKeywordToQueue('');
+        useAutomationStore.getState().addKeywordToQueue('   ');
       });
 
       // Assert
-      expect(useAutomationStore.getState().keywords).toHaveLength(0);
+      expect(useAutomationStore.getState().keywordQueue).toHaveLength(0);
     });
 
     it('adds multiple unique keywords', () => {
       // Act
       act(() => {
-        useAutomationStore.getState().addKeyword('keyword1');
-        useAutomationStore.getState().addKeyword('keyword2');
-        useAutomationStore.getState().addKeyword('keyword3');
+        useAutomationStore.getState().addKeywordToQueue('keyword1');
+        useAutomationStore.getState().addKeywordToQueue('keyword2');
+        useAutomationStore.getState().addKeywordToQueue('keyword3');
       });
 
       // Assert
       const state = useAutomationStore.getState();
-      expect(state.keywords).toHaveLength(3);
-      expect(state.keywords).toEqual(['keyword1', 'keyword2', 'keyword3']);
+      expect(state.keywordQueue).toHaveLength(3);
+      expect(state.keywordQueue).toEqual(['keyword1', 'keyword2', 'keyword3']);
     });
   });
 
-  describe('removeKeyword', () => {
+  describe('removeKeywordFromQueue', () => {
     it('removes keyword from list', () => {
       // Arrange
-      useAutomationStore.setState({ keywords: ['keyword1', 'keyword2', 'keyword3'] });
+      useAutomationStore.setState({ keywordQueue: ['keyword1', 'keyword2', 'keyword3'] });
 
       // Act
       act(() => {
-        useAutomationStore.getState().removeKeyword('keyword2');
+        useAutomationStore.getState().removeKeywordFromQueue('keyword2');
       });
 
       // Assert
       const state = useAutomationStore.getState();
-      expect(state.keywords).toEqual(['keyword1', 'keyword3']);
+      expect(state.keywordQueue).toEqual(['keyword1', 'keyword3']);
     });
 
     it('does nothing for non-existent keyword', () => {
       // Arrange
-      useAutomationStore.setState({ keywords: ['keyword1'] });
+      useAutomationStore.setState({ keywordQueue: ['keyword1'] });
 
       // Act
       act(() => {
-        useAutomationStore.getState().removeKeyword('nonexistent');
+        useAutomationStore.getState().removeKeywordFromQueue('nonexistent');
       });
 
       // Assert
-      expect(useAutomationStore.getState().keywords).toEqual(['keyword1']);
+      expect(useAutomationStore.getState().keywordQueue).toEqual(['keyword1']);
     });
   });
 
-  describe('clearKeywords', () => {
+  describe('clearAllKeywords', () => {
     it('removes all keywords', () => {
       // Arrange
-      useAutomationStore.setState({ keywords: ['k1', 'k2', 'k3'] });
+      useAutomationStore.setState({ keywordQueue: ['k1', 'k2', 'k3'] });
 
       // Act
       act(() => {
-        useAutomationStore.getState().clearKeywords();
+        useAutomationStore.getState().clearAllKeywords();
       });
 
       // Assert
-      expect(useAutomationStore.getState().keywords).toEqual([]);
+      expect(useAutomationStore.getState().keywordQueue).toEqual([]);
     });
   });
 

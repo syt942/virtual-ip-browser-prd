@@ -191,13 +191,14 @@ export class PasswordMigrationService {
           encryptedPassword = passwordResult.encrypted;
 
           // Insert into encrypted_credentials
+          // Using 'proxy_auth' credential_type (defined in migration 001 CHECK constraint)
           this.db.prepare(`
             INSERT INTO encrypted_credentials (
               id, proxy_id, credential_name, credential_type,
               encrypted_username, encrypted_password,
               encryption_version, key_id, algorithm, access_level,
               created_at, updated_at
-            ) VALUES (?, ?, ?, 'proxy_password', ?, ?, 1, ?, 'aes-256-gcm', 'private', 
+            ) VALUES (?, ?, ?, 'proxy_auth', ?, ?, 1, ?, 'aes-256-gcm', 'private', 
                       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
           `).run(
             credentialId,
@@ -309,7 +310,7 @@ export class PasswordMigrationService {
       const credentials = this.db.prepare(`
         SELECT ec.id, ec.encrypted_password, ec.proxy_id
         FROM encrypted_credentials ec
-        WHERE ec.credential_type = 'proxy_password'
+        WHERE ec.credential_type = 'proxy_auth'
       `).all() as Array<{ id: string; encrypted_password: string; proxy_id: string }>;
 
       for (const cred of credentials) {

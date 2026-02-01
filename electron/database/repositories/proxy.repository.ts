@@ -419,13 +419,14 @@ export class ProxyRepository {
         const encryptedPassword = passwordResult.encrypted;
 
         // Insert into encrypted_credentials
+        // Using 'proxy_auth' credential_type (defined in migration 001 CHECK constraint)
         this.db.prepare(`
           INSERT INTO encrypted_credentials (
             id, proxy_id, credential_name, credential_type,
             encrypted_username, encrypted_password,
             encryption_version, key_id, algorithm, access_level,
             created_at, updated_at
-          ) VALUES (?, ?, ?, 'proxy_password', ?, ?, 1, ?, 'aes-256-gcm', 'private', ?, ?)
+          ) VALUES (?, ?, ?, 'proxy_auth', ?, ?, 1, ?, 'aes-256-gcm', 'private', ?, ?)
         `).run(
           credentialId,
           proxyId,
@@ -539,13 +540,14 @@ export class ProxyRepository {
           // Create new credential
           const credentialId = randomUUID();
 
+          // Using 'proxy_auth' credential_type (defined in migration 001 CHECK constraint)
           this.db.prepare(`
             INSERT INTO encrypted_credentials (
               id, proxy_id, credential_name, credential_type,
               encrypted_username, encrypted_password,
               encryption_version, key_id, algorithm, access_level,
               created_at, updated_at
-            ) VALUES (?, ?, ?, 'proxy_password', ?, ?, 1, ?, 'aes-256-gcm', 'private', ?, ?)
+            ) VALUES (?, ?, ?, 'proxy_auth', ?, ?, 1, ?, 'aes-256-gcm', 'private', ?, ?)
           `).run(
             credentialId,
             id,

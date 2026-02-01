@@ -206,7 +206,7 @@ describe('Migration 005: Encrypt Proxy Passwords', () => {
       const credential = db.prepare('SELECT * FROM encrypted_credentials WHERE proxy_id = ?').get(proxyId) as any;
       expect(credential).toBeDefined();
       expect(credential.encrypted_password).toBeDefined();
-      expect(credential.credential_type).toBe('proxy_password');
+      expect(credential.credential_type).toBe('proxy_auth');
     });
 
     it('should migrate multiple proxies in batch', async () => {
