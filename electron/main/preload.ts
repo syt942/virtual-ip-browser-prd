@@ -46,6 +46,12 @@ const IPC_INVOKE_WHITELIST = new Set([
   IPC_CHANNELS.SESSION_SAVE,
   IPC_CHANNELS.SESSION_LOAD,
   IPC_CHANNELS.SESSION_LIST,
+  IPC_CHANNELS.SESSION_DELETE,
+  IPC_CHANNELS.SESSION_UPDATE,
+  IPC_CHANNELS.MONITORING_METRICS,
+  IPC_CHANNELS.MONITORING_ALERTS,
+  IPC_CHANNELS.MONITORING_CLEAR_ALERTS,
+  IPC_CHANNELS.MONITORING_HISTORY,
 ]);
 
 /**
@@ -138,9 +144,20 @@ contextBridge.exposeInMainWorld('api', {
 
   // Session Management
   session: {
-    save: (name: string) => secureInvoke(IPC_CHANNELS.SESSION_SAVE, name),
+    save: (config: { name: string; tabs: unknown[]; windowBounds: unknown }) =>
+      secureInvoke(IPC_CHANNELS.SESSION_SAVE, config),
     load: (id: string) => secureInvoke(IPC_CHANNELS.SESSION_LOAD, id),
-    list: () => secureInvoke(IPC_CHANNELS.SESSION_LIST)
+    list: () => secureInvoke(IPC_CHANNELS.SESSION_LIST),
+    delete: (id: string) => secureInvoke(IPC_CHANNELS.SESSION_DELETE, id),
+    update: (id: string, updates: unknown) =>
+      secureInvoke(IPC_CHANNELS.SESSION_UPDATE, id, updates)
+  },
+
+  monitoring: {
+    getMetrics: () => secureInvoke(IPC_CHANNELS.MONITORING_METRICS),
+    getAlerts: () => secureInvoke(IPC_CHANNELS.MONITORING_ALERTS),
+    clearAlerts: () => secureInvoke(IPC_CHANNELS.MONITORING_CLEAR_ALERTS),
+    getHistory: (limit?: number) => secureInvoke(IPC_CHANNELS.MONITORING_HISTORY, limit),
   },
 
   // Analytics (stub implementation - returns mock data for dashboard)
@@ -242,9 +259,18 @@ export interface SecureAPI {
     resume: (sessionId: string) => Promise<unknown>;
   };
   session: {
-    save: (name: string) => Promise<unknown>;
+    save: (config: { name: string; tabs: unknown[]; windowBounds: unknown }) => Promise<unknown>;
     load: (id: string) => Promise<unknown>;
     list: () => Promise<unknown>;
+    delete: (id: string) => Promise<unknown>;
+    update: (id: string, updates: unknown) => Promise<unknown>;
+  };
+
+  monitoring: {
+    getMetrics: () => Promise<unknown>;
+    getAlerts: () => Promise<unknown>;
+    clearAlerts: () => Promise<unknown>;
+    getHistory: (limit?: number) => Promise<unknown>;
   };
   analytics: {
     getStats: () => Promise<unknown>;

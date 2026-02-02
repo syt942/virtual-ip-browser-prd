@@ -10,6 +10,8 @@ import { ProxyManager } from '../core/proxy-engine/manager';
 import { TabManager } from '../core/tabs/manager';
 import { PrivacyManager } from '../core/privacy/manager';
 import { AutomationManager } from '../core/automation/manager';
+import { SessionManager } from '../core/session/manager';
+import { Metrics } from '../core/monitoring/metrics';
 import { setupIpcHandlers } from '../ipc/handlers';
 import { encryptionService } from '../database/services/encryption.service';
 import { ConfigManager } from './config-manager';
@@ -23,6 +25,8 @@ let proxyManager: ProxyManager;
 let tabManager: TabManager;
 let privacyManager: PrivacyManager;
 let automationManager: AutomationManager;
+let sessionManager: SessionManager;
+let metricsManager: Metrics;
 
 /**
  * Create main application window
@@ -99,6 +103,8 @@ async function initialize() {
     tabManager.setPrivacyManager(privacyManager);
     tabManager.setProxyManager(proxyManager);
     automationManager = new AutomationManager(dbManager);
+    sessionManager = new SessionManager(dbManager);
+    metricsManager = new Metrics();
 
     // Setup IPC handlers
     setupIpcHandlers({
@@ -106,7 +112,9 @@ async function initialize() {
       tabManager,
       privacyManager,
       automationManager,
-      dbManager
+      dbManager,
+      sessionManager,
+      metricsManager
     });
 
     console.log('Application initialized successfully');

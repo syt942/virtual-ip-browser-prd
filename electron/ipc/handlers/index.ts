@@ -10,10 +10,14 @@ import type { TabManager } from '../../core/tabs/manager';
 import type { PrivacyManager } from '../../core/privacy/manager';
 import type { AutomationManager } from '../../core/automation/manager';
 import type { DatabaseManager } from '../../database';
+import type { SessionManager } from '../../core/session/manager';
+import type { Metrics } from '../../core/monitoring/metrics';
 import { setupPrivacyHandlers } from './privacy';
 import { setupAutomationHandlers } from './automation';
 import { setupNavigationHandlers } from './navigation';
 import { setupTabHandlers } from './tabs';
+import { setupSessionHandlers } from './session';
+import { setupMonitoringHandlers } from './monitoring';
 import { 
   ProxyConfigSchema, 
   ProxyIdSchema, 
@@ -31,10 +35,12 @@ interface HandlerContext {
   privacyManager: PrivacyManager;
   automationManager: AutomationManager;
   dbManager: DatabaseManager;
+  sessionManager: SessionManager;
+  metricsManager: Metrics;
 }
 
 export function setupIpcHandlers(context: HandlerContext) {
-  const { proxyManager, tabManager, privacyManager, automationManager } = context;
+  const { proxyManager, tabManager, privacyManager, automationManager, sessionManager, metricsManager } = context;
   const rateLimiter = getIPCRateLimiter();
 
   // Setup specialized handlers
@@ -42,6 +48,8 @@ export function setupIpcHandlers(context: HandlerContext) {
   setupAutomationHandlers(automationManager);
   setupNavigationHandlers(tabManager);
   setupTabHandlers(tabManager, proxyManager);
+  setupSessionHandlers(sessionManager);
+  setupMonitoringHandlers(metricsManager);
 
   // Proxy Management Handlers
   ipcMain.handle(IPC_CHANNELS.PROXY_ADD, async (_event, config) => {

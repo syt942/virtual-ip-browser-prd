@@ -40,6 +40,14 @@ export const IPC_CHANNELS = {
   SESSION_SAVE: 'session:save',
   SESSION_LOAD: 'session:load',
   SESSION_LIST: 'session:list',
+  SESSION_DELETE: 'session:delete',
+  SESSION_UPDATE: 'session:update',
+
+  // Monitoring channels
+  MONITORING_METRICS: 'monitoring:metrics',
+  MONITORING_ALERTS: 'monitoring:alerts',
+  MONITORING_CLEAR_ALERTS: 'monitoring:clear-alerts',
+  MONITORING_HISTORY: 'monitoring:history',
   
   // Events (Main -> Renderer)
   EVENT_PROXY_STATUS_CHANGE: 'event:proxy-status-change',

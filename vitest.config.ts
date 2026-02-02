@@ -31,9 +31,9 @@ export default defineConfig({
     hookTimeout: 10000,
     
     // Reporter configuration
-    reporters: ['verbose', 'html'],
+    reporters: ['verbose', 'json'],
     outputFile: {
-      html: './test-reports/vitest/index.html',
+      json: './test-reports/vitest/results.json',
     },
     
     // Coverage configuration
