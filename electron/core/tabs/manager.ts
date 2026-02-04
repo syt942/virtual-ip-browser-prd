@@ -309,10 +309,83 @@ export class TabManager extends EventEmitter {
   /**
    * Apply proxy to session
    */
-  private async applyProxyToSession(_tabSession: Electron.Session, proxyId: string): Promise<void> {
-    // This will be implemented to fetch proxy config and apply it
-    // For now, placeholder
-    this.emit('proxy:applied', { proxyId });
+  private async applyProxyToSession(tabSession: Electron.Session, proxyId: string): Promise<void> {
+    if (!this.proxyManager) {
+      console.warn('[TabManager] ProxyManager not set, cannot apply proxy');
+      return;
+    }
+
+    const proxy = this.proxyManager.getProxy(proxyId);
+    if (!proxy) {
+      console.warn(`[TabManager] Proxy ${proxyId} not found`);
+      return;
+    }
+
+    try {
+      // Build proxy configuration string
+      let proxyConfig = '';
+      
+      if (proxy.protocol === 'http' || proxy.protocol === 'https') {
+        proxyConfig = `http://${proxy.host}:${proxy.port}`;
+      } else if (proxy.protocol === 'socks4' || proxy.protocol === 'socks5') {
+        proxyConfig = `${proxy.protocol}://${proxy.host}:${proxy.port}`;
+      }
+
+      // Apply proxy to session
+      await tabSession.setProxy({
+        proxyRules: proxyConfig,
+        proxyBypassRules: '<local>' // Bypass proxy for local addresses
+      });
+
+      console.log(`[TabManager] Applied proxy ${proxy.protocol}://${proxy.host}:${proxy.port} to session`);
+      this.emit('proxy:applied', { proxyId, proxy });
+    } catch (error) {
+      console.error(`[TabManager] Failed to apply proxy ${proxyId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Dynamically assign or change proxy for an existing tab
+   */
+  async assignProxyToTab(tabId: string, proxyId: string | null): Promise<boolean> {
+    const view = this.views.get(tabId);
+    const tab = this.tabs.get(tabId);
+
+    if (!view || !tab) {
+      console.warn(`[TabManager] Tab ${tabId} not found`);
+      return false;
+    }
+
+    try {
+      const tabSession = view.webContents.session;
+
+      if (proxyId === null) {
+        // Remove proxy - set to direct connection
+        await tabSession.setProxy({ proxyRules: 'direct://' });
+        console.log(`[TabManager] Removed proxy from tab ${tabId}`);
+        
+        // Update tab config
+        tab.proxyId = undefined;
+        this.tabs.set(tabId, tab);
+        
+        this.emit('proxy:removed', { tabId });
+        return true;
+      }
+
+      // Apply new proxy
+      await this.applyProxyToSession(tabSession, proxyId);
+      
+      // Update tab config
+      tab.proxyId = proxyId;
+      this.tabs.set(tabId, tab);
+      
+      this.emit('proxy:assigned', { tabId, proxyId });
+      return true;
+    } catch (error) {
+      console.error(`[TabManager] Failed to assign proxy to tab ${tabId}:`, error);
+      return false;
+    }
   }
 
   /**

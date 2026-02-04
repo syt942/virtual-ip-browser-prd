@@ -70,17 +70,20 @@ export function setupTabHandlers(tabManager: TabManager, proxyManager: ProxyMana
         }
       }
 
-      // Update tab with new proxy assignment
-      const updatedTab = tabManager.updateTab(validTabId, { proxyId: validProxyId ?? undefined });
+      // Dynamically assign proxy to the tab's session
+      const assigned = await tabManager.assignProxyToTab(validTabId, validProxyId);
       
-      if (!updatedTab) {
-        return { success: false, error: 'Failed to update tab' };
+      if (!assigned) {
+        return { success: false, error: 'Failed to assign proxy to tab' };
       }
+
+      // Get updated tab configuration
+      const updatedTab = tabManager.getTab(validTabId);
 
       return { 
         success: true, 
         tab: updatedTab,
-        message: validProxyId ? `Proxy assigned to tab` : 'Direct connection enabled'
+        message: validProxyId ? `Proxy assigned to tab and applied to session` : 'Direct connection enabled'
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to assign proxy to tab';

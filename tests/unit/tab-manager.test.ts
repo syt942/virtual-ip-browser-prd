@@ -999,4 +999,107 @@ describe('TabManager', () => {
       expect(suspensionMetrics.totalTracked).toBe(0);
     });
   });
+
+  // ==========================================================================
+  // DYNAMIC PROXY ASSIGNMENT TESTS (v1.4.0)
+  // ==========================================================================
+
+  describe('Dynamic Proxy Assignment', () => {
+    beforeEach(() => {
+      tabManager.setProxyManager(mockProxyManager as any);
+    });
+
+    it('should dynamically assign proxy to existing tab', async () => {
+      const tab = await tabManager.createTab({ url: 'https://example.com' });
+      
+      const result = await tabManager.assignProxyToTab(tab.id, '00000000-0000-4000-a000-000000000001');
+      
+      expect(result).toBe(true);
+      
+      const updatedTab = tabManager.getTab(tab.id);
+      expect(updatedTab?.proxyId).toBe('00000000-0000-4000-a000-000000000001');
+    });
+
+    it('should remove proxy from tab when proxyId is null', async () => {
+      const tab = await tabManager.createTab({ 
+        url: 'https://example.com',
+        proxyId: '00000000-0000-4000-a000-000000000001'
+      });
+      
+      const result = await tabManager.assignProxyToTab(tab.id, null);
+      
+      expect(result).toBe(true);
+      
+      const updatedTab = tabManager.getTab(tab.id);
+      expect(updatedTab?.proxyId).toBeUndefined();
+    });
+
+    it('should emit proxy:assigned event when proxy is assigned', async () => {
+      const tab = await tabManager.createTab({ url: 'https://example.com' });
+      const eventSpy = vi.fn();
+      tabManager.on('proxy:assigned', eventSpy);
+      
+      await tabManager.assignProxyToTab(tab.id, '00000000-0000-4000-a000-000000000001');
+      
+      expect(eventSpy).toHaveBeenCalledWith({
+        tabId: tab.id,
+        proxyId: '00000000-0000-4000-a000-000000000001'
+      });
+    });
+
+    it('should emit proxy:removed event when proxy is removed', async () => {
+      const tab = await tabManager.createTab({ 
+        url: 'https://example.com',
+        proxyId: '00000000-0000-4000-a000-000000000001'
+      });
+      const eventSpy = vi.fn();
+      tabManager.on('proxy:removed', eventSpy);
+      
+      await tabManager.assignProxyToTab(tab.id, null);
+      
+      expect(eventSpy).toHaveBeenCalledWith({ tabId: tab.id });
+    });
+
+    it('should return false if tab does not exist', async () => {
+      const result = await tabManager.assignProxyToTab('non-existent-tab', '00000000-0000-4000-a000-000000000001');
+      
+      expect(result).toBe(false);
+    });
+
+    it('should handle proxy assignment errors gracefully', async () => {
+      const tab = await tabManager.createTab({ url: 'https://example.com' });
+      
+      // Mock session.setProxy to throw error
+      const mockWebContents = getMockWebContents();
+      mockWebContents.session.setProxy = vi.fn().mockRejectedValue(new Error('Proxy error'));
+      
+      const result = await tabManager.assignProxyToTab(tab.id, '00000000-0000-4000-a000-000000000001');
+      
+      expect(result).toBe(false);
+    });
+
+    it('should apply correct proxy protocol (HTTP)', async () => {
+      const tab = await tabManager.createTab({ url: 'https://example.com' });
+      
+      await tabManager.assignProxyToTab(tab.id, '00000000-0000-4000-a000-000000000001');
+      
+      const mockWebContents = getMockWebContents();
+      expect(mockWebContents.session.setProxy).toHaveBeenCalledWith({
+        proxyRules: 'http://proxy1.example.com:8080',
+        proxyBypassRules: '<local>'
+      });
+    });
+
+    it('should apply correct proxy protocol (SOCKS5)', async () => {
+      const tab = await tabManager.createTab({ url: 'https://example.com' });
+      
+      await tabManager.assignProxyToTab(tab.id, '00000000-0000-4000-a000-000000000002');
+      
+      const mockWebContents = getMockWebContents();
+      expect(mockWebContents.session.setProxy).toHaveBeenCalledWith({
+        proxyRules: 'socks5://proxy2.example.com:1080',
+        proxyBypassRules: '<local>'
+      });
+    });
+  });
 });
