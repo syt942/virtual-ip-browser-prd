@@ -13,6 +13,27 @@ export interface TabConfig {
   updatedAt: Date;
 }
 
+export interface Tab {
+  id: string;
+  title: string;
+  url: string;
+  favicon?: string;
+  partition: string;
+  proxyId?: string;
+  fingerprintSeed?: string;
+  status: TabStatus;
+  isActive: boolean;
+  isPinned: boolean;
+  isLoading: boolean;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  memoryUsage?: number;
+  createdAt: Date;
+  lastActiveAt: Date;
+}
+
+export type TabStatus = 'created' | 'loading' | 'active' | 'idle' | 'suspended' | 'closing' | 'closed';
+
 export interface FingerprintConfig {
   canvas: boolean;
   webgl: boolean;

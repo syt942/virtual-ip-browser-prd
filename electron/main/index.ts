@@ -208,7 +208,12 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
+  // Clean up TabManager (tab pool and suspension)
+  if (tabManager) {
+    await tabManager.destroy();
+  }
+  
   // Clean up ConfigManager (clears master key from memory)
   if (configManager) {
     configManager.destroy();

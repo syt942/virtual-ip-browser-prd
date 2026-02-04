@@ -4,7 +4,7 @@
  * Implements acquire/release pattern with automatic recycling.
  */
 
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'crypto';
 import type { Tab } from './types';
 
 export interface TabPoolConfig {
@@ -47,10 +47,10 @@ export class TabPool {
 
   private createTab(): Tab {
     return {
-      id: `tab-${uuid()}`,
+      id: `tab-${randomUUID()}`,
       title: '',
       url: 'about:blank',
-      partition: `persist:tab-${uuid()}`,
+      partition: `persist:tab-${randomUUID()}`,
       status: 'created',
       isActive: false,
       isPinned: false,

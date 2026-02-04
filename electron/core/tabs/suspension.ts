@@ -32,7 +32,6 @@ export interface TabSuspensionMetrics {
 
 export class TabSuspension {
   private static readonly ESTIMATED_MEMORY_PER_TAB_MB = 50;
-  private static readonly MAX_METRIC_SAMPLES = 1000;
 
   private config: TabSuspensionConfig;
   private tabStates: Map<string, TabStatus> = new Map();

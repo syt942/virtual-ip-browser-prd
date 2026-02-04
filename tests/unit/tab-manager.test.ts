@@ -852,4 +852,151 @@ describe('TabManager', () => {
       expect(eventSpy).toHaveBeenCalled();
     });
   });
+
+  // ==========================================================================
+  // TAB POOL TESTS (v1.4.0)
+  // ==========================================================================
+
+  describe('Tab Pool Integration', () => {
+    it('should create tabs using tab pool for performance', async () => {
+      const startTime = Date.now();
+      
+      const tab = await tabManager.createTab({
+        url: 'https://example.com'
+      });
+      
+      const creationTime = Date.now() - startTime;
+      
+      expect(tab).toBeDefined();
+      expect(tab.id).toBeDefined();
+      expect(tab.url).toBe('https://example.com');
+      
+      // Should create quickly (target: <100ms, but in tests allow more)
+      expect(creationTime).toBeLessThan(1000);
+    });
+
+    it('should get pool metrics', () => {
+      const metrics = tabManager.getPoolMetrics();
+      
+      expect(metrics).toBeDefined();
+      expect(metrics).toHaveProperty('totalTabs');
+      expect(metrics).toHaveProperty('availableTabs');
+      expect(metrics).toHaveProperty('inUseTabs');
+      expect(metrics).toHaveProperty('recycleCount');
+      expect(metrics).toHaveProperty('avgRecycleTime');
+    });
+
+    it('should enforce maximum 50 concurrent tabs', async () => {
+      // Create 50 tabs
+      const tabs: TabConfig[] = [];
+      for (let i = 0; i < 50; i++) {
+        const tab = await tabManager.createTab({ url: `https://example${i}.com` });
+        tabs.push(tab);
+      }
+      
+      expect(tabs.length).toBe(50);
+      
+      // 51st tab should fail
+      await expect(async () => {
+        await tabManager.createTab({ url: 'https://example51.com' });
+      }).rejects.toThrow('Tab pool exhausted');
+    });
+
+    it('should release tabs back to pool on close', async () => {
+      const tab = await tabManager.createTab({ url: 'https://example.com' });
+      const metricsBefore = tabManager.getPoolMetrics();
+      
+      await tabManager.closeTab(tab.id);
+      
+      const metricsAfter = tabManager.getPoolMetrics();
+      
+      // Available tabs should increase after releasing
+      expect(metricsAfter.availableTabs).toBeGreaterThanOrEqual(metricsBefore.availableTabs);
+    });
+
+    it('should reuse tabs from pool', async () => {
+      // Create and close a tab
+      const tab1 = await tabManager.createTab({ url: 'https://example1.com' });
+      await tabManager.closeTab(tab1.id);
+      
+      // Create another tab - should reuse from pool
+      const tab2 = await tabManager.createTab({ url: 'https://example2.com' });
+      
+      expect(tab2).toBeDefined();
+      expect(tab2.id).toBeDefined();
+      
+      const metrics = tabManager.getPoolMetrics();
+      expect(metrics.recycleCount).toBeGreaterThan(0);
+    });
+  });
+
+  // ==========================================================================
+  // TAB SUSPENSION TESTS (v1.4.0)
+  // ==========================================================================
+
+  describe('Tab Suspension for Memory Management', () => {
+    it('should get suspension metrics', () => {
+      const metrics = tabManager.getSuspensionMetrics();
+      
+      expect(metrics).toBeDefined();
+      expect(metrics).toHaveProperty('totalTracked');
+      expect(metrics).toHaveProperty('suspendedCount');
+      expect(metrics).toHaveProperty('suspensionCount');
+      expect(metrics).toHaveProperty('restorationCount');
+      expect(metrics).toHaveProperty('estimatedMemorySaved');
+    });
+
+    it('should record tab activity', async () => {
+      const tab = await tabManager.createTab({ url: 'https://example.com' });
+      
+      // Should not throw
+      await expect(tabManager.recordTabActivity(tab.id)).resolves.not.toThrow();
+    });
+
+    it('should register tabs for suspension tracking', async () => {
+      const metricsBefore = tabManager.getSuspensionMetrics();
+      
+      await tabManager.createTab({ url: 'https://example.com' });
+      
+      const metricsAfter = tabManager.getSuspensionMetrics();
+      
+      expect(metricsAfter.totalTracked).toBeGreaterThan(metricsBefore.totalTracked);
+    });
+
+    it('should unregister tabs on close', async () => {
+      const tab = await tabManager.createTab({ url: 'https://example.com' });
+      const metricsBefore = tabManager.getSuspensionMetrics();
+      
+      await tabManager.closeTab(tab.id);
+      
+      const metricsAfter = tabManager.getSuspensionMetrics();
+      
+      expect(metricsAfter.totalTracked).toBeLessThan(metricsBefore.totalTracked);
+    });
+  });
+
+  // ==========================================================================
+  // TAB MANAGER CLEANUP TESTS
+  // ==========================================================================
+
+  describe('Tab Manager Cleanup', () => {
+    it('should cleanup all resources on destroy', async () => {
+      const newManager = new TabManager();
+      newManager.setWindow(mockBrowserWindow as any);
+      
+      // Create some tabs
+      await newManager.createTab({ url: 'https://example1.com' });
+      await newManager.createTab({ url: 'https://example2.com' });
+      
+      // Destroy should not throw
+      await expect(newManager.destroy()).resolves.not.toThrow();
+      
+      // Metrics should be cleared
+      const poolMetrics = newManager.getPoolMetrics();
+      const suspensionMetrics = newManager.getSuspensionMetrics();
+      
+      expect(poolMetrics.totalTabs).toBe(0);
+      expect(suspensionMetrics.totalTracked).toBe(0);
+    });
+  });
 });
