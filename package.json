@@ -46,7 +46,7 @@
   "dependencies": {
     "better-sqlite3": "^11.10.0",
     "clsx": "^2.1.1",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.1.0",
     "electron-store": "^8.2.0",
     "framer-motion": "^12.29.2",
     "lucide-react": "^0.453.0",
