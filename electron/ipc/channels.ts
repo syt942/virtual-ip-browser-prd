@@ -43,6 +43,11 @@ export const IPC_CHANNELS = {
   SESSION_DELETE: 'session:delete',
   SESSION_UPDATE: 'session:update',
 
+  // Analytics channels
+  ANALYTICS_GET_POSITION_HISTORY: 'analytics:get-position-history',
+  ANALYTICS_GET_KEYWORD_SUMMARIES: 'analytics:get-keyword-summaries',
+  ANALYTICS_GET_STATS: 'analytics:get-stats',
+
   // Monitoring channels
   MONITORING_METRICS: 'monitoring:metrics',
   MONITORING_ALERTS: 'monitoring:alerts',

@@ -12,6 +12,7 @@ export interface PrivacySettings {
   audio: boolean;
   navigator: boolean;
   timezone: boolean;
+  fonts: boolean;
   webrtc: boolean;
   trackerBlocking: boolean;
 }
@@ -68,6 +69,7 @@ const defaultSettings: PrivacySettings = {
   audio: true,
   navigator: true,
   timezone: true,
+  fonts: true,
   webrtc: true,
   trackerBlocking: true
 };
@@ -79,6 +81,7 @@ const DEFAULT_RANDOM_PROFILE_SETTINGS: PrivacySettings = {
   audio: true,
   navigator: true,
   timezone: true,
+  fonts: true,
   webrtc: true,
   trackerBlocking: true
 };
@@ -138,6 +141,15 @@ export const usePrivacyStore = create<PrivacyState>()(
           currentPrivacySettings: {
             ...state.currentPrivacySettings,
             timezone: !state.currentPrivacySettings.timezone
+          }
+        }));
+      },
+
+      toggleFontSpoofing: () => {
+        set((state) => ({
+          currentPrivacySettings: {
+            ...state.currentPrivacySettings,
+            fonts: !state.currentPrivacySettings.fonts
           }
         }));
       },

@@ -2,13 +2,15 @@
  * Enhanced Proxy Panel with Magic UI
  */
 
-import { useEffect } from 'react';
-import { Plus, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Plus, CheckCircle, XCircle, Clock, RefreshCw, Upload, Download } from 'lucide-react';
 import { useProxyStore } from '@stores/proxyStore';
 import { ShimmerButton } from '@components/ui/shimmer-button';
 import { NumberTicker } from '@components/ui/number-ticker';
 import { BorderBeam } from '@components/ui/border-beam';
 import { useBorderBeamEnabled } from '@stores/animationStore';
+import { BulkProxyImportModal } from './BulkProxyImportModal';
+import { exportProxies, type ParsedProxy } from '@utils/proxyParser';
 
 export function EnhancedProxyPanel() {
   const { 
@@ -19,10 +21,12 @@ export function EnhancedProxyPanel() {
     removeProxy,
     validateProxy,
     setRotationStrategy,
-    getActiveProxies
+    getActiveProxies,
+    addProxy
   } = useProxyStore();
   
   const borderBeamEnabled = useBorderBeamEnabled();
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   useEffect(() => {
     loadProxies();
@@ -30,6 +34,40 @@ export function EnhancedProxyPanel() {
 
   const activeProxies = getActiveProxies();
   const failedProxies = proxies.filter(p => p.status === 'failed');
+
+  // Handle bulk import
+  const handleBulkImport = async (parsedProxies: ParsedProxy[]) => {
+    for (const proxy of parsedProxies) {
+      try {
+        await addProxy({
+          host: proxy.host,
+          port: proxy.port,
+          protocol: proxy.protocol,
+          username: proxy.username,
+          password: proxy.password,
+          name: proxy.name || `${proxy.host}:${proxy.port}`,
+        });
+      } catch (error) {
+        console.error('[ProxyPanel] Failed to import proxy:', error);
+      }
+    }
+  };
+
+  // Handle bulk export
+  const handleBulkExport = (format: 'simple' | 'url' | 'csv' = 'simple') => {
+    const exportData = exportProxies(proxies, format);
+    
+    // Create download
+    const blob = new Blob([exportData], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `proxies-export-${Date.now()}.${format === 'csv' ? 'csv' : 'txt'}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -65,14 +103,58 @@ export function EnhancedProxyPanel() {
           <h2 className="text-lg font-semibold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent" data-testid="proxy-panel-title">
             Proxy Manager
           </h2>
-          <ShimmerButton
-            className="h-9 px-4"
-            onClick={() => {/* Add proxy modal */}}
-            data-testid="add-proxy-btn"
-          >
-            <Plus size={14} className="mr-2" />
-            Add Proxy
-          </ShimmerButton>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="h-9 px-3 flex items-center gap-2 bg-secondary hover:bg-secondary/80 rounded transition-colors text-sm"
+              data-testid="bulk-import-btn"
+            >
+              <Upload size={14} />
+              <span>Import</span>
+            </button>
+            <div className="relative group">
+              <button
+                onClick={() => handleBulkExport('simple')}
+                disabled={proxies.length === 0}
+                className="h-9 px-3 flex items-center gap-2 bg-secondary hover:bg-secondary/80 rounded transition-colors text-sm disabled:opacity-50"
+                data-testid="bulk-export-btn"
+              >
+                <Download size={14} />
+                <span>Export</span>
+              </button>
+              {/* Export format dropdown */}
+              {proxies.length > 0 && (
+                <div className="absolute right-0 mt-1 w-40 bg-card border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <button
+                    onClick={() => handleBulkExport('simple')}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-secondary transition-colors rounded-t-lg"
+                  >
+                    Simple Format
+                  </button>
+                  <button
+                    onClick={() => handleBulkExport('url')}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-secondary transition-colors"
+                  >
+                    URL Format
+                  </button>
+                  <button
+                    onClick={() => handleBulkExport('csv')}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-secondary transition-colors rounded-b-lg"
+                  >
+                    CSV Format
+                  </button>
+                </div>
+              )}
+            </div>
+            <ShimmerButton
+              className="h-9 px-4"
+              onClick={() => {/* Add proxy modal */}}
+              data-testid="add-proxy-btn"
+            >
+              <Plus size={14} className="mr-2" />
+              Add
+            </ShimmerButton>
+          </div>
         </div>
         
         {/* Rotation Strategy */}
@@ -212,6 +294,13 @@ export function EnhancedProxyPanel() {
           </div>
         </div>
       </div>
+
+      {/* Bulk Import Modal */}
+      <BulkProxyImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleBulkImport}
+      />
     </div>
   );
 }

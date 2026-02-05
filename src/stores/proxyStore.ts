@@ -45,6 +45,7 @@ interface ProxyState {
   isLoadingProxies: boolean;
   
   // Actions - Proxy CRUD
+  addProxy: (proxyInput: NewProxyInput) => Promise<void>;
   createProxy: (proxyInput: NewProxyInput) => Promise<void>;
   deleteProxyById: (proxyId: string) => Promise<void>;
   updateProxyById: (proxyId: string, updates: Partial<Proxy>) => Promise<void>;
@@ -63,6 +64,11 @@ export const useProxyStore = create<ProxyState>((set, get) => ({
   proxyList: [],
   currentRotationStrategy: 'round-robin',
   isLoadingProxies: false,
+
+  // Alias for backward compatibility
+  addProxy: async function(proxyInput: NewProxyInput) {
+    return this.createProxy(proxyInput);
+  },
 
   createProxy: async (proxyInput) => {
     try {

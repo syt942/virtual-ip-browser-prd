@@ -7,14 +7,15 @@ import { usePrivacyStore } from '@/stores/privacyStore';
 
 export function PrivacyPanel() {
   const {
-    currentSettings,
-    toggleCanvas,
-    toggleWebGL,
-    toggleAudio,
-    toggleNavigator,
-    toggleTimezone,
-    toggleWebRTC,
-    toggleTrackerBlocking,
+    currentPrivacySettings,
+    toggleCanvasSpoofing,
+    toggleWebGLSpoofing,
+    toggleAudioSpoofing,
+    toggleNavigatorSpoofing,
+    toggleTimezoneSpoofing,
+    toggleFontSpoofing,
+    toggleWebRTCProtection,
+    toggleTrackerBlockingProtection,
   } = usePrivacyStore();
 
   return (
@@ -34,8 +35,8 @@ export function PrivacyPanel() {
               <span className="text-sm">Canvas Fingerprint</span>
               <input 
                 type="checkbox" 
-                checked={currentSettings.canvas} 
-                onChange={toggleCanvas}
+                checked={currentPrivacySettings.canvas} 
+                onChange={toggleCanvasSpoofing}
                 className="rounded"
                 data-testid="canvas-toggle"
               />
@@ -44,8 +45,8 @@ export function PrivacyPanel() {
               <span className="text-sm">WebGL Fingerprint</span>
               <input 
                 type="checkbox" 
-                checked={currentSettings.webgl} 
-                onChange={toggleWebGL}
+                checked={currentPrivacySettings.webgl} 
+                onChange={toggleWebGLSpoofing}
                 className="rounded"
                 data-testid="webgl-toggle"
               />
@@ -54,8 +55,8 @@ export function PrivacyPanel() {
               <span className="text-sm">Audio Fingerprint</span>
               <input 
                 type="checkbox" 
-                checked={currentSettings.audio} 
-                onChange={toggleAudio}
+                checked={currentPrivacySettings.audio} 
+                onChange={toggleAudioSpoofing}
                 className="rounded"
                 data-testid="audio-toggle"
               />
@@ -64,10 +65,20 @@ export function PrivacyPanel() {
               <span className="text-sm">Navigator Spoofing</span>
               <input 
                 type="checkbox" 
-                checked={currentSettings.navigator} 
-                onChange={toggleNavigator}
+                checked={currentPrivacySettings.navigator} 
+                onChange={toggleNavigatorSpoofing}
                 className="rounded"
                 data-testid="navigator-toggle"
+              />
+            </label>
+            <label className="flex items-center justify-between p-2 hover:bg-secondary rounded cursor-pointer" data-testid="fonts-toggle-label">
+              <span className="text-sm">Font Fingerprint</span>
+              <input 
+                type="checkbox" 
+                checked={currentPrivacySettings.fonts} 
+                onChange={toggleFontSpoofing}
+                className="rounded"
+                data-testid="fonts-toggle"
               />
             </label>
           </div>
@@ -80,8 +91,8 @@ export function PrivacyPanel() {
             <span className="text-sm">Block WebRTC Leaks</span>
             <input 
               type="checkbox" 
-              checked={currentSettings.webrtc} 
-              onChange={() => toggleWebRTC()}
+              checked={currentPrivacySettings.webrtc} 
+              onChange={() => toggleWebRTCProtection()}
               className="rounded"
               data-testid="webrtc-toggle"
             />
@@ -95,8 +106,8 @@ export function PrivacyPanel() {
             <span className="text-sm">Block All Trackers</span>
             <input 
               type="checkbox" 
-              checked={currentSettings.trackerBlocking} 
-              onChange={() => toggleTrackerBlocking()}
+              checked={currentPrivacySettings.trackerBlocking} 
+              onChange={() => toggleTrackerBlockingProtection()}
               className="rounded"
               data-testid="tracker-toggle"
             />
@@ -110,8 +121,8 @@ export function PrivacyPanel() {
             <span className="text-sm">Enable Timezone Spoofing</span>
             <input 
               type="checkbox" 
-              checked={currentSettings.timezone} 
-              onChange={toggleTimezone}
+              checked={currentPrivacySettings.timezone} 
+              onChange={toggleTimezoneSpoofing}
               className="rounded"
               data-testid="timezone-toggle"
             />

@@ -9,6 +9,7 @@ import { WebGLFingerprintProtection } from './fingerprint/webgl';
 import { AudioFingerprintProtection } from './fingerprint/audio';
 import { NavigatorFingerprintProtection, type NavigatorSpoofConfig } from './fingerprint/navigator';
 import { TimezoneFingerprintProtection } from './fingerprint/timezone';
+import { FontFingerprintProtection, type FontSpoofConfig } from './fingerprint/fonts';
 import { WebRTCProtection } from './webrtc';
 import { TrackerBlocker } from './tracker-blocker';
 
@@ -18,10 +19,12 @@ export interface PrivacyConfig {
   audio: boolean;
   navigator: boolean;
   timezone: boolean;
+  fonts: boolean;
   webrtc: boolean;
   trackerBlocking: boolean;
   navigatorConfig?: NavigatorSpoofConfig;
   timezoneRegion?: string;
+  fontConfig?: FontSpoofConfig;
 }
 
 export class PrivacyManager extends EventEmitter {
@@ -30,6 +33,7 @@ export class PrivacyManager extends EventEmitter {
   private audioProtection: AudioFingerprintProtection;
   private navigatorProtection: NavigatorFingerprintProtection;
   private timezoneProtection: TimezoneFingerprintProtection;
+  private fontProtection: FontFingerprintProtection;
   private webrtcProtection: WebRTCProtection;
   private trackerBlocker: TrackerBlocker;
 
@@ -40,6 +44,7 @@ export class PrivacyManager extends EventEmitter {
     this.audioProtection = new AudioFingerprintProtection();
     this.navigatorProtection = new NavigatorFingerprintProtection();
     this.timezoneProtection = new TimezoneFingerprintProtection();
+    this.fontProtection = new FontFingerprintProtection();
     this.webrtcProtection = new WebRTCProtection();
     this.trackerBlocker = new TrackerBlocker();
   }
@@ -77,6 +82,14 @@ export class PrivacyManager extends EventEmitter {
         this.timezoneProtection.setTimezone(tz.timezone, tz.offset);
       }
       scripts.push(this.timezoneProtection.generateInjectionScript());
+    }
+
+    if (config.fonts) {
+      // Apply custom font config if provided
+      if (config.fontConfig) {
+        this.fontProtection.setConfig(config.fontConfig);
+      }
+      scripts.push(this.fontProtection.generateInjectionScript());
     }
 
     if (config.webrtc) {
@@ -141,6 +154,13 @@ export class PrivacyManager extends EventEmitter {
   }
 
   /**
+   * Get font protection instance
+   */
+  getFontProtection(): FontFingerprintProtection {
+    return this.fontProtection;
+  }
+
+  /**
    * Get tracker blocker instance
    */
   getTrackerBlocker(): TrackerBlocker {
@@ -160,15 +180,28 @@ export class PrivacyManager extends EventEmitter {
     this.navigatorProtection.setConfig(navigatorConfig);
     this.webglProtection.setConfig(webglConfig);
 
+    // Generate font list for platform
+    const fontList = FontFingerprintProtection.generateRealisticFontList(platform);
+    const fontConfig: FontSpoofConfig = {
+      platform,
+      fontList,
+      spoofMetrics: true,
+      metricsVariation: 0.02,
+      blockEnumeration: true,
+    };
+    this.fontProtection.setConfig(fontConfig);
+
     return {
       canvas: true,
       webgl: true,
       audio: true,
       navigator: true,
       timezone: true,
+      fonts: true,
       webrtc: true,
       trackerBlocking: true,
-      navigatorConfig
+      navigatorConfig,
+      fontConfig,
     };
   }
 }
